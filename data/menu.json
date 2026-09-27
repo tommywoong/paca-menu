@@ -1,0 +1,997 @@
+{
+  "categories": [
+    {
+      "id": "week",
+      "name": "Menu of the Week",
+      "name_vi": "Cocktail Tuần Này",
+      "icon": "🍸",
+      "station": "bar",
+      "default_station": "bar",
+      "order": 1,
+      "is_active": true,
+      "show_on_cover": true,
+      "show_on_nav": true,
+      "display_layout": "grid",
+      "pageId": "page_week",
+      "description": "Bộ sưu tập cocktail đặc sắc luân phiên theo tuần của PACA Bar"
+    },
+    {
+      "id": "bites",
+      "name": "Bites & Snacks",
+      "name_vi": "Món Nhắm / Bếp",
+      "icon": "🍟",
+      "station": "kitchen",
+      "default_station": "kitchen",
+      "order": 2,
+      "is_active": true,
+      "show_on_cover": true,
+      "show_on_nav": true,
+      "display_layout": "grid",
+      "pageId": "page_bites",
+      "description": "Các món ăn nhẹ, khoai tây chiên giòn và đồ nhắm thơm lừng"
+    },
+    {
+      "id": "cocktail",
+      "name": "Cocktails (Classic & Signature)",
+      "name_vi": "Cocktail Đặc Biệt & Classic",
+      "icon": "🍹",
+      "station": "bar",
+      "default_station": "bar",
+      "order": 3,
+      "is_active": true,
+      "show_on_cover": true,
+      "show_on_nav": true,
+      "display_layout": "grid",
+      "pageId": "page_cocktail",
+      "description": "Cocktail tuyển chọn từ signature hiện đại đến các món cổ điển kinh điển"
+    },
+    {
+      "id": "beer",
+      "name": "Craft Beer & Cider",
+      "name_vi": "Bia Thủ Công & Tepache",
+      "icon": "🍺",
+      "station": "bar",
+      "default_station": "bar",
+      "order": 4,
+      "is_active": true,
+      "show_on_cover": true,
+      "show_on_nav": true,
+      "display_layout": "grid",
+      "pageId": "page_beer",
+      "description": "Bia thủ công rót vòi, bia chai tuyển chọn và cider mát lạnh"
+    },
+    {
+      "id": "wine_shot",
+      "name": "Wine & Shots",
+      "name_vi": "Rượu Vang & Shots",
+      "icon": "🍷",
+      "station": "bar",
+      "default_station": "bar",
+      "order": 5,
+      "is_active": true,
+      "show_on_cover": true,
+      "show_on_nav": true,
+      "display_layout": "grid",
+      "pageId": "page_wine_shots",
+      "description": "Vang ly hảo hạng và các shot rượu mạnh nguyên bản"
+    },
+    {
+      "id": "mocktail",
+      "name": "Mocktails (Non-Alcoholic)",
+      "name_vi": "Mocktail (Không Cồn)",
+      "icon": "🧃",
+      "station": "bar",
+      "default_station": "bar",
+      "order": 6,
+      "is_active": true,
+      "show_on_cover": false,
+      "show_on_nav": true,
+      "display_layout": "grid",
+      "pageId": "sec_cat_mocktail",
+      "description": "Đồ uống hoa quả sảng khoái không cồn dành cho mọi lứa tuổi"
+    }
+  ],
+  "items": [
+    {
+      "id": "w01",
+      "name": "SCARLET BLOOM",
+      "name_vi": "Scarlet Bloom",
+      "category": "week",
+      "station": "bar",
+      "price": 180000,
+      "image": "assets/canva/28adf05eda02b6ec8307a74ce95d974f.png",
+      "description_vi": "Sự kết hợp cuốn hút giữa Tequila và Campari đắng nhẹ, cân bằng bởi vị vải ngọt thanh cùng hương hoa dịu nhẹ.",
+      "description_en": "A striking balance of vibrant tequila and bittersweet Campari, softened by sweet lychee notes for a rich, floral finish.",
+      "ingredients": [
+        "Tequila",
+        "Lychee Cordial",
+        "Campari",
+        "Choco Bitter",
+        "Sour Water"
+      ],
+      "badge": "Signature",
+      "is_available": true
+    },
+    {
+      "id": "w02",
+      "name": "ASTRAL STAR",
+      "name_vi": "Astral Star",
+      "category": "week",
+      "station": "bar",
+      "price": 180000,
+      "image": "assets/canva/32ce3196c738a55c6e125673a1c9709f.png",
+      "description_vi": "Vị Gin thảo mộc tươi mát kết hợp độc đáo cùng cordial khế và limecello chua thanh, mang lại cảm giác sảng khoái trọn vẹn.",
+      "description_en": "A crisp, botanical fusion of classic gin and refreshing starfruit, brightened with zesty limecello for an uplifting sip.",
+      "ingredients": [
+        "Gin",
+        "Home-made Limecello",
+        "Starfruit Cordial",
+        "Juniper Liqueur"
+      ],
+      "badge": "Refreshing",
+      "is_available": true
+    },
+    {
+      "id": "w03",
+      "name": "HOP & PEAR",
+      "name_vi": "Hop & Pear",
+      "category": "week",
+      "station": "bar",
+      "price": 180000,
+      "image": "assets/canva/26e2b9fc22d060d2a83d148aacbb654a.png",
+      "description_vi": "Phong cách thanh nhẹ, bừng sáng vị lê ngọt dịu quyện cùng whisky và sủi bọt soda đã miệng.",
+      "description_en": "A light, effervescent whiskey highball infused with sweet pear cordial and a lively fizzy finish.",
+      "ingredients": [
+        "Whisky",
+        "Pear Cordial",
+        "Soda"
+      ],
+      "badge": "Highball",
+      "is_available": true
+    },
+    {
+      "id": "w04",
+      "name": "NOCTURNE CACAO",
+      "name_vi": "Nocturne Cacao",
+      "category": "week",
+      "station": "bar",
+      "price": 180000,
+      "image": "assets/canva/4b4c1309b9398c524b53a672c3810158.png",
+      "description_vi": "Nốt trầm đầm ấm của cà phê đắng nhẹ quyện cùng gin, vị cam tươi và anh đào mọng nước cho buổi đêm sâu lắng.",
+      "description_en": "A sophisticated nightcap blending sharp gin, rich coffee, and bright citrus with a touch of sweet cherry.",
+      "ingredients": [
+        "Gin",
+        "Coffee Liqueur",
+        "Cherry Cordial",
+        "Orangecello"
+      ],
+      "badge": "Nightcap",
+      "is_available": true
+    },
+    {
+      "id": "w05",
+      "name": "COLD DRIFT",
+      "name_vi": "Cold Drift",
+      "category": "week",
+      "station": "bar",
+      "price": 180000,
+      "image": "assets/canva/b714bf56c3fcceadb4fd418d77791b7a.png",
+      "description_vi": "Chất Rum nền mượt mà hòa cùng vị táo xanh giòn ngọt và lemoncello chua mát, cực kỳ dễ uống.",
+      "description_en": "A refreshing, citrus-forward rum mix driven by crisp green apple and bright lemoncello.",
+      "ingredients": [
+        "Rum",
+        "Apple Cordial",
+        "Home-made Lemoncello"
+      ],
+      "badge": "Easy Sip",
+      "is_available": true
+    },
+    {
+      "id": "w06",
+      "name": "HEATWAVE GOLD",
+      "name_vi": "Heatwave Gold",
+      "category": "week",
+      "station": "bar",
+      "price": 180000,
+      "image": "assets/canva/a40c1dd2b1aa832fbfd3f4becb611c1b.png",
+      "description_vi": "Vị xoài nhiệt đới chín mọng trên nền whisky đằm đặm, nhấn nhá chút cay nồng kích thích vị giác.",
+      "description_en": "A tropical, vibrant whiskey cocktail featuring juicy mango cordial balanced by a warm, spicy kick.",
+      "ingredients": [
+        "Whiskey",
+        "Mango Cordial",
+        "Spicy Bitter"
+      ],
+      "badge": "Tropical & Spicy",
+      "is_available": true
+    },
+    {
+      "id": "w07",
+      "name": "VELVET BANANE",
+      "name_vi": "Velvet Banane",
+      "category": "week",
+      "station": "bar",
+      "price": 180000,
+      "image": "assets/canva/1b3c7405030fc8716b89b071836f7dbb.png",
+      "description_vi": "Sự biến tấu thú vị giữa whisky, vị chuối béo dịu và cranberry soda chua nhẹ sủi bọt vui tươi.",
+      "description_en": "A playful yet refined blend of smooth whisky, rich banana liqueur, and tart cranberry soda.",
+      "ingredients": [
+        "Whisky",
+        "Banana Liqueur",
+        "Cranberry Soda"
+      ],
+      "badge": "SOLD OUT",
+      "is_available": false
+    },
+    {
+      "id": "w08",
+      "name": "SILK SONIC",
+      "name_vi": "Silk Sonic",
+      "category": "week",
+      "station": "bar",
+      "price": 180000,
+      "image": "assets/canva/b39e83bcd3e781d72ac36b3fee710acb.png",
+      "description_vi": "Biến tấu sảng khoái trên nền Gin & Tonic kinh điển, hòa quyện vị lê ngọt dịu cùng lemoncello chua thanh mát lạnh.",
+      "description_en": "A crisp, effervescent twist on the classic Gin & Tonic, combining sweet pear cordial with bright, zesty lemoncello.",
+      "ingredients": [
+        "Gin",
+        "Pear Cordial",
+        "Lemoncello",
+        "Tonic"
+      ],
+      "badge": "Crisp G&T",
+      "is_available": true
+    },
+    {
+      "id": "w09",
+      "name": "ONYX",
+      "name_vi": "Onyx",
+      "category": "week",
+      "station": "bar",
+      "price": 180000,
+      "image": "assets/canva/3f7b56635ba5b446c5fac557a917c77b.png",
+      "description_vi": "Nền whisky đậm đà hòa quyện cùng cacao đắng nhẹ, điểm xuyết thảo mộc bạch đậu khấu nhà làm cho hậu vị khói êm đằm.",
+      "description_en": "A bold, spirit-forward blend of aged whiskies and dark cacao, deepened with home-made cardamom for a smoky, velvety finish.",
+      "ingredients": [
+        "Aged Whisky",
+        "Cacao Liqueur",
+        "Home-made Cardamom Liqueur"
+      ],
+      "badge": "Spirit-Forward",
+      "is_available": true
+    },
+    {
+      "id": "w10",
+      "name": "BOTANICAL FLORA",
+      "name_vi": "Botanical Flora",
+      "category": "week",
+      "station": "bar",
+      "price": 180000,
+      "image": "assets/canva/28adf05eda02b6ec8307a74ce95d974f.png",
+      "description_vi": "Gu uống thanh lịch và khô nhẹ, kết hợp gin thảo mộc, vang trắng cùng lemoncello nhà làm thơm ngát.",
+      "description_en": "An elegant, dry aperitif pairing aromatic gin with home-made lemoncello and crisp white wine.",
+      "ingredients": [
+        "Gin",
+        "White Wine",
+        "Home-made Lemoncello"
+      ],
+      "badge": "Dry & Elegant",
+      "is_available": true
+    },
+    {
+      "id": "b01",
+      "name": "FRENCH FRIES WITH GARLIC FISH SAUCE",
+      "name_vi": "Khoai tây chiên mắm tỏi",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 70000,
+      "image": "assets/canva/0e6ad945841bfc9bde3aefe8930e6839.png",
+      "description_vi": "Khoai tây chiên giòn rụm xốc sốt nước mắm tỏi ớt đậm đà thơm lừng.",
+      "description_en": "Crispy golden french fries tossed in aromatic savory garlic fish sauce glaze.",
+      "ingredients": [
+        "Khoai tây tươi chiên",
+        "Tỏi phi giòn",
+        "Sốt mắm rim đường"
+      ],
+      "badge": "Best Seller",
+      "is_available": true
+    },
+    {
+      "id": "b02",
+      "name": "FRENCH FRIES WITH BACON & CHEESE",
+      "name_vi": "Khoai tây chiên sốt phô mai & thịt xông khói",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 95000,
+      "image": "assets/canva/c243f99dc58032a0f023c28ba843eac2.png",
+      "description_vi": "Khoai tây chiên phủ ngập xốt phô mai béo ngậy và thịt xông khói giòn tan.",
+      "description_en": "Crispy fries loaded with melted cheese sauce and crispy savory bacon bits.",
+      "ingredients": [
+        "Khoai tây chiên",
+        "Bacon giòn",
+        "Sốt phô mai tan chảy"
+      ],
+      "badge": "Must Try",
+      "is_available": true
+    },
+    {
+      "id": "b03",
+      "name": "FRENCH FRIES WITH CHEESE",
+      "name_vi": "Khoai tây chiên sốt phô mai",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 70000,
+      "image": "assets/canva/2478f97ef54304ee79763d99641719e0.png",
+      "description_vi": "Khoai tây chiên vàng giòn rưới đẫm xốt phô mai cheddar tan chảy béo ngậy.",
+      "description_en": "Golden fries drizzled with warm, velvety melted cheese.",
+      "ingredients": [
+        "Khoai tây chiên",
+        "Sốt phô mai béo"
+      ],
+      "badge": "Cheesy",
+      "is_available": true
+    },
+    {
+      "id": "b04",
+      "name": "CLASSIC FRENCH FRIES",
+      "name_vi": "Khoai tây chiên truyền thống",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 55000,
+      "image": "assets/canva/0e6ad945841bfc9bde3aefe8930e6839.png",
+      "description_vi": "Khoai tây cọng truyền thống chiên ráo dầu, giòn lâu ăn kèm sốt cà chua/tương ớt.",
+      "description_en": "Classic straight-cut french fries, salted and fried to golden perfection.",
+      "ingredients": [
+        "Khoai tây giòn",
+        "Muối tiêu",
+        "Tương ớt / Sốt chấm"
+      ],
+      "badge": "Classic",
+      "is_available": true
+    },
+    {
+      "id": "b05",
+      "name": "FRIES WITH CREAMY ONION SAUCE",
+      "name_vi": "Khoai tây chiên sốt kem hành tây",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 70000,
+      "image": "assets/canva/5dc4519f512c639864a5c59fcd450574.jpg",
+      "description_vi": "Khoai tây chiên giòn phủ sốt kem chua hành tây thơm béo mịn màng đặc trưng.",
+      "description_en": "Crisp fries paired with a luscious homemade sour cream and onion sauce.",
+      "ingredients": [
+        "Khoai tây chiên",
+        "Sốt kem hành chua béo"
+      ],
+      "badge": "New",
+      "is_available": true
+    },
+    {
+      "id": "b06",
+      "name": "FRIED WONTON CHIPS",
+      "name_vi": "Lá hoành thánh chiên giòn",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 55000,
+      "image": "assets/canva/192a266e9d811dc75d8647348854481c.jpg",
+      "description_vi": "Lá hoành thánh chiên phồng giòn tan chấm tương ớt chua ngọt vui miệng.",
+      "description_en": "Golden crispy wonton crackers served with sweet-chili dipping sauce.",
+      "ingredients": [
+        "Lá hoành thánh tươi",
+        "Gia vị thảo mộc"
+      ],
+      "badge": "Snack",
+      "is_available": true
+    },
+    {
+      "id": "b07",
+      "name": "CRISPY FRIED MACARONI & CHEESE",
+      "name_vi": "Nui chiên giòn lắc phô mai",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 55000,
+      "image": "",
+      "description_vi": "Nui chiên phồng giòn rụm lắc bột phô mai mặn ngọt đậm đà, món nhắm lai rai cực dính.",
+      "description_en": "Crispy crunchy fried macaroni tossed in rich aromatic cheddar cheese powder.",
+      "ingredients": [
+        "Nui giòn rụm",
+        "Bột phô mai mặn béo"
+      ],
+      "badge": "Popular",
+      "is_available": true
+    },
+    {
+      "id": "b08",
+      "name": "POPCORN CHICKEN CHEESE",
+      "name_vi": "Gà viên sốt cay phủ phô mai",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 95000,
+      "image": "",
+      "description_vi": "Gà chiên giòn rụm áo sốt cay ngọt Hàn Quốc phủ ngập phô mai kéo sợi thơm phức.",
+      "description_en": "Bite-sized crispy popcorn chicken glazed in sweet & spicy sauce, topped with melted cheese.",
+      "ingredients": [
+        "Gà viên tươi",
+        "Sốt cay ngọt",
+        "Phô mai Mozzarella kéo sợi"
+      ],
+      "badge": "M/L Options",
+      "variants": [
+        {
+          "id": "v_m",
+          "name": "Size M",
+          "price": 95000,
+          "is_default": true
+        },
+        {
+          "id": "v_l",
+          "name": "Size L",
+          "price": 125000,
+          "is_default": false
+        }
+      ],
+      "options": [
+        {
+          "id": "extra_cheese",
+          "name": "Thêm phô mai tan chảy (+Extra Cheese)",
+          "price": 30000
+        }
+      ],
+      "is_available": true
+    },
+    {
+      "id": "c01",
+      "name": "TROPICAL VEIL",
+      "name_vi": "Tropical Veil",
+      "category": "cocktail",
+      "station": "bar",
+      "price": 170000,
+      "image": "assets/canva/261aa7c21633e8bab30538dc7f21a18a.png",
+      "description_vi": "Nhiệt đới tươi mát: Rum hòa cùng mứt xoài ngọt lịm và syrup dừa thơm thoang thoảng.",
+      "description_en": "Rum meets mango and coconut syrup in a bright tropical twist — warm, fruity, and quietly floral.",
+      "ingredients": [
+        "Rum",
+        "Mango Puree",
+        "Cointreau",
+        "Coconut Syrup",
+        "Lime Juice"
+      ],
+      "badge": "Highlight",
+      "is_available": true
+    },
+    {
+      "id": "c02",
+      "name": "PINK BLOOM",
+      "name_vi": "Pink Bloom",
+      "category": "cocktail",
+      "station": "bar",
+      "price": 170000,
+      "image": "assets/canva/261aa7c21633e8bab30538dc7f21a18a.png",
+      "description_vi": "Chút đắng, ngọt, thơm, nhẹ nhẹ trôi trôi: Vải và hoa anh đào nhấn nhá chút Campari quyến rũ.",
+      "description_en": "Lychee and cherry blossom with a hint of Campari — sweet, floral, and playfully bitter.",
+      "ingredients": [
+        "Lychee Puree",
+        "Cherry Blossom Syrup",
+        "Campari",
+        "Gin"
+      ],
+      "badge": "Floral & Sweet",
+      "is_available": true
+    },
+    {
+      "id": "c03",
+      "name": "MIDNIGHT CHERRY",
+      "name_vi": "Midnight Cherry",
+      "category": "cocktail",
+      "station": "bar",
+      "price": 170000,
+      "image": "assets/canva/261aa7c21633e8bab30538dc7f21a18a.png",
+      "description_vi": "Cherry và cà phê hòa quyện – đậm, chua nhẹ, lựa chọn hoàn hảo cho những đêm muộn Đà Lạt.",
+      "description_en": "Cherry, gin, and coffee liqueur — rich, tangy, and made for slow nights.",
+      "ingredients": [
+        "Gin",
+        "Cherry",
+        "Sweet Vermouth",
+        "Coffee Liqueur",
+        "Simple Syrup"
+      ],
+      "badge": "Dark & Rich",
+      "is_available": true
+    },
+    {
+      "id": "c04",
+      "name": "GOLDEN PEAR HIGHBALL",
+      "name_vi": "Golden Pear Highball",
+      "category": "cocktail",
+      "station": "bar",
+      "price": 170000,
+      "image": "assets/canva/261aa7c21633e8bab30538dc7f21a18a.png",
+      "description_vi": "Bourbon whisky hoà cùng lê, táo và quế — ngọt dịu, mượt mà và mát lạnh với lớp Orgeat Foam béo mịn.",
+      "description_en": "Bourbon whisky with pear, apple & cinnamon purée — gently sweet, smooth, and refreshing topped with Orgeat Foam.",
+      "ingredients": [
+        "Bourbon Whisky",
+        "Pear, Apple & Cinnamon Puree",
+        "Orgeat Foam on top"
+      ],
+      "badge": "Smooth Foam",
+      "is_available": true
+    },
+    {
+      "id": "c05",
+      "name": "OLD FASHIONED",
+      "name_vi": "Old Fashioned",
+      "category": "cocktail",
+      "station": "bar",
+      "price": 190000,
+      "image": "assets/canva/c2d4608440211aa525baf5236b84862f.png",
+      "description_vi": "Kinh điển vượt thời gian trên nền Bourbon whisky, đường nâu và bitter thảo mộc nồng nàn.",
+      "description_en": "Timeless classic with bourbon whiskey, sugar cube, and aromatic bitters over a large ice block.",
+      "ingredients": [
+        "Bourbon Whisky",
+        "Angostura Bitter",
+        "Sugar Cube",
+        "Orange Peel"
+      ],
+      "badge": "Old But Gold",
+      "is_available": true
+    },
+    {
+      "id": "c06",
+      "name": "NEGRONI",
+      "name_vi": "Negroni",
+      "category": "cocktail",
+      "station": "bar",
+      "price": 190000,
+      "image": "assets/canva/c2d4608440211aa525baf5236b84862f.png",
+      "description_vi": "Sự cân bằng hoàn hảo giữa Gin thượng hạng Tanqueray No.10, Sweet Vermouth và vị đắng đặc trưng Campari.",
+      "description_en": "Perfect balance of Tanqueray No.10 Gin, Sweet Vermouth, and Campari with an orange twist.",
+      "ingredients": [
+        "Tanqueray No.10",
+        "Sweet Vermouth",
+        "Campari"
+      ],
+      "badge": "Old But Gold",
+      "is_available": true
+    },
+    {
+      "id": "c07",
+      "name": "WHISKY SOUR",
+      "name_vi": "Whisky Sour",
+      "category": "cocktail",
+      "station": "bar",
+      "price": 190000,
+      "image": "assets/canva/c2d4608440211aa525baf5236b84862f.png",
+      "description_vi": "Vị chua thanh mát mượt mà của whisky, chanh tươi và lớp bọt trứng trắng mịn màng.",
+      "description_en": "Silky smooth balance of whiskey, freshly squeezed lemon juice, sugar, and egg white foam.",
+      "ingredients": [
+        "Whisky",
+        "Fresh Lime/Lemon",
+        "Egg White Foam",
+        "Angostura"
+      ],
+      "badge": "Classic",
+      "is_available": true
+    },
+    {
+      "id": "c08",
+      "name": "MARGARITA",
+      "name_vi": "Margarita",
+      "category": "cocktail",
+      "station": "bar",
+      "price": 160000,
+      "image": "assets/canva/c2d4608440211aa525baf5236b84862f.png",
+      "description_vi": "Tequila Jose Cuervo Gold hòa cùng rượu mùi cam Cointreau và chanh tươi, viền muối tinh thể.",
+      "description_en": "Jose Cuervo Gold Tequila, Cointreau, fresh lime with a salted rim.",
+      "ingredients": [
+        "Jose Cuervo Gold Tequila",
+        "Cointreau",
+        "Lime",
+        "Salt Rim"
+      ],
+      "badge": "Classic",
+      "is_available": true
+    },
+    {
+      "id": "c09",
+      "name": "GIN TONIC",
+      "name_vi": "Gin Tonic",
+      "category": "cocktail",
+      "station": "bar",
+      "price": 140000,
+      "image": "assets/canva/c2d4608440211aa525baf5236b84862f.png",
+      "description_vi": "Sảng khoái thuần khiết với Gin cao cấp và Tonic sủi tăm mát lạnh kèm thảo mộc.",
+      "description_en": "Clean and crisp Gin King Robert (or upgrade to Tanqueray No.10) with premium tonic water.",
+      "ingredients": [
+        "Gin",
+        "Tonic Water",
+        "Lime & Botanicals"
+      ],
+      "badge": "Refreshing",
+      "is_available": true
+    },
+    {
+      "id": "m01",
+      "name": "ROSY LYCHEE FIZZ / LỆ CHI TƯƠI",
+      "name_vi": "Lệ Chi Tươi (Rosy Lychee)",
+      "category": "mocktail",
+      "station": "bar",
+      "price": 110000,
+      "image": "assets/canva/43860a0aa257d8030de10ae038834d29.png",
+      "description_vi": "Mùa hè trong ly: nhẹ, mát, đậm vị trái cây nhiệt đới với mận tự ngâm ủ, vị thanh ngọt dịu dàng mát lạnh bung xõa.",
+      "description_en": "Summer in a glass — light, tropical, featuring house-fermented plum for subtle tang and depth. Zero alcohol.",
+      "ingredients": [
+        "Mứt mận nhà làm",
+        "Trái vải tươi",
+        "Soda sủi bọt",
+        "Thảo mộc"
+      ],
+      "badge": "No Alcohol / Best Seller",
+      "is_available": true
+    },
+    {
+      "id": "m02",
+      "name": "COASTAL PLUM TEA",
+      "name_vi": "Trà Mận Vùng Duyên Hải",
+      "category": "mocktail",
+      "station": "bar",
+      "price": 90000,
+      "image": "assets/canva/fa60c9afe06e9b78f9ac52e6956e7f8b.png",
+      "description_vi": "Trà ô long, mứt mận nhà làm, nước mận lên men thủ công, syrup hạnh nhân. Phục vụ cùng viên kem mận gelato nhà làm.",
+      "description_en": "Oolong tea, homemade plum puree, crafted plum syrup, orgeat syrup, acid water. Served with homemade plum gelato.",
+      "ingredients": [
+        "Trà Ô Long",
+        "Mứt mận nhà làm",
+        "Nước mận lên men",
+        "Kem mận Gelato"
+      ],
+      "badge": "Gelato Inside",
+      "is_available": true
+    },
+    {
+      "id": "m03",
+      "name": "MANGO TANGO",
+      "name_vi": "Mango Tango",
+      "category": "mocktail",
+      "station": "bar",
+      "price": 90000,
+      "image": "assets/canva/44dba54837231daf4d104fed5ab0fab1.png",
+      "description_vi": "Mứt xoài, chanh, trà đào, soda dứa lên men nhà làm. Phục vụ cùng lớp kem mặn béo vị dứa thơm ngậy.",
+      "description_en": "Mango puree, lime juice, peach tea, homemade pineapple soda. Served with Salted Pineapple Cheese Foam.",
+      "ingredients": [
+        "Mứt xoài",
+        "Trà đào",
+        "Soda dứa lên men",
+        "Salted Pineapple Cheese Foam"
+      ],
+      "badge": "Cheese Foam",
+      "is_available": true
+    },
+    {
+      "id": "m04",
+      "name": "PASSIONATE CRUNCH",
+      "name_vi": "Passionate Crunch",
+      "category": "mocktail",
+      "station": "bar",
+      "price": 90000,
+      "image": "assets/canva/1d2c8302be6dec2f5ba02c96aa76ec7a.png",
+      "description_vi": "Mứt cóc nhà làm, syrup chanh dây thủ công, hương lá dứa thanh mát và chanh tươi.",
+      "description_en": "Ambarella puree, homemade passion fruit syrup, pandan syrup, fresh lime juice.",
+      "ingredients": [
+        "Mứt cóc nhà làm",
+        "Syrup chanh dây",
+        "Syrup lá dứa",
+        "Chanh"
+      ],
+      "badge": "Crisp & Sour",
+      "is_available": true
+    },
+    {
+      "id": "m05",
+      "name": "CHERRY POP",
+      "name_vi": "Cherry Pop",
+      "category": "mocktail",
+      "station": "bar",
+      "price": 90000,
+      "image": "assets/canva/fa81863be34caaa21f5c7d5957cc45ba.png",
+      "description_vi": "Mứt cherry đỏ mọng, trà ô long, chanh, syrup hạnh nhân. Phục vụ cùng lớp kem nhãn berry ngọt ngào.",
+      "description_en": "Cherry puree, oolong tea, lime juice, orgeat syrup. Served with Logan Berry Foam.",
+      "ingredients": [
+        "Mứt cherry",
+        "Trà ô long",
+        "Syrup hạnh nhân",
+        "Logan Berry Foam"
+      ],
+      "badge": "Sweet Foam",
+      "is_available": true
+    },
+    {
+      "id": "br01",
+      "name": "SUNNY PINT (HOPPY PILSNER ON TAP)",
+      "name_vi": "Bia Thủ Công Sunny Pint (Rót Vòi)",
+      "category": "beer",
+      "station": "bar",
+      "price": 65000,
+      "image": "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
+      "description_vi": "Pilsner thiên về hoa bia thơm nức mũi, đậm mùi hoa bia hơn. AVB 5.2% - IBU 16.",
+      "description_en": "Hoppy pilsner on tap, intensely aromatic hop character with crisp finish. AVB 5.2 - IBU 16.",
+      "ingredients": [
+        "Craft Beer on tap 330ml"
+      ],
+      "badge": "Craft On-Tap -10k",
+      "is_available": true
+    },
+    {
+      "id": "br02",
+      "name": "CRISPY BOI (CLASSIC PILSNER ON TAP)",
+      "name_vi": "Bia Thủ Công Crispy Boi (Rót Vòi)",
+      "category": "beer",
+      "station": "bar",
+      "price": 65000,
+      "image": "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
+      "description_vi": "Pilsner truyền thống, malt cân bằng mượt mà, giòn rụm cực kỳ dễ uống.",
+      "description_en": "Classic traditional pilsner on tap, balanced malt body, ultra crisp drinkability.",
+      "ingredients": [
+        "Craft Beer on tap 330ml"
+      ],
+      "badge": "Craft On-Tap -10k",
+      "is_available": true
+    },
+    {
+      "id": "br03",
+      "name": "KISO - TEPACHE DỨA LÊN MEN THỦ CÔNG",
+      "name_vi": "Kiso - Tepache Dứa Lên Men",
+      "category": "beer",
+      "station": "bar",
+      "price": 65000,
+      "image": "assets/canva/30423de40428a91247022ecb792313f8.png",
+      "description_vi": "Đồ uống truyền thống từ Mexico ủ từ vỏ dứa chín, đường thốt nốt và quế. Vị chua thanh, sủi tăm tự nhiên, cực kỳ giải nhiệt. (330ml/ly).",
+      "description_en": "Traditional Mexican fermented pineapple beverage crafted with ripe pineapple peel, piloncillo palm sugar, and cinnamon. Naturally effervescent.",
+      "ingredients": [
+        "Dứa tươi lên men thủ công",
+        "Đường thốt nốt",
+        "Quế thơm"
+      ],
+      "badge": "Special Ferment",
+      "is_available": true
+    },
+    {
+      "id": "br04",
+      "name": "HOEGAARDEN WITBIER",
+      "name_vi": "Bia Bỉ Hoegaarden Trắng",
+      "category": "beer",
+      "station": "bar",
+      "price": 65000,
+      "image": "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
+      "description_vi": "Bia lúa mì trứ danh của Bỉ với hương vỏ cam cay nhẹ và hạt ngò rí thơm dịu. (250ml - AVB 4.9%).",
+      "description_en": "Famous Belgian wheat beer with subtle notes of orange peel and coriander seed.",
+      "ingredients": [
+        "Chai 250ml"
+      ],
+      "badge": "Imported",
+      "is_available": true
+    },
+    {
+      "id": "br05",
+      "name": "CORONA EXTRA",
+      "name_vi": "Bia Chai Corona Extra",
+      "category": "beer",
+      "station": "bar",
+      "price": 85000,
+      "image": "assets/canva/e454dbd7c1f9f1ee1b8b8214133a4f4b.png",
+      "description_vi": "Bia chai nhập khẩu Mexico kinh điển, phục vụ kèm lát chanh vàng tươi mát lạnh. (300ml - AVB 4.6%).",
+      "description_en": "Classic Mexican lager served chilled with a fresh lime wedge.",
+      "ingredients": [
+        "Chai 300ml"
+      ],
+      "badge": "Imported",
+      "is_available": true
+    },
+    {
+      "id": "br06",
+      "name": "MICHELOB ULTRA LIGHT",
+      "name_vi": "Bia Michelob Ultra Light",
+      "category": "beer",
+      "station": "bar",
+      "price": 45000,
+      "image": "assets/canva/05940b5838075c36f20a1c039855c485.png",
+      "description_vi": "Bia nhẹ ít calo, êm dịu sảng khoái không lo nặng bụng. (250ml - AVB 4.2%).",
+      "description_en": "Low-carb, light and refreshing American beer.",
+      "ingredients": [
+        "Lon 250ml"
+      ],
+      "badge": "Low Carb",
+      "is_available": true
+    },
+    {
+      "id": "br07",
+      "name": "CRAFT CIDER (APPLE / BLACKBERRY)",
+      "name_vi": "Cider Táo / Mâm Xôi Đen",
+      "category": "beer",
+      "station": "bar",
+      "price": 75000,
+      "image": "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
+      "description_vi": "Nước táo và dâu mâm xôi đen lên men tự nhiên, chua ngọt sủi bọt thơm lừng mát rượi. (330ml/ly).",
+      "description_en": "Naturally fermented sparkling apple & blackberry craft cider.",
+      "ingredients": [
+        "Ly 330ml"
+      ],
+      "badge": "Fruity Cider",
+      "is_available": true
+    },
+    {
+      "id": "wn01",
+      "name": "CHATEAU DALAT TRADITION MERLOT",
+      "name_vi": "Vang Đỏ Chateau Dalat Merlot",
+      "category": "wine_shot",
+      "station": "bar",
+      "price": 85000,
+      "image": "assets/canva/89828c89d73528a34181b9d45f25f8a2.png",
+      "description_vi": "Vang đỏ đượm đà vị nho Merlot lên men gỗ sồi, nồng nàn quyến rũ giữa cái se lạnh Đà Lạt. (150ml/Ly).",
+      "description_en": "Oak-aged Dalat red wine made from Merlot grapes, smooth and rich (150ml glass).",
+      "ingredients": [
+        "Ly 150ml"
+      ],
+      "badge": "By The Glass",
+      "is_available": true
+    },
+    {
+      "id": "sh01",
+      "name": "SHOT TANQUERAY NO.10 GIN",
+      "name_vi": "Shot Rượu Tanqueray No.10 Gin",
+      "category": "wine_shot",
+      "station": "bar",
+      "price": 120000,
+      "image": "assets/canva/8ccdcdb3a2f18990e491a76889d7f24d.png",
+      "description_vi": "Shot Gin thảo mộc cam chanh tươi cao cấp nhất của Tanqueray (40ml).",
+      "description_en": "Premium small-batch London Dry Gin shot (40ml).",
+      "ingredients": [
+        "Shot 40ml"
+      ],
+      "badge": "Shot 40ml",
+      "is_available": true
+    },
+    {
+      "id": "sh02",
+      "name": "SHOT BLACK LABEL BLENDED WHISKY",
+      "name_vi": "Shot Rượu Black Label Whisky",
+      "category": "wine_shot",
+      "station": "bar",
+      "price": 120000,
+      "image": "assets/canva/8ccdcdb3a2f18990e491a76889d7f24d.png",
+      "description_vi": "Hương vị khói than bùn đặc trưng và gỗ sồi 12 năm tuổi của Johnnie Walker (40ml).",
+      "description_en": "Iconic 12-year-old blended Scotch whisky with rich smoke and oak notes (40ml).",
+      "ingredients": [
+        "Shot 40ml"
+      ],
+      "badge": "Shot 40ml",
+      "is_available": true
+    },
+    {
+      "id": "sh03",
+      "name": "SHOT JOSE CUERVO GOLD TEQUILA",
+      "name_vi": "Shot Rượu Jose Cuervo Gold",
+      "category": "wine_shot",
+      "station": "bar",
+      "price": 100000,
+      "image": "assets/canva/8ccdcdb3a2f18990e491a76889d7f24d.png",
+      "description_vi": "Tequila vàng cay nồng kèm chanh và muối khai tiệc (40ml).",
+      "description_en": "Classic Mexican gold tequila served with lime & salt (40ml).",
+      "ingredients": [
+        "Shot 40ml"
+      ],
+      "badge": "Shot 40ml",
+      "is_available": true
+    },
+    {
+      "id": "be01",
+      "name": "SUNNY PINT (PILSNER)",
+      "name_vi": "Bia Sunny Pint rót vòi",
+      "category": "beer",
+      "station": "bar",
+      "price": 65000,
+      "badge": "ABV 5.2%",
+      "description_vi": "Hoppy Pilsner thơm lừng hoa bia tươi, hậu vị đắng giòn thanh mát sảng khoái.",
+      "description_en": "Hoppy Pilsner with crisp bitterness and refreshing hop aroma.",
+      "is_available": true
+    },
+    {
+      "id": "be02",
+      "name": "CRISPY BOI (PILSNER)",
+      "name_vi": "Bia Crispy Boi rót vòi",
+      "category": "beer",
+      "station": "bar",
+      "price": 65000,
+      "badge": "Classic",
+      "description_vi": "Pilsner truyền thống, vị mạch nha cân bằng giòn tan rất dễ uống.",
+      "description_en": "Clean, crisp and classic pilsner for easy drinking.",
+      "is_available": true
+    },
+    {
+      "id": "be03",
+      "name": "APPLE CIDER",
+      "name_vi": "Apple Cider táo lên men",
+      "category": "beer",
+      "station": "bar",
+      "price": 75000,
+      "badge": "330ml",
+      "description_vi": "Nước táo lên men tự nhiên giòn ngọt, sủi tăm tươi mát dễ uống.",
+      "description_en": "Crisp and refreshing naturally fermented apple cider.",
+      "is_available": true
+    },
+    {
+      "id": "be04",
+      "name": "KISO - TEPACHE (DỨA)",
+      "name_vi": "Nước dứa lên men Tepache",
+      "category": "beer",
+      "station": "bar",
+      "price": 65000,
+      "badge": "Mexico Recipe",
+      "description_vi": "Ủ từ vỏ dứa chín, đường thốt nốt và quế theo công thức Mexico. Chua thanh sủi bọt cực đã.",
+      "description_en": "Fermented pineapple drink with raw cane sugar and aromatic cinnamon.",
+      "is_available": true
+    },
+    {
+      "id": "be05",
+      "name": "HOEGAARDEN WITBIER",
+      "name_vi": "Bia Hoegaarden Witbier",
+      "category": "beer",
+      "station": "bar",
+      "price": 45000,
+      "badge": "250ml",
+      "image": "assets/canva/ea093b2144fcd44344cfc2c4f1b8f149.png",
+      "description_vi": "Bia lúa mì Bỉ nồng nàn vị vỏ cam curacao và hạt ngò rí thơm dịu.",
+      "description_en": "Authentic Belgian white wheat beer with orange peel and coriander.",
+      "is_available": true
+    },
+    {
+      "id": "be06",
+      "name": "CORONA EXTRA",
+      "name_vi": "Bia Corona Extra",
+      "category": "beer",
+      "station": "bar",
+      "price": 85000,
+      "badge": "355ml",
+      "image": "assets/canva/32ce3196c738a55c6e125673a1c9709f.png",
+      "description_vi": "Bia Mexico kinh điển uống cùng lát chanh tươi mát lạnh sảng khoái.",
+      "description_en": "Iconic Mexican lager served ice-cold with fresh lime.",
+      "is_available": true
+    },
+    {
+      "id": "w_merlot",
+      "name": "CHATEAU DALAT MERLOT",
+      "name_vi": "Vang đỏ Chateau Dalat Merlot",
+      "category": "wine_shot",
+      "station": "bar",
+      "price": 85000,
+      "badge": "150ml Glass",
+      "image": "assets/canva/b39e83bcd3e781d72ac36b3fee710acb.png",
+      "description_vi": "Vang đỏ Đà Lạt êm dịu, hương dâu tằm chín và gỗ sồi phảng phất.",
+      "description_en": "Smooth Dalat red wine by the glass, notes of ripe berries and oak.",
+      "is_available": true
+    },
+    {
+      "id": "s01",
+      "name": "BLACK LABEL WHISKY",
+      "name_vi": "Shot Black Label Whisky",
+      "category": "wine_shot",
+      "station": "bar",
+      "price": 120000,
+      "badge": "40ml Shot",
+      "image": "assets/canva/8ccdcdb3a2f18990e491a76889d7f24d.png",
+      "description_vi": "Blended Scotch Whisky đậm vị khói than bùn, gia vị ấm và vani phong phú.",
+      "description_en": "40ml shot of iconic blended Scotch whisky with rich smokiness.",
+      "is_available": true
+    },
+    {
+      "id": "s02",
+      "name": "TANQUERAY NO. 10",
+      "name_vi": "Shot Tanqueray No. 10",
+      "category": "wine_shot",
+      "station": "bar",
+      "price": 120000,
+      "badge": "40ml Shot",
+      "description_vi": "London Dry Gin chưng cất cùng cam chanh bưởi tươi thanh mát, hậu vị mượt mà.",
+      "description_en": "40ml shot of premium London Dry Gin with fresh whole citrus.",
+      "is_available": true
+    }
+  ]
+}

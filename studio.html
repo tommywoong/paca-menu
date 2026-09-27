@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PACA Canvas Studio - Trình Thiết Kế Menu Sáng Tạo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paca: {
+                            navy: '#10234d',
+                            dark: '#0a1633',
+                            red: '#ce1126',
+                            crimson: '#940b05',
+                            cream: '#f6dcaf',
+                            warmBg: '#f8fafc',
+                            blueCallout: '#afd8f8'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        syne: ['Syne', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .retro-shadow-sm { box-shadow: 2px 2px 0px #10234d; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden font-sans text-xs">
+
+    <!-- Top Bar -->
+    <header class="bg-paca-dark border-b border-gray-800 px-4 py-2.5 flex items-center justify-between z-30 select-none">
+        <div class="flex items-center space-x-3">
+            <a href="admin.html" class="flex items-center space-x-2 text-gray-300 hover:text-white transition">
+                <span class="text-sm">←</span>
+                <span class="font-bold text-xs">Quản Trị</span>
+            </a>
+            <div class="h-4 w-px bg-gray-700"></div>
+            <div class="flex items-center space-x-1.5">
+                <span class="w-6 h-6 rounded bg-paca-cream text-paca-navy flex items-center justify-center font-serif font-black text-sm">P</span>
+                <span class="font-serif font-bold text-sm text-paca-cream tracking-wider">PACA STUDIO</span>
+                <span class="bg-amber-500/20 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-500/30">Canva Visual Engine</span>
+            </div>
+        </div>
+
+        <!-- Center Tools (Undo, Redo, Zoom, Delete) -->
+        <div class="flex items-center space-x-1.5 bg-gray-900 border border-gray-700 rounded-xl px-2 py-1">
+            <button onclick="engine.undo()" title="Hoàn tác (Undo)" class="p-1.5 hover:bg-gray-800 rounded text-gray-300 hover:text-white">↶</button>
+            <button onclick="engine.redo()" title="Làm lại (Redo)" class="p-1.5 hover:bg-gray-800 rounded text-gray-300 hover:text-white">↷</button>
+            <div class="h-3 w-px bg-gray-700 mx-1"></div>
+            <button onclick="changeZoom(-0.1)" title="Thu nhỏ" class="p-1.5 hover:bg-gray-800 rounded font-bold text-gray-300">-</button>
+            <span id="lblZoom" class="font-mono text-[11px] w-10 text-center text-gray-300">100%</span>
+            <button onclick="changeZoom(0.1)" title="Phóng to" class="p-1.5 hover:bg-gray-800 rounded font-bold text-gray-300">+</button>
+            <div class="h-3 w-px bg-gray-700 mx-1"></div>
+            <button onclick="engine.duplicateSelectedElement()" title="Nhân bản (Duplicate)" class="p-1.5 hover:bg-gray-800 rounded text-gray-300">📑</button>
+            <button onclick="engine.deleteSelectedElement()" title="Xóa phần tử" class="p-1.5 hover:bg-gray-800 rounded text-red-400 hover:text-red-300">🗑️</button>
+        </div>
+
+        <!-- Right Action (Preview & Publish) -->
+        <div class="flex items-center space-x-2">
+            <button onclick="openPreviewModal()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold px-3 py-1.5 rounded-xl border border-gray-600 flex items-center gap-1.5">
+                <span>👁️</span>
+                <span>Xem Trước</span>
+            </button>
+            <button onclick="saveDraft()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded-xl">
+                Lưu Nháp
+            </button>
+            <button onclick="publishLive()" class="bg-paca-crimson hover:bg-paca-red text-white font-bold px-4 py-1.5 rounded-xl flex items-center gap-1 shadow-lg shadow-red-900/40">
+                <span>🚀</span>
+                <span>XUẤT BẢN MENU</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="flex-1 flex overflow-hidden">
+
+        <!-- Left Tool Tabs Sidebar (Desktop) -->
+        <aside id="leftSidebar" class="hidden md:flex w-16 bg-gray-900 border-r border-gray-800 flex-col items-center py-3 space-y-4 select-none z-20">
+            <button onclick="switchToolTab('tabTpl')" class="tool-tab-btn flex flex-col items-center text-amber-400" data-tab="tabTpl">
+                <span class="text-xl">📁</span>
+                <span class="text-[9px] mt-1 font-semibold">Mẫu</span>
+            </button>
+            <button onclick="switchToolTab('tabImages')" class="tool-tab-btn flex flex-col items-center text-gray-400 hover:text-white" data-tab="tabImages">
+                <span class="text-xl">🖼️</span>
+                <span class="text-[9px] mt-1 font-semibold">Ảnh & Kho</span>
+            </button>
+            <button onclick="switchToolTab('tabText')" class="tool-tab-btn flex flex-col items-center text-gray-400 hover:text-white" data-tab="tabText">
+                <span class="text-xl">🔤</span>
+                <span class="text-[9px] mt-1 font-semibold">Văn Bản</span>
+            </button>
+            <button onclick="switchToolTab('tabShapes')" class="tool-tab-btn flex flex-col items-center text-gray-400 hover:text-white" data-tab="tabShapes">
+                <span class="text-xl">🔲</span>
+                <span class="text-[9px] mt-1 font-semibold">Hình Khối</span>
+            </button>
+            <button onclick="switchToolTab('tabProducts')" class="tool-tab-btn flex flex-col items-center text-gray-400 hover:text-white" data-tab="tabProducts">
+                <span class="text-xl">🍸</span>
+                <span class="text-[9px] mt-1 font-semibold">Gắn Món</span>
+            </button>
+            <button onclick="switchToolTab('tabUpload')" class="tool-tab-btn flex flex-col items-center text-gray-400 hover:text-white" data-tab="tabUpload">
+                <span class="text-xl">📤</span>
+                <span class="text-[9px] mt-1 font-semibold">Tải Lên</span>
+            </button>
+        </aside>
+
+        <!-- Tool Content Drawer (Desktop static drawer / Mobile bottom sheet) -->
+        <div id="toolDrawer" class="hidden md:flex w-full md:w-72 bg-gray-900 border-r border-gray-800 flex-col p-3 overflow-y-auto space-y-3 z-30 md:static fixed inset-x-0 bottom-12 md:bottom-auto max-h-[65vh] md:max-h-none rounded-t-3xl md:rounded-none border-t md:border-t-0 shadow-2xl">
+            <!-- Mobile Header with Close Button -->
+            <div class="flex md:hidden items-center justify-between pb-2 border-b border-gray-800">
+                <span class="font-serif font-bold text-sm text-paca-cream" id="mobileDrawerTitle">Công Cụ Thiết Kế</span>
+                <button onclick="closeMobileToolDrawer()" class="w-7 h-7 rounded-full bg-gray-800 text-gray-300 flex items-center justify-center font-bold">✕</button>
+            </div>
+
+            <!-- DRAWER: TEMPLATES -->
+            <div id="drawerTpl" class="drawer-content space-y-3">
+                <h3 class="font-bold text-sm text-paca-cream">Mẫu Thiết Kế Sẵn</h3>
+                <div onclick="loadDefaultTemplate()" class="bg-gray-800 hover:bg-gray-700 p-3 rounded-xl border border-gray-700 cursor-pointer space-y-1">
+                    <div class="font-bold text-xs text-white">⭐ PACA Original Poster (Canva)</div>
+                    <p class="text-[11px] text-gray-400">Thiết kế poster chuẩn gồm 5 trang: Trang bìa đỏ sẫm, Lời chào, Menu of the Week 2 cột, Bites & Footer.</p>
+                </div>
+                <div onclick="resetBlankTemplate()" class="bg-gray-800 hover:bg-gray-700 p-3 rounded-xl border border-gray-700 cursor-pointer space-y-1">
+                    <div class="font-bold text-xs text-white">📄 Tạo Trang Trắng Mới</div>
+                    <p class="text-[11px] text-gray-400">Bắt đầu thiết kế hoàn toàn tự do từ đầu.</p>
+                </div>
+            </div>
+
+            <!-- DRAWER: IMAGES & CANVA ASSETS -->
+            <div id="drawerImages" class="drawer-content hidden space-y-3">
+                <h3 class="font-bold text-sm text-paca-cream">Kho Ảnh & Sticker Gốc PACA</h3>
+                <p class="text-[11px] text-gray-400">96 tài nguyên gốc trích xuất từ Canva (ly cocktail, bia, đồ ăn, sticker sao `✦`). Chạm để thêm:</p>
+                <div id="canvaAssetsGrid" class="grid grid-cols-3 gap-2 max-h-[70vh] overflow-y-auto pr-1">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+
+            <!-- DRAWER: TEXT -->
+            <div id="drawerText" class="drawer-content hidden space-y-3">
+                <h3 class="font-bold text-sm text-paca-cream">Thêm Văn Bản</h3>
+                <button onclick="addText('heading')" class="w-full bg-gray-800 hover:bg-gray-700 p-3 rounded-xl border border-gray-700 text-left">
+                    <span class="text-lg font-black font-serif block text-paca-cream">Thêm Tiêu Đề Lớn</span>
+                    <span class="text-[10px] text-gray-400">Dành cho tên mục: MENU OF THE WEEK, BITES...</span>
+                </button>
+                <button onclick="addText('subheading')" class="w-full bg-gray-800 hover:bg-gray-700 p-2.5 rounded-xl border border-gray-700 text-left">
+                    <span class="text-sm font-bold block text-white">Thêm Tiêu Đề Phụ</span>
+                    <span class="text-[10px] text-gray-400">Dành cho tên món hoặc ghi chú nhóm</span>
+                </button>
+                <button onclick="addText('body')" class="w-full bg-gray-800 hover:bg-gray-700 p-2 rounded-xl border border-gray-700 text-left">
+                    <span class="text-xs block text-gray-200">Thêm đoạn văn bản thường</span>
+                    <span class="text-[10px] text-gray-400">Mô tả món, thành phần nguyên liệu</span>
+                </button>
+                <button onclick="addText('star')" class="w-full bg-gray-800 hover:bg-gray-700 p-2 rounded-xl border border-gray-700 text-left flex items-center justify-between">
+                    <span class="text-sm font-bold text-amber-300">✦ Sticker Ngôi Sao Lấp Lánh</span>
+                    <span class="text-base">✦</span>
+                </button>
+            </div>
+
+            <!-- DRAWER: SHAPES -->
+            <div id="drawerShapes" class="drawer-content hidden space-y-3">
+                <h3 class="font-bold text-sm text-paca-cream">Hình Khối & Badge Retro</h3>
+                <button onclick="addShape('wine_card')" class="w-full bg-paca-crimson p-3 rounded-xl border border-paca-navy text-left retro-shadow-sm">
+                    <span class="font-bold text-white block">Thẻ Chữ Nhật Đỏ Rượu</span>
+                    <span class="text-[10px] text-red-200">#940b05 - Nền thẻ cocktail</span>
+                </button>
+                <button onclick="addShape('navy_card')" class="w-full bg-paca-navy p-3 rounded-xl border border-white/20 text-left retro-shadow-sm">
+                    <span class="font-bold text-white block">Thẻ Chữ Nhật Xanh Navy</span>
+                    <span class="text-[10px] text-blue-200">#10234d - Nền thẻ cocktail luân phiên</span>
+                </button>
+                <button onclick="addShape('blue_callout')" class="w-full bg-paca-blueCallout text-paca-navy p-3 rounded-xl border-2 border-paca-navy text-left font-bold" style="box-shadow: 3px 3px 0px #10234d;">
+                    Khối Thông Báo Xanh Dương
+                </button>
+            </div>
+
+            <!-- DRAWER: PRODUCTS BINDING -->
+            <div id="drawerProducts" class="drawer-content hidden space-y-3">
+                <h3 class="font-bold text-sm text-paca-cream">Gắn Món Bán Trực Tiếp</h3>
+                <p class="text-[11px] text-gray-400">Bấm vào món để chèn ngay thẻ món kèm liên kết `productId` và Giá Động vào trang:</p>
+                <div id="studioProductCatFilters" class="flex flex-wrap gap-1 pb-1">
+                    <!-- Populated by JS -->
+                </div>
+                <div id="productsDrawerList" class="space-y-2 max-h-[62vh] overflow-y-auto pr-1">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+
+            <!-- DRAWER: UPLOAD -->
+            <div id="drawerUpload" class="drawer-content hidden space-y-3">
+                <h3 class="font-bold text-sm text-paca-cream">Tải Lên Hình Ảnh Của Bạn</h3>
+                <label class="w-full border-2 border-dashed border-gray-600 hover:border-amber-400 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer text-center">
+                    <span class="text-3xl mb-1">📸</span>
+                    <span class="font-bold text-xs text-white">Chọn ảnh từ thiết bị</span>
+                    <span class="text-[10px] text-gray-400 mt-1">PNG, JPG, SVG</span>
+                    <input type="file" id="fileUploadInput" accept="image/*" onchange="handleImageUpload(event)" class="hidden">
+                </label>
+            </div>
+        </div>
+
+        <!-- Canvas Workspace Area -->
+        <main class="flex-1 bg-gray-950 overflow-auto flex flex-col items-center p-6 relative">
+            <!-- Page Selector Bar -->
+            <div class="mb-4 flex items-center space-x-2 bg-gray-900 border border-gray-800 rounded-2xl p-1.5 z-10 select-none">
+                <span class="text-[11px] font-bold text-gray-400 px-2">Trang:</span>
+                <div id="pageSelectorTabs" class="flex space-x-1">
+                    <!-- Rendered by JS -->
+                </div>
+                <button onclick="addNewPage()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs px-2.5 py-1 rounded-xl">
+                    + Thêm trang
+                </button>
+            </div>
+
+            <!-- The Interactive Canvas Container -->
+            <div id="canvasViewport" class="flex-1 flex justify-center pb-20">
+                <!-- Rendered by PacaCanvasEngine -->
+            </div>
+        </main>
+
+        <!-- Right Inspector Sidebar (Desktop static sidebar / Mobile bottom sheet) -->
+        <aside id="inspectorAside" class="hidden md:flex w-full md:w-72 bg-gray-900 border-l border-gray-800 p-3 flex-col overflow-y-auto space-y-3 select-none z-30 md:static fixed inset-x-0 bottom-12 md:bottom-auto max-h-[70vh] md:max-h-none rounded-t-3xl md:rounded-none border-t md:border-t-0 shadow-2xl">
+            <!-- Mobile Header with Close Button -->
+            <div class="flex md:hidden items-center justify-between pb-2 border-b border-gray-800">
+                <span class="font-serif font-bold text-sm text-paca-cream">Thuộc Tính Đối Tượng</span>
+                <button onclick="closeMobileInspector()" class="w-7 h-7 rounded-full bg-gray-800 text-gray-300 flex items-center justify-center font-bold">✕</button>
+            </div>
+
+            <h3 class="hidden md:block font-bold text-sm text-paca-cream border-b border-gray-800 pb-2">Thuộc Tính Đối Tượng</h3>
+
+            <div id="noSelectionMsg" class="text-gray-500 italic text-center py-8">
+                Chạm vào một đối tượng trên canvas để chỉnh sửa thuộc tính hoặc gắn món bán.
+            </div>
+
+            <div id="inspectorForm" class="hidden space-y-3 text-xs">
+                <!-- Common: Position & Size -->
+                <div class="bg-gray-800/60 p-2.5 rounded-xl border border-gray-700/60 space-y-2">
+                    <div class="font-bold text-gray-300">Toạ độ & Kích thước:</div>
+                    <div class="grid grid-cols-2 gap-2 text-[11px]">
+                        <div>W: <span id="propW" class="font-mono text-white">0</span> px</div>
+                        <div>H: <span id="propH" class="font-mono text-white">0</span> px</div>
+                        <div>X: <span id="propX" class="font-mono text-white">0</span> px</div>
+                        <div>Y: <span id="propY" class="font-mono text-white">0</span> px</div>
+                    </div>
+                </div>
+
+                <!-- Text Specific -->
+                <div id="textInspectorBox" class="space-y-2">
+                    <div>
+                        <label class="font-bold text-gray-400 block mb-1">Nội dung chữ:</label>
+                        <textarea id="propTextContent" rows="3" oninput="updatePropText()" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-1.5 text-white"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="font-bold text-gray-400 block mb-1">Cỡ chữ:</label>
+                            <input type="number" id="propFontSize" onchange="updatePropFontSize()" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-2 py-1 text-white">
+                        </div>
+                        <div>
+                            <label class="font-bold text-gray-400 block mb-1">Màu chữ:</label>
+                            <input type="color" id="propTextColor" onchange="updatePropTextColor()" class="w-full h-8 bg-gray-800 border border-gray-700 rounded-xl p-1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shape Specific -->
+                <div id="shapeInspectorBox" class="space-y-2">
+                    <div>
+                        <label class="font-bold text-gray-400 block mb-1">Màu nền:</label>
+                        <input type="color" id="propShapeFill" onchange="updatePropShapeFill()" class="w-full h-8 bg-gray-800 border border-gray-700 rounded-xl p-1">
+                    </div>
+                </div>
+
+                <!-- PRODUCT BINDING (SMART PICKER INTEGRATED) -->
+                <div class="bg-amber-950/40 border border-amber-500/40 rounded-xl p-3 space-y-2">
+                    <div class="flex items-center space-x-1.5 text-amber-300 font-bold">
+                        <span>🍸</span>
+                        <span>LIÊN KẾT MÓN BÁN</span>
+                    </div>
+                    <p class="text-[10px] text-gray-300">Gắn phần tử này với món trong danh mục. Giá tiền sẽ tự động cập nhật khi bạn đổi giá trong thực đơn.</p>
+                    
+                    <button onclick="openSmartProductPicker()" class="w-full bg-amber-400 hover:bg-amber-300 text-paca-navy text-xs font-black py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition">
+                        <span>🔍</span>
+                        <span>CHỌN MÓN TỪ THỰC ĐƠN</span>
+                    </button>
+
+                    <div class="pt-1">
+                        <label class="font-bold text-gray-400 block mb-1">Hoặc chọn nhanh từ danh sách:</label>
+                        <select id="propBindingSelect" onchange="updatePropBinding()" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-1.5 text-white font-bold text-xs">
+                            <option value="">-- Không gắn món --</option>
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+
+                    <div id="boundProductInfo" class="hidden bg-gray-900/80 p-2 rounded-lg border border-amber-500/20 text-[11px] space-y-1">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Giá hiện hành:</span>
+                            <span id="boundProductPrice" class="font-bold text-amber-400">0 đ</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Trạng thái:</span>
+                            <span id="boundProductStatus" class="font-bold text-emerald-400">Còn món</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layer order -->
+                <div class="pt-2 border-t border-gray-800 flex gap-1">
+                    <button onclick="moveLayer(1)" class="flex-1 bg-gray-800 hover:bg-gray-700 p-2 rounded-xl text-center font-bold">
+                        Lên trước ▲
+                    </button>
+                    <button onclick="moveLayer(-1)" class="flex-1 bg-gray-800 hover:bg-gray-700 p-2 rounded-xl text-center font-bold">
+                        Xuống sau ▼
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Bottom Mobile Toolbar for Studio (Visible only on < md) -->
+    <nav id="mobileStudioBar" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-gray-900 border-t border-gray-800 flex items-center justify-around py-1.5 px-2 select-none shadow-xl">
+        <button onclick="openMobileToolDrawer('tabTpl')" class="flex flex-col items-center p-1 text-gray-400 hover:text-amber-400">
+            <span class="text-lg">📁</span>
+            <span class="text-[9px] mt-0.5">Mẫu</span>
+        </button>
+        <button onclick="openMobileToolDrawer('tabImages')" class="flex flex-col items-center p-1 text-gray-400 hover:text-amber-400">
+            <span class="text-lg">🖼️</span>
+            <span class="text-[9px] mt-0.5">Kho Ảnh</span>
+        </button>
+        <button onclick="openMobileToolDrawer('tabText')" class="flex flex-col items-center p-1 text-gray-400 hover:text-amber-400">
+            <span class="text-lg">🔤</span>
+            <span class="text-[9px] mt-0.5">Chữ</span>
+        </button>
+        <button onclick="openMobileToolDrawer('tabShapes')" class="flex flex-col items-center p-1 text-gray-400 hover:text-amber-400">
+            <span class="text-lg">🔲</span>
+            <span class="text-[9px] mt-0.5">Khối</span>
+        </button>
+        <button onclick="openSmartProductPicker()" class="flex flex-col items-center p-1 text-amber-300 hover:text-amber-200">
+            <span class="text-lg">🍸</span>
+            <span class="text-[9px] mt-0.5 font-bold">Gắn Món</span>
+        </button>
+        <button onclick="toggleMobileInspector()" id="btnMobileInspector" class="flex flex-col items-center p-1 text-gray-400 hover:text-amber-400">
+            <span class="text-lg">⚙️</span>
+            <span class="text-[9px] mt-0.5">Thuộc Tính</span>
+        </button>
+    </nav>
+
+    <!-- SMART PRODUCT PICKER MODAL -->
+    <div id="smartProductPickerModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-6">
+        <div class="bg-gray-900 text-white w-full max-w-2xl rounded-2xl border border-gray-700 max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <!-- Modal Header -->
+            <div class="p-3.5 bg-gray-800 border-b border-gray-700 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl">🍸</span>
+                    <div>
+                        <h3 class="font-serif font-black text-sm text-paca-cream tracking-wide uppercase">CHỌN MÓN LIÊN KẾT (SMART PRODUCT PICKER)</h3>
+                        <p class="text-[11px] text-gray-400">Gắn món từ thực đơn PACA vào canvas để hiển thị giá động và nhận đơn tức thì</p>
+                    </div>
+                </div>
+                <button onclick="closeSmartProductPicker()" class="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 text-white flex items-center justify-center font-bold text-sm">✕</button>
+            </div>
+
+            <!-- Search & Filters -->
+            <div class="p-3 border-b border-gray-800 space-y-2 bg-gray-950">
+                <div class="relative">
+                    <input type="text" id="pickerSearchInput" placeholder="Tìm tên món, cocktail, mã món, nguyên liệu..." oninput="filterPickerProducts()" class="w-full bg-gray-900 border border-gray-700 rounded-xl py-2 pl-9 pr-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-400">
+                    <span class="absolute left-3 top-2 text-gray-400">🔍</span>
+                </div>
+                <div class="flex space-x-1 overflow-x-auto hide-scrollbar pb-1 text-[11px] font-bold" id="pickerCategoryTabs">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Products Grid / List -->
+            <div class="p-3 overflow-y-auto flex-1 max-h-[50vh] grid grid-cols-1 sm:grid-cols-2 gap-2" id="pickerProductsGrid">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Footer -->
+            <div class="p-3 bg-gray-800 border-t border-gray-800 flex items-center justify-between text-xs">
+                <span class="text-gray-400" id="pickerSelectedCount">Chạm vào món để gắn kết ngay</span>
+                <div class="flex gap-2">
+                    <button onclick="unbindCurrentElementProduct()" class="bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold px-3 py-1.5 rounded-xl border border-gray-600">
+                        Bỏ Gắn Món
+                    </button>
+                    <button onclick="closeSmartProductPicker()" class="bg-paca-crimson text-white font-bold px-4 py-1.5 rounded-xl hover:bg-paca-red">
+                        Đóng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREVIEW MODAL (DESKTOP & IPHONE SIMULATOR) -->
+    <div id="previewModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex flex-col">
+        <div class="bg-gray-900 border-b border-gray-800 p-3 flex items-center justify-between text-white px-6">
+            <div class="flex items-center space-x-3">
+                <span class="font-bold text-sm text-paca-cream">Xem Trước Menu Sáng Tạo</span>
+                <div class="flex bg-gray-800 rounded-xl p-0.5 border border-gray-700 text-xs">
+                    <button onclick="setPreviewDevice('desktop')" id="btnPrevDesk" class="px-3 py-1 rounded-lg bg-paca-navy text-white font-bold">Desktop</button>
+                    <button onclick="setPreviewDevice('mobile')" id="btnPrevMob" class="px-3 py-1 rounded-lg text-gray-400 font-bold">iPhone / Mobile</button>
+                </div>
+            </div>
+            <button onclick="closePreviewModal()" class="w-8 h-8 rounded-full bg-gray-800 text-white font-bold flex items-center justify-center">✕</button>
+        </div>
+        <div class="flex-1 overflow-auto flex justify-center p-4 bg-gray-950">
+            <div id="previewContainer" class="transition-all duration-300">
+                <!-- Scaled Canvas Output rendered by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/paca_core.js"></script>
+    <script src="js/paca_canvas.js"></script>
+    <script>
+        let engine = null;
+        let canvaManifest = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await window.paca.init();
+
+            // Load Canva manifest
+            try {
+                const res = await fetch('assets/canva_manifest.json');
+                canvaManifest = await res.json();
+                renderCanvaAssetsGrid();
+            } catch (e) {
+                console.warn("Failed to load manifest", e);
+            }
+
+            // Init Canvas Engine in Edit Mode
+            engine = new PacaCanvasEngine({
+                mode: 'edit',
+                container: document.getElementById('canvasViewport'),
+                onSelectionChange: (el) => updateInspector(el),
+                onDesignChange: () => updatePageTabs()
+            });
+
+            updatePageTabs();
+            populateProductBindingsSelect();
+            renderProductsDrawer();
+
+            // Direct tester for Smart Product Picker
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('modal') === 'picker') {
+                openSmartProductPicker();
+            }
+        });
+
+        // --- TOOL TABS ---
+        function switchToolTab(tabId) {
+            document.querySelectorAll('.drawer-content').forEach(d => d.classList.add('hidden'));
+            document.querySelectorAll('.tool-tab-btn').forEach(b => {
+                b.classList.remove('text-amber-400');
+                b.classList.add('text-gray-400');
+            });
+
+            const activeBtn = document.querySelector(`.tool-tab-btn[data-tab="${tabId}"]`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-gray-400');
+                activeBtn.classList.add('text-amber-400');
+            }
+
+            if (tabId === 'tabTpl') document.getElementById('drawerTpl').classList.remove('hidden');
+            if (tabId === 'tabImages') document.getElementById('drawerImages').classList.remove('hidden');
+            if (tabId === 'tabText') document.getElementById('drawerText').classList.remove('hidden');
+            if (tabId === 'tabShapes') document.getElementById('drawerShapes').classList.remove('hidden');
+            if (tabId === 'tabProducts') document.getElementById('drawerProducts').classList.remove('hidden');
+            if (tabId === 'tabUpload') document.getElementById('drawerUpload').classList.remove('hidden');
+        }
+
+        // --- PAGE TABS ---
+        function updatePageTabs() {
+            const container = document.getElementById('pageSelectorTabs');
+            if (!engine || !engine.design) return;
+            const pages = engine.design.pages || [];
+
+            container.innerHTML = pages.map((p, idx) => `
+                <button onclick="selectPage('${p.id}')" class="px-3 py-1 rounded-xl text-xs font-bold transition ${engine.activePageId === p.id ? 'bg-paca-navy text-paca-cream border border-paca-cream/30' : 'bg-gray-800 text-gray-400 hover:text-white'}">
+                    ${idx + 1}. ${p.title || 'Trang ' + (idx + 1)}
+                </button>
+            `).join('');
+        }
+
+        function selectPage(pageId) {
+            engine.activePageId = pageId;
+            engine.selectedElementId = null;
+            updatePageTabs();
+            engine.render();
+            updateInspector(null);
+        }
+
+        function addNewPage() {
+            const count = (engine.design.pages || []).length + 1;
+            const newPage = {
+                id: 'page_' + Date.now().toString(36),
+                title: `Trang ${count}`,
+                width: 800,
+                height: 1200,
+                bg: "#f6dcaf",
+                elements: []
+            };
+            engine.recordState();
+            engine.design.pages.push(newPage);
+            selectPage(newPage.id);
+            engine.saveDraft();
+        }
+
+        // --- CANVA ASSETS GRID ---
+        function renderCanvaAssetsGrid() {
+            const grid = document.getElementById('canvaAssetsGrid');
+            if (!canvaManifest) return;
+
+            const allAssets = [
+                ...(canvaManifest.stickers_decor || []),
+                ...(canvaManifest.cocktails || []),
+                ...(canvaManifest.food || []),
+                ...(canvaManifest.icons_svg || [])
+            ];
+
+            grid.innerHTML = allAssets.slice(0, 60).map(a => `
+                <div onclick="addCanvaAsset('${a.path}')" class="bg-gray-800 hover:bg-gray-700 p-1.5 rounded-xl border border-gray-700 flex items-center justify-center h-16 cursor-pointer hover:scale-105 active:scale-95 transition">
+                    <img src="${a.path}" class="max-h-full max-w-full object-contain pointer-events-none">
+                </div>
+            `).join('');
+        }
+
+        function addCanvaAsset(path) {
+            engine.addElement('image', { src: path, fit: 'contain' });
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                engine.addElement('image', { src: event.target.result, fit: 'contain' });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- ADD ELEMENTS ---
+        function addText(kind) {
+            if (kind === 'heading') {
+                engine.addElement('text', { text: "TIÊU ĐỀ LỚN", font: "Playfair Display", size: 48, weight: "900", color: "#ce1126", align: "center" });
+            } else if (kind === 'subheading') {
+                engine.addElement('text', { text: "Tiêu Đề Phụ / Nhóm Món", size: 22, weight: "700", color: "#10234d", align: "center" });
+            } else if (kind === 'body') {
+                engine.addElement('text', { text: "Mô tả hương vị hoặc thành phần nguyên liệu...", size: 14, weight: "400", color: "#333333", align: "left" });
+            } else if (kind === 'star') {
+                engine.addElement('text', { text: "✦", size: 36, weight: "900", color: "#ce1126" });
+            }
+        }
+
+        function addShape(kind) {
+            if (kind === 'wine_card') {
+                engine.addElement('shape', { fill: '#940b05', border: '2px solid #10234d', radius: 4, shadow: '4px 4px 0px #10234d' });
+            } else if (kind === 'navy_card') {
+                engine.addElement('shape', { fill: '#10234d', border: '2px solid #10234d', radius: 4, shadow: '4px 4px 0px #10234d' });
+            } else if (kind === 'blue_callout') {
+                engine.addElement('shape', { fill: '#afd8f8', border: '2px solid #10234d', radius: 16, shadow: '4px 4px 0px #10234d' });
+            }
+        }
+
+        // --- PRODUCTS DRAWER ---
+        let currentStudioProductCat = 'all';
+
+        function renderProductsDrawer(targetCatId = null) {
+            if (targetCatId !== null) currentStudioProductCat = targetCatId;
+            const filterContainer = document.getElementById('studioProductCatFilters');
+            const list = document.getElementById('productsDrawerList');
+            const items = window.paca?.menu?.items || [];
+            const categories = window.paca?.getCategories ? window.paca.getCategories(true) : [];
+
+            if (filterContainer) {
+                let fHtml = `
+                    <button onclick="renderProductsDrawer('all')" class="text-[10px] px-2 py-0.5 rounded-lg border transition ${currentStudioProductCat === 'all' ? 'bg-amber-400 text-gray-900 border-amber-400 font-bold' : 'bg-gray-800 text-gray-300 border-gray-700 hover:border-gray-500'}">
+                        Tất cả
+                    </button>
+                `;
+                categories.forEach(c => {
+                    const isSel = currentStudioProductCat === c.id;
+                    fHtml += `
+                        <button onclick="renderProductsDrawer('${c.id}')" class="text-[10px] px-2 py-0.5 rounded-lg border transition ${isSel ? 'bg-amber-400 text-gray-900 border-amber-400 font-bold' : 'bg-gray-800 text-gray-300 border-gray-700 hover:border-gray-500'}">
+                            ${c.icon || ''} ${c.name_vi || c.name}
+                        </button>
+                    `;
+                });
+                filterContainer.innerHTML = fHtml;
+            }
+
+            const filteredItems = currentStudioProductCat === 'all' 
+                ? items 
+                : items.filter(i => i.category === currentStudioProductCat);
+
+            if (filteredItems.length === 0) {
+                list.innerHTML = `<div class="text-xs text-gray-500 italic p-3 text-center">Không có món nào trong danh mục này</div>`;
+                return;
+            }
+
+            list.innerHTML = filteredItems.map(it => `
+                <div onclick="addProductCard('${it.id}')" class="bg-gray-800 hover:bg-gray-700 p-2 rounded-xl border border-gray-700 cursor-pointer flex items-center justify-between">
+                    <div>
+                        <div class="font-serif font-bold text-xs text-white">${it.name}</div>
+                        <div class="text-[10px] text-gray-400">${it.name_vi || ''}</div>
+                    </div>
+                    <span class="font-bold text-amber-400 text-xs">${window.paca.formatMoney(it.price)}</span>
+                </div>
+            `).join('');
+        }
+
+        function addProductCard(productId) {
+            const item = window.paca?.menu?.items.find(i => i.id === productId);
+            if (!item) return;
+
+            engine.addElement('product_card', {
+                bg: '#940b05',
+                color: '#ffffff',
+                border: '2px solid #10234d',
+                shadow: '4px 4px 0px #10234d',
+                title: item.name,
+                price: Math.round(item.price / 1000),
+                badge: item.badge || '',
+                ingredients: (item.ingredients || []).join(' • '),
+                desc_vi: item.description_vi || ''
+            }, { productId, action: 'open_modal' });
+        }
+
+        function populateProductBindingsSelect() {
+            const select = document.getElementById('propBindingSelect');
+            const items = window.paca?.menu?.items || [];
+
+            select.innerHTML = '<option value="">-- Không gắn món --</option>' + items.map(i => 
+                `<option value="${i.id}">${i.name} (${window.paca.formatMoney(i.price)})</option>`
+            ).join('');
+        }
+
+        // --- INSPECTOR ---
+        function updateInspector(el) {
+            const noSel = document.getElementById('noSelectionMsg');
+            const form = document.getElementById('inspectorForm');
+
+            if (!el) {
+                noSel.classList.remove('hidden');
+                form.classList.add('hidden');
+                return;
+            }
+
+            noSel.classList.add('hidden');
+            form.classList.remove('hidden');
+
+            // Coordinates
+            document.getElementById('propW').innerText = el.w;
+            document.getElementById('propH').innerText = el.h;
+            document.getElementById('propX').innerText = el.x;
+            document.getElementById('propY').innerText = el.y;
+
+            // Text
+            const textBox = document.getElementById('textInspectorBox');
+            if (el.type === 'text') {
+                textBox.classList.remove('hidden');
+                document.getElementById('propTextContent').value = el.props.text || '';
+                document.getElementById('propFontSize').value = el.props.size || 16;
+                document.getElementById('propTextColor').value = el.props.color || '#000000';
+            } else {
+                textBox.classList.add('hidden');
+            }
+
+            // Shape
+            const shapeBox = document.getElementById('shapeInspectorBox');
+            if (el.type === 'shape' || el.type === 'product_card') {
+                shapeBox.classList.remove('hidden');
+                document.getElementById('propShapeFill').value = el.props.fill || el.props.bg || '#940b05';
+            } else {
+                shapeBox.classList.add('hidden');
+            }
+
+            // Binding
+            const bindSelect = document.getElementById('propBindingSelect');
+            bindSelect.value = el.binding?.productId || '';
+            updateBoundProductInfo(el.binding?.productId);
+        }
+
+        function updateBoundProductInfo(productId) {
+            const infoBox = document.getElementById('boundProductInfo');
+            if (!productId) {
+                infoBox.classList.add('hidden');
+                return;
+            }
+            const item = window.paca?.menu?.items.find(i => i.id === productId);
+            if (item) {
+                infoBox.classList.remove('hidden');
+                document.getElementById('boundProductPrice').innerText = window.paca.formatMoney(item.price);
+                const statusEl = document.getElementById('boundProductStatus');
+                if (item.is_available === false) {
+                    statusEl.innerText = 'Hết món';
+                    statusEl.className = 'font-bold text-red-400';
+                } else {
+                    statusEl.innerText = 'Còn món';
+                    statusEl.className = 'font-bold text-emerald-400';
+                }
+            } else {
+                infoBox.classList.add('hidden');
+            }
+        }
+
+        function updatePropText() {
+            const val = document.getElementById('propTextContent').value;
+            engine.updateSelectedProps({ text: val });
+        }
+
+        function updatePropFontSize() {
+            const val = parseInt(document.getElementById('propFontSize').value) || 16;
+            engine.updateSelectedProps({ size: val });
+        }
+
+        function updatePropTextColor() {
+            const val = document.getElementById('propTextColor').value;
+            engine.updateSelectedProps({ color: val });
+        }
+
+        function updatePropShapeFill() {
+            const val = document.getElementById('propShapeFill').value;
+            const el = engine.getSelectedElement();
+            if (el.type === 'product_card') {
+                engine.updateSelectedProps({ bg: val });
+            } else {
+                engine.updateSelectedProps({ fill: val });
+            }
+        }
+
+        function updatePropBinding() {
+            const prodId = document.getElementById('propBindingSelect').value;
+            engine.bindSelectedToProduct(prodId);
+            updateBoundProductInfo(prodId);
+        }
+
+        function moveLayer(delta) {
+            const el = engine.getSelectedElement();
+            if (!el) return;
+            el.zIndex = Math.max(1, (el.zIndex || 1) + delta);
+            engine.render();
+            engine.saveDraft();
+        }
+
+        function changeZoom(delta) {
+            const newZoom = Math.round((engine.zoom + delta) * 10) / 10;
+            engine.setZoom(newZoom);
+            document.getElementById('lblZoom').innerText = `${Math.round(engine.zoom * 100)}%`;
+        }
+
+        async function loadDefaultTemplate() {
+            if (confirm("Nạp lại mẫu thiết kế gốc PACA? Các thay đổi chưa lưu có thể bị ghi đè.")) {
+                const res = await fetch('data/default_canvas_template.json');
+                engine.design = await res.json();
+                engine.activePageId = engine.design.pages[0].id;
+                engine.render();
+                updatePageTabs();
+                engine.saveDraft();
+            }
+        }
+
+        function resetBlankTemplate() {
+            if (confirm("Tạo mới thiết kế trắng?")) {
+                engine.design = {
+                    version: "1.0",
+                    title: "PACA Blank Canvas",
+                    baseWidth: 800,
+                    pages: [
+                        { id: "page_1", title: "Trang 1", width: 800, height: 1200, bg: "#f6dcaf", elements: [] }
+                    ]
+                };
+                engine.activePageId = "page_1";
+                engine.render();
+                updatePageTabs();
+                engine.saveDraft();
+            }
+        }
+
+        function saveDraft() {
+            engine.saveDraft();
+            alert("✓ Đã lưu bản nháp thiết kế thành công!");
+        }
+
+        function publishLive() {
+            engine.publish();
+            alert("🚀 XUẤT BẢN THÀNH CÔNG! Menu sáng tạo đã được áp dụng trực tiếp cho khách quét QR.");
+        }
+
+        // --- PREVIEW MODAL ---
+        let previewEngine = null;
+        function openPreviewModal() {
+            const modal = document.getElementById('previewModal');
+            const container = document.getElementById('previewContainer');
+            modal.classList.remove('hidden');
+
+            previewEngine = new PacaCanvasEngine({
+                mode: 'view',
+                container: container
+            });
+            previewEngine.design = JSON.parse(JSON.stringify(engine.design));
+            setPreviewDevice('desktop');
+        }
+
+        function closePreviewModal() {
+            document.getElementById('previewModal').classList.add('hidden');
+        }
+
+        function setPreviewDevice(device) {
+            const container = document.getElementById('previewContainer');
+            const btnDesk = document.getElementById('btnPrevDesk');
+            const btnMob = document.getElementById('btnPrevMob');
+
+            if (device === 'mobile') {
+                container.style.width = '390px'; // iPhone 14/15 width
+                container.style.maxWidth = '390px';
+                btnMob.className = 'px-3 py-1 rounded-lg bg-paca-navy text-white font-bold';
+                btnDesk.className = 'px-3 py-1 rounded-lg text-gray-400 font-bold';
+            } else {
+                container.style.width = '800px';
+                container.style.maxWidth = '800px';
+                btnDesk.className = 'px-3 py-1 rounded-lg bg-paca-navy text-white font-bold';
+                btnMob.className = 'px-3 py-1 rounded-lg text-gray-400 font-bold';
+            }
+            if (previewEngine) previewEngine.render();
+        }
+
+        // --- MOBILE DRAWER & INSPECTOR CONTROLS ---
+        function openMobileToolDrawer(tabId) {
+            switchToolTab(tabId);
+            const drawer = document.getElementById('toolDrawer');
+            drawer.classList.remove('hidden');
+
+            const titleMap = {
+                tabTpl: 'Mẫu Thiết Kế Sẵn',
+                tabImages: 'Kho Ảnh & Sticker Gốc',
+                tabText: 'Thêm Văn Bản',
+                tabShapes: 'Hình Khối & Thẻ Retro',
+                tabProducts: 'Món Bán Trực Tiếp',
+                tabUpload: 'Tải Ảnh Của Bạn'
+            };
+            const titleEl = document.getElementById('mobileDrawerTitle');
+            if (titleEl) titleEl.innerText = titleMap[tabId] || 'Công Cụ Thiết Kế';
+
+            // Close inspector if open on mobile
+            if (window.innerWidth < 768) {
+                closeMobileInspector();
+            }
+        }
+
+        function closeMobileToolDrawer() {
+            document.getElementById('toolDrawer').classList.add('hidden');
+        }
+
+        function openMobileInspector() {
+            document.getElementById('inspectorAside').classList.remove('hidden');
+            if (window.innerWidth < 768) {
+                closeMobileToolDrawer();
+            }
+        }
+
+        function closeMobileInspector() {
+            document.getElementById('inspectorAside').classList.add('hidden');
+        }
+
+        function toggleMobileInspector() {
+            const el = document.getElementById('inspectorAside');
+            if (el.classList.contains('hidden')) {
+                openMobileInspector();
+            } else {
+                closeMobileInspector();
+            }
+        }
+
+        // --- SMART PRODUCT PICKER SYSTEM ---
+        let pickerActiveCategory = 'all';
+
+        function openSmartProductPicker() {
+            pickerActiveCategory = 'all';
+            document.getElementById('pickerSearchInput').value = '';
+            populatePickerCategories();
+            renderPickerProducts();
+            document.getElementById('smartProductPickerModal').classList.remove('hidden');
+        }
+
+        function closeSmartProductPicker() {
+            document.getElementById('smartProductPickerModal').classList.add('hidden');
+        }
+
+        function populatePickerCategories() {
+            const categories = window.paca?.menu?.categories || [];
+            const container = document.getElementById('pickerCategoryTabs');
+            let html = `
+                <button onclick="setPickerCategory('all')" class="px-2.5 py-1 rounded-lg whitespace-nowrap ${pickerActiveCategory === 'all' ? 'bg-amber-400 text-paca-navy font-black' : 'bg-gray-800 text-gray-300'}">
+                    Tất cả
+                </button>
+            `;
+            categories.forEach(c => {
+                html += `
+                    <button onclick="setPickerCategory('${c.id}')" class="px-2.5 py-1 rounded-lg whitespace-nowrap ${pickerActiveCategory === c.id ? 'bg-amber-400 text-paca-navy font-black' : 'bg-gray-800 text-gray-300'}">
+                        ${c.name_vi || c.name}
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function setPickerCategory(catId) {
+            pickerActiveCategory = catId;
+            populatePickerCategories();
+            renderPickerProducts();
+        }
+
+        function filterPickerProducts() {
+            renderPickerProducts();
+        }
+
+        function renderPickerProducts() {
+            const container = document.getElementById('pickerProductsGrid');
+            const items = window.paca?.menu?.items || [];
+            const kw = document.getElementById('pickerSearchInput').value.trim().toLowerCase();
+
+            let filtered = items;
+            if (pickerActiveCategory !== 'all') {
+                filtered = filtered.filter(i => i.category === pickerActiveCategory);
+            }
+            if (kw) {
+                filtered = filtered.filter(i => 
+                    i.name.toLowerCase().includes(kw) || 
+                    (i.name_vi || '').toLowerCase().includes(kw) ||
+                    (i.ingredients && i.ingredients.join(' ').toLowerCase().includes(kw))
+                );
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-2 text-gray-500 italic text-center py-8">Không tìm thấy món ăn nào khớp với từ khóa tìm kiếm.</div>`;
+                return;
+            }
+
+            // Check what product is currently bound to the selected element
+            const selectedEl = engine.getSelectedElement();
+            const currentBoundId = selectedEl?.binding?.productId;
+
+            container.innerHTML = filtered.map(it => {
+                const isSelected = currentBoundId === it.id;
+                const isSoldOut = it.is_available === false;
+
+                return `
+                    <div onclick="selectPickerProduct('${it.id}')" 
+                        class="p-2.5 rounded-xl border cursor-pointer transition hover:scale-[1.01] active:scale-[0.99] flex items-center justify-between gap-2.5 ${isSelected ? 'bg-amber-950/60 border-amber-400 shadow-md shadow-amber-900/30' : 'bg-gray-800/80 hover:bg-gray-800 border-gray-700'}">
+                        
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            ${it.image ? `
+                                <img src="${it.image}" class="w-12 h-12 rounded-lg object-cover border border-gray-700 flex-shrink-0">
+                            ` : `
+                                <div class="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center text-lg flex-shrink-0">🍹</div>
+                            `}
+                            <div class="min-w-0">
+                                <div class="font-serif font-black text-xs text-white truncate uppercase">${it.name}</div>
+                                <div class="text-[10px] text-gray-400 truncate">${it.name_vi || ''}</div>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                    <span class="font-bold text-amber-400 text-xs">${window.paca.formatMoney(it.price)}</span>
+                                    <span class="text-[9px] px-1 py-0.2 rounded font-bold uppercase ${it.station === 'kitchen' ? 'bg-orange-950 text-orange-300 border border-orange-800' : 'bg-blue-950 text-blue-300 border border-blue-800'}">
+                                        ${it.station === 'kitchen' ? 'Bếp' : 'Bar'}
+                                    </span>
+                                    ${isSoldOut ? `<span class="text-[9px] bg-red-900 text-red-200 px-1 py-0.2 rounded font-bold">Hết</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex-shrink-0">
+                            ${isSelected ? `
+                                <span class="bg-amber-400 text-paca-navy text-[10px] font-black px-2 py-1 rounded-lg">Đang gắn ✓</span>
+                            ` : `
+                                <button class="bg-gray-700 hover:bg-amber-400 hover:text-paca-navy text-white text-[11px] font-bold px-2.5 py-1 rounded-lg transition">
+                                    Chọn
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectPickerProduct(productId) {
+            const item = window.paca?.menu?.items.find(i => i.id === productId);
+            if (!item) return;
+
+            const selectedEl = engine.getSelectedElement();
+
+            if (selectedEl) {
+                // Bind to selected element
+                if (selectedEl.type === 'product_card') {
+                    engine.updateSelectedProps({
+                        title: item.name,
+                        price: Math.round(item.price / 1000),
+                        badge: item.badge || '',
+                        ingredients: (item.ingredients || []).join(' • '),
+                        desc_vi: item.description_vi || ''
+                    });
+                } else if (selectedEl.type === 'text') {
+                    engine.updateSelectedProps({
+                        text: item.name
+                    });
+                }
+                selectedEl.binding = { productId: item.id, action: 'open_modal' };
+                updateInspector(selectedEl);
+                engine.render();
+                engine.saveDraft();
+            } else {
+                // If no element selected, add as new product card
+                addProductCard(productId);
+            }
+
+            closeSmartProductPicker();
+        }
+
+        function unbindCurrentElementProduct() {
+            const selectedEl = engine.getSelectedElement();
+            if (selectedEl) {
+                selectedEl.binding = null;
+                updateInspector(selectedEl);
+                engine.render();
+                engine.saveDraft();
+            }
+            closeSmartProductPicker();
+        }
+    </script>
+</body>
+</html>

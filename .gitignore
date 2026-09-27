@@ -1,0 +1,18 @@
+# PACA .gitignore
+# Logs & Caches
+*.log
+.system_generated/
+__pycache__/
+*.pyc
+
+# Temporary screenshots from test runs (assets in assets/ and image/ are tracked)
+shot_*.png
+admin_*.png
+index_*.png
+studio_*.png
+test_*.png
+
+# Tool cache
+node_modules/
+.vercel/
+.wrangler/

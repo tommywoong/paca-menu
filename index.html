@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PACA - 2025 Online Menu & Đặt Món</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <script src="js/qrcode.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paca: {
+                            navy: '#10234d',
+                            dark: '#0a1633',
+                            red: '#ce1126',
+                            crimson: '#940b05',
+                            cream: '#f6dcaf',
+                            warmBg: '#f6dcaf',
+                            blueCallout: '#afd8f8'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        syne: ['Syne', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f6dcaf;
+            color: #10234d;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .retro-shadow { box-shadow: 4px 4px 0px #10234d; }
+        .retro-shadow-sm { box-shadow: 2px 2px 0px #10234d; }
+        .retro-border { border: 2px solid #10234d; }
+    </style>
+</head>
+<body class="min-h-screen pb-32">
+
+    <!-- Top Floating Header Bar -->
+    <header class="bg-paca-navy text-white sticky top-0 z-40 shadow-lg">
+        <div class="max-w-2xl mx-auto px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <a href="#page_cover" class="w-9 h-9 rounded-full bg-paca-cream text-paca-navy flex items-center justify-center font-serif font-black text-xl border border-paca-navy">
+                    P
+                </a>
+                <div>
+                    <h1 class="font-serif font-black text-base leading-tight tracking-wider text-paca-cream uppercase">PACA</h1>
+                    <p class="text-[10px] text-blue-200">5A Pasteur, Đà Lạt • Tiny Cozy Bar</p>
+                </div>
+            </div>
+
+            <!-- Table Indicator & Mode Switcher -->
+            <div class="flex items-center space-x-2">
+                <!-- View Mode Toggle -->
+                <button onclick="toggleMenuMode()" id="btnModeToggle" class="bg-white/10 hover:bg-white/20 text-paca-cream text-[11px] font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1 border border-paca-cream/30 transition">
+                    <span id="modeIcon">🎨</span>
+                    <span id="modeLabel" class="hidden sm:inline">Chế độ Poster</span>
+                </button>
+
+                <button onclick="openTablePickerModal()" id="btnTableBadge" class="bg-paca-crimson hover:bg-paca-red text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center space-x-1.5 border border-red-300 shadow transition">
+                    <span>🪑</span>
+                    <span id="lblCurrentTable">Chọn bàn</span>
+                    <span class="text-[10px] opacity-80">▼</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Quick Navigation Bar (Sticky underneath) -->
+    <nav class="bg-paca-dark text-paca-cream sticky top-[53px] z-30 shadow border-b border-paca-cream/20">
+        <div id="customerNavBarLinks" class="max-w-2xl mx-auto px-4 py-1.5 flex items-center space-x-3 overflow-x-auto hide-scrollbar text-xs font-bold whitespace-nowrap">
+            <!-- Populated dynamically by renderCustomerNavBar() -->
+        </div>
+    </nav>
+
+
+    <!-- ==================== MAIN MENU CONTAINER ==================== -->
+    <main class="w-full flex flex-col items-center pb-32">
+
+        <!-- 1. CREATIVE CANVAS POSTER MODE (Default - 100% Canva Visual Style) -->
+        <div id="canvasMenuWrapper" class="w-full flex flex-col items-center">
+            <!-- Rendered by PacaCanvasEngine -->
+        </div>
+
+        <!-- 2. STANDARD LIST MODE (Alternative view mode) -->
+        <div id="standardMenuWrapper" class="hidden max-w-xl w-full px-4 pt-4 space-y-3">
+            <div class="relative mb-3">
+                <input type="text" id="searchInput" placeholder="Tìm kiếm món ăn, cocktail..." oninput="filterStandardMenu()" 
+                    class="w-full bg-white text-paca-navy text-sm rounded-xl py-2.5 pl-10 pr-4 retro-border focus:outline-none">
+                <span class="absolute left-3.5 top-2.5 text-gray-400">🔍</span>
+            </div>
+            <div id="standardItemsContainer" class="space-y-3">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Return to top floating button (Red circle with yellow arrow matching Canva) -->
+    <button onclick="window.scrollTo({ top: 0, behavior: 'smooth' })" 
+        class="fixed bottom-20 right-4 z-30 w-11 h-11 bg-paca-crimson hover:bg-paca-red text-amber-300 rounded-full border-2 border-paca-navy flex items-center justify-center font-black text-xl shadow-lg active:scale-90 transition">
+        ↑
+    </button>
+
+
+    <!-- Floating Cart Bar (Bottom Bar) -->
+    <div id="floatingCart" class="fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-black/40 to-transparent pointer-events-none transition-transform duration-300 translate-y-full">
+        <div class="max-w-xl mx-auto pointer-events-auto">
+            <button onclick="openCartModal()" class="w-full bg-paca-navy hover:bg-paca-dark text-white rounded-2xl p-3.5 retro-border retro-shadow flex items-center justify-between transition active:scale-[0.99]">
+                <div class="flex items-center space-x-3">
+                    <div class="relative bg-paca-red w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold">
+                        🛒
+                        <span id="cartCountBadge" class="absolute -top-1.5 -right-1.5 bg-paca-cream text-paca-navy text-[11px] font-black w-5 h-5 rounded-full flex items-center justify-center border border-paca-navy">0</span>
+                    </div>
+                    <div class="text-left">
+                        <div class="text-[11px] text-blue-200">Giỏ hàng PACA</div>
+                        <div class="font-bold text-base text-paca-cream" id="cartTotalPreview">0 đ</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-1.5 bg-paca-red text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow">
+                    <span>Xem giỏ & Đặt món</span>
+                    <span>→</span>
+                </div>
+            </button>
+        </div>
+    </div>
+
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- MODAL: CHI TIẾT MÓN & BIẾN THỂ SIZE (DISH OPTIONS) -->
+    <div id="detailModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-2xl retro-border max-h-[85vh] flex flex-col overflow-hidden animate-slide-up">
+            <div class="p-4 border-b border-gray-100 flex items-start justify-between bg-paca-navy text-white">
+                <div>
+                    <span id="modalCategoryBadge" class="text-[10px] font-bold uppercase tracking-wider bg-paca-crimson text-white px-2 py-0.5 rounded-full">COCKTAIL</span>
+                    <h3 id="modalItemName" class="font-serif font-black text-lg text-paca-cream mt-1">Item Name</h3>
+                    <p id="modalItemNameVi" class="text-xs text-blue-200">Tên tiếng Việt</p>
+                </div>
+                <button onclick="closeDetailModal()" class="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center font-bold text-sm">✕</button>
+            </div>
+
+            <div class="p-4 overflow-y-auto space-y-3 flex-1 text-sm bg-white">
+                <div class="flex items-center justify-between">
+                    <span class="text-gray-500 text-xs">Đơn giá:</span>
+                    <span id="modalItemPrice" class="font-bold text-base text-paca-crimson">0 đ</span>
+                </div>
+
+                <!-- Description -->
+                <div class="bg-amber-50/70 p-3 rounded-xl border border-amber-200 text-xs leading-relaxed text-paca-navy space-y-1">
+                    <p id="modalDescVi" class="font-semibold"></p>
+                    <p id="modalDescEn" class="text-gray-500 italic"></p>
+                </div>
+
+                <!-- Variants (Size M / Size L if present) -->
+                <div id="modalVariantsBox" class="hidden space-y-1.5 pt-1">
+                    <div class="text-xs font-bold text-paca-navy uppercase">Chọn kích cỡ (Size):</div>
+                    <div id="modalVariantsList" class="grid grid-cols-2 gap-2"></div>
+                </div>
+
+                <!-- Addon Options (Extra Cheese if present) -->
+                <div id="modalOptionsBox" class="hidden space-y-1.5 pt-1">
+                    <div class="text-xs font-bold text-paca-navy uppercase">Tùy chọn thêm:</div>
+                    <div id="modalOptionsList" class="space-y-1.5"></div>
+                </div>
+
+                <!-- Note for bartender/kitchen -->
+                <div>
+                    <label class="text-xs font-bold text-paca-navy block mb-1">Ghi chú khẩu vị:</label>
+                    <input type="text" id="modalItemNote" placeholder="Ví dụ: ít đá, ít ngọt, nhiều tương ớt..." 
+                        class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-paca-navy">
+                </div>
+            </div>
+
+            <!-- Footer Action -->
+            <div class="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between gap-3">
+                <div class="flex items-center border border-gray-300 bg-white rounded-xl overflow-hidden">
+                    <button onclick="decreaseModalQty()" class="w-9 h-9 flex items-center justify-center text-base font-bold text-paca-navy hover:bg-gray-100 active:scale-90">-</button>
+                    <span id="modalQtyDisplay" class="w-8 text-center text-sm font-bold">1</span>
+                    <button onclick="increaseModalQty()" class="w-9 h-9 flex items-center justify-center text-base font-bold text-paca-navy hover:bg-gray-100 active:scale-90">+</button>
+                </div>
+                <button onclick="addModalItemToCart()" class="flex-1 bg-paca-crimson hover:bg-paca-red text-white font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center space-x-1.5 shadow transition">
+                    <span>Thêm vào giỏ</span>
+                    <span id="modalBtnPrice">0 đ</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GIỎ HÀNG & XÁC NHẬN ĐẶT MÓN -->
+    <div id="cartModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-2xl retro-border max-h-[90vh] flex flex-col overflow-hidden animate-slide-up">
+            <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-paca-navy text-white">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl">🛒</span>
+                    <div>
+                        <h3 class="font-serif font-black text-base text-paca-cream">Giỏ Hàng Đặt Món</h3>
+                        <p class="text-[11px] text-blue-200" id="cartModalTableLabel">Vị trí: Chưa chọn</p>
+                    </div>
+                </div>
+                <button onclick="closeCartModal()" class="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center font-bold text-sm">✕</button>
+            </div>
+
+            <!-- Cart Items List -->
+            <div class="p-4 overflow-y-auto flex-1 space-y-3 bg-white" id="cartItemsList"></div>
+
+            <!-- Notes & Total summary -->
+            <div class="p-4 bg-amber-50/50 border-t border-gray-200 space-y-3">
+                <div>
+                    <label class="text-xs font-bold text-paca-navy block mb-1">Ghi chú chung cho quầy:</label>
+                    <input type="text" id="orderGeneralNote" placeholder="Ví dụ: Đồ uống làm trước..." 
+                        class="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs">
+                </div>
+
+                <div class="space-y-1.5 text-xs pt-1">
+                    <div class="flex justify-between text-gray-500">
+                        <span>Số lượng món:</span>
+                        <span id="cartTotalItemsCount" class="font-bold text-paca-navy">0</span>
+                    </div>
+                    <div class="flex justify-between text-sm font-extrabold text-paca-navy pt-1 border-t border-gray-200">
+                        <span>TỔNG CỘNG:</span>
+                        <span id="cartFinalAmount" class="text-base text-paca-crimson">0 đ</span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button id="btnSubmitOrder" onclick="submitCurrentOrder()" class="w-full bg-paca-crimson hover:bg-paca-red text-white font-bold text-sm py-3.5 rounded-xl retro-shadow-sm flex items-center justify-center space-x-2 transition active:scale-[0.98]">
+                    <span>🛎️</span>
+                    <span>XÁC NHẬN GỬI ĐƠN ĐẶT MÓN</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ĐẶT MÓN THÀNH CÔNG & MÃ VIETQR -->
+    <div id="successModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl retro-border p-5 text-center space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto">
+                ✓
+            </div>
+            <div>
+                <h3 class="font-serif font-black text-lg text-paca-navy">Đơn Hàng Đã Gửi Thành Công!</h3>
+                <p class="text-xs text-gray-600 mt-1">Quầy Bar & Bếp đang tiếp nhận món của bạn.</p>
+                <div class="inline-block bg-paca-warmBg border border-paca-navy px-3 py-1 rounded-lg mt-2 text-xs font-bold text-paca-navy">
+                    Mã đơn: <span id="successOrderId" class="text-paca-crimson font-mono font-bold">#PACA-0000</span>
+                </div>
+            </div>
+
+            <!-- VietQR Container -->
+            <div id="vietQrSection" class="bg-amber-50/80 border border-amber-200 rounded-xl p-3 space-y-2">
+                <div class="text-xs font-bold text-paca-navy flex items-center justify-center gap-1">
+                    <span>💳</span> QUÉT MÃ VIETQR ĐỂ CHUYỂN KHOẢN
+                </div>
+                <div class="bg-white p-2 rounded-xl inline-block border border-gray-200 shadow-sm mx-auto">
+                    <img id="vietQrImage" src="" alt="VietQR" class="w-48 h-48 object-contain mx-auto">
+                </div>
+                <div class="text-[11px] text-gray-600 space-y-0.5">
+                    <div>Ngân hàng: <b id="lblBankName">MBBank</b></div>
+                    <div>Số tài khoản: <b id="lblAccountNo" class="font-mono text-xs text-paca-crimson">---</b></div>
+                    <div>Chủ tài khoản: <b id="lblAccountName">PACA BAR</b></div>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button onclick="closeSuccessModal()" class="w-full bg-paca-navy text-white text-xs font-bold py-3 rounded-xl hover:bg-paca-dark">
+                    Xem Menu & Gọi Thêm Món
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CHỌN BÀN -->
+    <div id="tablePickerModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl retro-border p-4 space-y-3">
+            <div class="flex items-center justify-between border-b pb-2">
+                <h3 class="font-serif font-bold text-base text-paca-navy">Chọn Vị Trí Ngồi</h3>
+                <button onclick="closeTablePickerModal()" class="text-gray-400 font-bold">✕</button>
+            </div>
+            <div id="tablesGrid" class="grid grid-cols-3 gap-2 max-h-60 overflow-y-auto p-1"></div>
+            <button onclick="closeTablePickerModal()" class="w-full bg-gray-100 text-gray-700 text-xs font-bold py-2.5 rounded-xl">
+                Đóng
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL: OFF-MENU -->
+    <div id="customDishModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-2xl retro-border p-4 space-y-3">
+            <div class="flex items-center justify-between border-b pb-2">
+                <h3 class="font-serif font-bold text-base text-paca-navy">Yêu Cầu Món Ngoài Menu</h3>
+                <button onclick="closeCustomDishModal()" class="text-gray-400 font-bold">✕</button>
+            </div>
+            <p class="text-xs text-gray-600 leading-relaxed italic">
+                "If you want something off-menu, just ask! Có nguyên liệu là tụi mình làm liền."
+            </p>
+            <div class="space-y-2 text-xs">
+                <div>
+                    <label class="font-bold text-paca-navy block mb-1">Tên món cocktail bạn muốn:</label>
+                    <input type="text" id="customDishName" placeholder="Ví dụ: Dry Martini..." class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="font-bold text-paca-navy block mb-1">Ghi chú khẩu vị:</label>
+                    <textarea id="customDishNote" rows="2" placeholder="Ví dụ: Đậm vị gin, ít ngọt..." class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs"></textarea>
+                </div>
+            </div>
+            <button onclick="addCustomDishToCart()" class="w-full bg-paca-crimson text-white text-xs font-bold py-3 rounded-xl hover:bg-paca-red">
+                Thêm món vào giỏ
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/paca_core.js"></script>
+    <script src="js/paca_canvas.js"></script>
+    <script>
+        let isPosterMode = true;
+        let canvasEngine = null;
+        let currentTable = null;
+        let cart = [];
+        let selectedModalItem = null;
+        let selectedVariant = null;
+        let selectedOptions = [];
+        let modalQty = 1;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await window.paca.init();
+
+            // Detect table from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const tableParam = urlParams.get('table') || urlParams.get('t');
+            if (tableParam) {
+                const foundTable = window.paca.tables.find(t => t.id.toLowerCase() === tableParam.toLowerCase());
+                if (foundTable) {
+                    selectTable(foundTable);
+                } else {
+                    currentTable = { id: tableParam, name: `Bàn ${tableParam}` };
+                    updateTableLabel();
+                }
+            } else if (window.paca.tables.length > 0) {
+                selectTable(window.paca.tables[0]);
+            }
+
+            // Init Canvas Engine in View Mode
+            canvasEngine = new PacaCanvasEngine({
+                mode: 'view',
+                container: document.getElementById('canvasMenuWrapper'),
+                onProductClick: (productId) => openDetailModal(productId)
+            });
+            await canvasEngine.init();
+
+            renderCustomerNavBar();
+            renderStandardMenu();
+            updateCartUI();
+        });
+
+        // Dynamic Customer Navigation Bar
+        function renderCustomerNavBar() {
+            const container = document.getElementById('customerNavBarLinks');
+            if (!container) return;
+
+            const activeCats = window.paca?.getCategories ? window.paca.getCategories().filter(c => c.show_on_nav !== false) : [];
+            let html = `
+                <a href="#page_cover" onclick="smoothScrollToTarget('page_cover', event)" class="hover:text-amber-300 transition">✦ Đầu trang</a>
+            `;
+
+            activeCats.forEach(cat => {
+                const targetId = cat.pageId || ('sec_cat_' + cat.id);
+                html += `
+                    <a href="#${targetId}" onclick="smoothScrollToTarget('${targetId}', event)" class="hover:text-amber-300 transition">
+                        ${cat.icon ? cat.icon + ' ' : ''}${cat.name_vi || cat.name}
+                    </a>
+                `;
+            });
+
+            html += `
+                <button onclick="openCustomDishModal()" class="text-amber-300 hover:underline">✨ Món ngoài menu</button>
+            `;
+            container.innerHTML = html;
+        }
+
+        function smoothScrollToTarget(targetId, evt) {
+            if (evt) evt.preventDefault();
+            const el = document.getElementById(targetId);
+            if (el) {
+                if (!isPosterMode) {
+                    toggleMenuMode();
+                }
+                el.scrollIntoView({ behavior: 'smooth' });
+            } else if (!isPosterMode) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // Live synchronizer across browser tabs / storage events
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'paca_menu_v2' || e.key === 'paca_published_canvas_v2') {
+                window.paca.init().then(() => {
+                    renderCustomerNavBar();
+                    if (canvasEngine) canvasEngine.init();
+                    renderStandardMenu();
+                    updateCartUI();
+                });
+            }
+        });
+        if (window.paca?.broadcastChannel) {
+            window.paca.broadcastChannel.addEventListener('message', (ev) => {
+                if (ev.data?.type === 'CATEGORIES_CHANGED' || ev.data?.type === 'MENU_UPDATED' || ev.data?.type === 'CANVAS_PUBLISHED') {
+                    window.paca.init().then(() => {
+                        renderCustomerNavBar();
+                        if (canvasEngine) canvasEngine.init();
+                        renderStandardMenu();
+                        updateCartUI();
+                    });
+                }
+            });
+        }
+
+        // View Mode Toggle
+        function toggleMenuMode() {
+            isPosterMode = !isPosterMode;
+            const canvasWrapper = document.getElementById('canvasMenuWrapper');
+            const stdWrapper = document.getElementById('standardMenuWrapper');
+            const lbl = document.getElementById('modeLabel');
+            const icon = document.getElementById('modeIcon');
+
+            if (isPosterMode) {
+                canvasWrapper.classList.remove('hidden');
+                stdWrapper.classList.add('hidden');
+                lbl.innerText = "Chế độ Poster";
+                icon.innerText = "🎨";
+            } else {
+                canvasWrapper.classList.add('hidden');
+                stdWrapper.classList.remove('hidden');
+                lbl.innerText = "Chế độ Danh sách";
+                icon.innerText = "📋";
+            }
+        }
+
+        // --- DISH DETAIL & VARIANT MODAL ---
+        function openDetailModal(itemId) {
+            const item = window.paca.menu?.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            selectedModalItem = item;
+            selectedVariant = item.variants && item.variants.length > 0 ? item.variants[0] : null;
+            selectedOptions = [];
+            modalQty = 1;
+
+            document.getElementById('modalCategoryBadge').innerText = (item.category || 'MÓN').toUpperCase();
+            document.getElementById('modalItemName').innerText = item.name;
+            document.getElementById('modalItemNameVi').innerText = item.name_vi || '';
+            document.getElementById('modalDescVi').innerText = item.description_vi || '';
+            document.getElementById('modalDescEn').innerText = item.description_en || '';
+            document.getElementById('modalItemNote').value = '';
+            document.getElementById('modalQtyDisplay').innerText = modalQty;
+
+            // Variants (Size M / L)
+            const varBox = document.getElementById('modalVariantsBox');
+            const varList = document.getElementById('modalVariantsList');
+            if (item.variants && item.variants.length > 0) {
+                varBox.classList.remove('hidden');
+                varList.innerHTML = item.variants.map((v, idx) => `
+                    <button onclick="selectModalVariant('${v.id}')" id="btnVar_${v.id}" class="p-2.5 rounded-xl border text-center font-bold text-xs transition ${idx === 0 ? 'bg-paca-navy text-paca-cream border-paca-navy' : 'bg-gray-50 border-gray-200 text-gray-700'}">
+                        <div>${v.name}</div>
+                        <div class="text-[11px] opacity-80">${window.paca.formatMoney(v.price)}</div>
+                    </button>
+                `).join('');
+            } else {
+                varBox.classList.add('hidden');
+            }
+
+            // Options (Extra Cheese)
+            const optBox = document.getElementById('modalOptionsBox');
+            const optList = document.getElementById('modalOptionsList');
+            if (item.options && item.options.length > 0) {
+                optBox.classList.remove('hidden');
+                optList.innerHTML = item.options.map(opt => `
+                    <label class="flex items-center justify-between p-2 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer">
+                        <span class="font-bold text-xs text-gray-800">${opt.name}</span>
+                        <input type="checkbox" onchange="toggleModalOption('${opt.id}', this.checked)" class="w-4 h-4 rounded text-paca-crimson">
+                    </label>
+                `).join('');
+            } else {
+                optBox.classList.add('hidden');
+            }
+
+            updateModalPriceDisplay();
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            selectedModalItem = null;
+        }
+
+        function selectModalVariant(variantId) {
+            if (!selectedModalItem || !selectedModalItem.variants) return;
+            selectedVariant = selectedModalItem.variants.find(v => v.id === variantId);
+            
+            selectedModalItem.variants.forEach(v => {
+                const btn = document.getElementById(`btnVar_${v.id}`);
+                if (btn) {
+                    if (v.id === variantId) {
+                        btn.className = 'p-2.5 rounded-xl border text-center font-bold text-xs transition bg-paca-navy text-paca-cream border-paca-navy';
+                    } else {
+                        btn.className = 'p-2.5 rounded-xl border text-center font-bold text-xs transition bg-gray-50 border-gray-200 text-gray-700';
+                    }
+                }
+            });
+            updateModalPriceDisplay();
+        }
+
+        function toggleModalOption(optionId, isChecked) {
+            if (!selectedModalItem || !selectedModalItem.options) return;
+            const opt = selectedModalItem.options.find(o => o.id === optionId);
+            if (!opt) return;
+
+            if (isChecked) {
+                if (!selectedOptions.some(o => o.id === optionId)) selectedOptions.push(opt);
+            } else {
+                selectedOptions = selectedOptions.filter(o => o.id !== optionId);
+            }
+            updateModalPriceDisplay();
+        }
+
+        function updateModalPriceDisplay() {
+            if (!selectedModalItem) return;
+            let unitPrice = selectedVariant ? selectedVariant.price : selectedModalItem.price;
+            selectedOptions.forEach(opt => { unitPrice += opt.price; });
+
+            const total = unitPrice * modalQty;
+            document.getElementById('modalItemPrice').innerText = window.paca.formatMoney(unitPrice);
+            document.getElementById('modalBtnPrice').innerText = `(${window.paca.formatMoney(total)})`;
+        }
+
+        function increaseModalQty() {
+            modalQty += 1;
+            document.getElementById('modalQtyDisplay').innerText = modalQty;
+            updateModalPriceDisplay();
+        }
+
+        function decreaseModalQty() {
+            if (modalQty > 1) {
+                modalQty -= 1;
+                document.getElementById('modalQtyDisplay').innerText = modalQty;
+                updateModalPriceDisplay();
+            }
+        }
+
+        function addModalItemToCart() {
+            if (!selectedModalItem) return;
+            const note = document.getElementById('modalItemNote').value.trim();
+
+            let unitPrice = selectedVariant ? selectedVariant.price : selectedModalItem.price;
+            let fullTitle = selectedModalItem.name;
+            if (selectedVariant) fullTitle += ` (${selectedVariant.name})`;
+            if (selectedOptions.length > 0) {
+                selectedOptions.forEach(opt => {
+                    unitPrice += opt.price;
+                    fullTitle += ` + ${opt.name}`;
+                });
+            }
+
+            cart.push({
+                id: selectedModalItem.id + (selectedVariant ? '_' + selectedVariant.id : ''),
+                productId: selectedModalItem.id,
+                name: fullTitle,
+                name_vi: selectedModalItem.name_vi,
+                price: unitPrice,
+                quantity: modalQty,
+                station: selectedModalItem.station || 'bar',
+                itemNote: note
+            });
+
+            closeDetailModal();
+            updateCartUI();
+            showToast(`Đã thêm ${modalQty}x ${fullTitle} vào giỏ! 🛒`, "success");
+        }
+
+        // --- QUICK ADD & TOAST ---
+        function quickAddToCart(productId) {
+            const item = window.paca.menu?.items.find(i => i.id === productId);
+            if (!item) return;
+
+            if (item.is_available === false) {
+                showToast("Món này tạm thời hết hàng, bạn vui lòng chọn món khác nhé! 🍹", "warning");
+                return;
+            }
+
+            // If item has variants or options, open detail modal instead
+            if ((item.variants && item.variants.length > 0) || (item.options && item.options.length > 0)) {
+                openDetailModal(productId);
+                return;
+            }
+
+            // Simple item: add or increase quantity
+            const existingIndex = cart.findIndex(c => c.productId === item.id && !c.itemNote);
+            if (existingIndex > -1) {
+                cart[existingIndex].quantity += 1;
+            } else {
+                cart.push({
+                    id: item.id,
+                    productId: item.id,
+                    name: item.name,
+                    name_vi: item.name_vi,
+                    price: item.price,
+                    quantity: 1,
+                    station: item.station || 'bar',
+                    itemNote: ''
+                });
+            }
+
+            updateCartUI();
+            showToast(`Đã thêm 1x ${item.name} vào giỏ! 🛒`, "success");
+
+            // Animate cart bounce
+            const cartBadge = document.getElementById('cartCountBadge');
+            if (cartBadge) {
+                cartBadge.classList.add('animate-bounce');
+                setTimeout(() => cartBadge.classList.remove('animate-bounce'), 800);
+            }
+        }
+
+        let toastTimer = null;
+        function showToast(msg, type = 'info') {
+            let toast = document.getElementById('pacaToast');
+            let toastMsg = document.getElementById('pacaToastMsg');
+            let toastContent = document.getElementById('pacaToastContent');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'pacaToast';
+                toast.className = 'fixed top-16 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 pointer-events-none opacity-0 translate-y-[-20px] max-w-sm w-[90%]';
+                toast.innerHTML = `<div id="pacaToastContent" class="bg-paca-navy text-paca-cream px-4 py-2.5 rounded-2xl shadow-xl border border-amber-300/40 text-xs font-bold flex items-center gap-2"><span id="pacaToastMsg"></span></div>`;
+                document.body.appendChild(toast);
+                toastMsg = document.getElementById('pacaToastMsg');
+                toastContent = document.getElementById('pacaToastContent');
+            }
+
+            if (toastTimer) clearTimeout(toastTimer);
+            toastMsg.innerText = msg;
+            if (type === 'warning') {
+                toastContent.className = 'bg-red-900 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-red-400 text-xs font-bold flex items-center gap-2';
+            } else {
+                toastContent.className = 'bg-paca-navy text-paca-cream px-4 py-2.5 rounded-2xl shadow-xl border border-amber-300/40 text-xs font-bold flex items-center gap-2';
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-[-20px]');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-[-20px]');
+            }, 2500);
+        }
+        window.showToast = showToast;
+        window.quickAddToCart = quickAddToCart;
+
+        // --- CART UI & ACTIONS ---
+        function updateCartUI() {
+            const totalCount = cart.reduce((sum, it) => sum + it.quantity, 0);
+            const totalAmount = cart.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+
+            document.getElementById('cartCountBadge').innerText = totalCount;
+            document.getElementById('cartTotalPreview').innerText = window.paca.formatMoney(totalAmount);
+
+            const floatingCart = document.getElementById('floatingCart');
+            if (totalCount > 0) {
+                floatingCart.classList.remove('translate-y-full');
+            } else {
+                floatingCart.classList.add('translate-y-full');
+            }
+        }
+
+        function openCartModal() {
+            if (cart.length === 0) return;
+            renderCartModalItems();
+            document.getElementById('cartModal').classList.remove('hidden');
+        }
+
+        function closeCartModal() {
+            document.getElementById('cartModal').classList.add('hidden');
+        }
+
+        function renderCartModalItems() {
+            const container = document.getElementById('cartItemsList');
+            document.getElementById('cartModalTableLabel').innerText = currentTable ? `Vị trí: ${currentTable.name}` : "Vị trí: Chưa chọn";
+
+            const submitBtn = document.getElementById('btnSubmitOrder');
+
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="py-10 text-center flex flex-col items-center justify-center space-y-2">
+                        <div class="w-14 h-14 bg-amber-100/70 rounded-full flex items-center justify-center text-3xl mb-1">🛒</div>
+                        <div class="font-serif font-black text-sm text-paca-navy">Giỏ hàng của bạn đang trống</div>
+                        <p class="text-xs text-gray-500 max-w-xs">Chưa có món nào được chọn. Hãy xem menu và thêm món bạn yêu thích nhé!</p>
+                        <button onclick="closeCartModal()" class="mt-3 bg-paca-navy text-paca-cream text-xs font-bold px-4 py-2 rounded-xl shadow hover:bg-paca-dark transition">
+                            Khám phá Menu ngay
+                        </button>
+                    </div>
+                `;
+                document.getElementById('cartTotalItemsCount').innerText = '0';
+                document.getElementById('cartFinalAmount').innerText = '0 đ';
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            let totalAmount = 0;
+            let totalItems = 0;
+
+            container.innerHTML = cart.map((it, idx) => {
+                const subtotal = it.price * it.quantity;
+                totalAmount += subtotal;
+                totalItems += it.quantity;
+                const isMinQty = it.quantity <= 1;
+
+                return `
+                    <div class="bg-gray-50 hover:bg-amber-50/30 transition-colors rounded-xl p-3 border border-gray-200 flex items-center justify-between gap-3">
+                        <div class="flex-1 min-w-0 pr-1">
+                            <div class="font-serif font-bold text-xs sm:text-sm text-paca-navy truncate">${it.name}</div>
+                            ${it.itemNote ? `<div class="text-[11px] text-paca-crimson font-medium mt-0.5 break-words">⚠️ ${it.itemNote}</div>` : ''}
+                            <div class="text-xs font-black text-paca-crimson mt-1">${window.paca.formatMoney(subtotal)}</div>
+                        </div>
+
+                        <!-- Stepper & Dedicated Delete Button with comfortable separation -->
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <!-- Stepper (stops at 1) -->
+                            <div class="flex items-center border border-gray-300 bg-white rounded-lg overflow-hidden shadow-sm">
+                                <button onclick="changeCartQty(${idx}, -1)" 
+                                    ${isMinQty ? 'disabled' : ''} 
+                                    class="w-7 h-7 flex items-center justify-center font-bold text-xs text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition select-none" 
+                                    title="Giảm số lượng">
+                                    −
+                                </button>
+                                <span class="w-7 text-center text-xs font-bold text-paca-navy select-none">${it.quantity}</span>
+                                <button onclick="changeCartQty(${idx}, 1)" 
+                                    class="w-7 h-7 flex items-center justify-center font-bold text-xs text-gray-700 hover:bg-gray-100 transition select-none" 
+                                    title="Tăng số lượng">
+                                    +
+                                </button>
+                            </div>
+
+                            <!-- Dedicated Delete Button -->
+                            <button onclick="removeCartItem(${idx})" 
+                                class="h-7 px-2.5 bg-red-50 hover:bg-red-100 active:bg-red-200 text-paca-crimson border border-red-200 rounded-lg flex items-center gap-1 text-[11px] font-bold transition shadow-sm" 
+                                title="Xóa món này khỏi giỏ" 
+                                aria-label="Xóa món">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                <span>Xóa</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('cartTotalItemsCount').innerText = totalItems;
+            document.getElementById('cartFinalAmount').innerText = window.paca.formatMoney(totalAmount);
+        }
+
+        function changeCartQty(idx, delta) {
+            if (cart[idx]) {
+                const targetQty = cart[idx].quantity + delta;
+                if (targetQty >= 1) {
+                    cart[idx].quantity = targetQty;
+                }
+            }
+            updateCartUI();
+            renderCartModalItems();
+        }
+
+        function removeCartItem(idx) {
+            if (cart[idx]) {
+                const removedName = cart[idx].name;
+                cart.splice(idx, 1);
+                updateCartUI();
+                renderCartModalItems();
+                showToast(`Đã xóa "${removedName}" khỏi giỏ`, "info");
+            }
+        }
+        window.removeCartItem = removeCartItem;
+
+        // --- SUBMIT ORDER ---
+        async function submitCurrentOrder() {
+            if (cart.length === 0) {
+                showToast("Giỏ hàng đang trống! Vui lòng chọn món trước nhé 🛒", "warning");
+                return;
+            }
+            if (!currentTable) {
+                alert("Vui lòng chọn số bàn trước khi đặt món!");
+                openTablePickerModal();
+                return;
+            }
+
+            // Check out-of-stock validation
+            const outOfStockItems = [];
+            cart.forEach(it => {
+                const freshItem = window.paca.menu?.items.find(m => m.id === it.productId);
+                if (freshItem && freshItem.is_available === false) {
+                    outOfStockItems.push(it.name);
+                }
+            });
+            if (outOfStockItems.length > 0) {
+                alert(`Rất tiếc! Món sau vừa tạm hết hàng: \n- ${outOfStockItems.join('\n- ')}\nVui lòng xóa hoặc đổi món khác trước khi gửi đơn nhé.`);
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitOrder');
+            btn.disabled = true;
+            btn.innerHTML = `<span>⏳</span><span>ĐANG GỬI ĐƠN...</span>`;
+
+            const note = document.getElementById('orderGeneralNote').value.trim();
+
+            try {
+                const order = window.paca.createOrder({
+                    tableId: currentTable.id,
+                    tableName: currentTable.name,
+                    items: cart,
+                    note: note
+                });
+
+                cart = [];
+                updateCartUI();
+                closeCartModal();
+
+                // Show success modal
+                showSuccessModal(order);
+            } catch (err) {
+                alert("Lỗi khi gửi đơn: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span>🛎️</span><span>XÁC NHẬN GỬI ĐƠN ĐẶT MÓN</span>`;
+            }
+        }
+
+        function showSuccessModal(order) {
+            document.getElementById('successOrderId').innerText = order.id;
+
+            const cfg = window.paca.config;
+            const bank = cfg?.bank_config;
+            const qrSection = document.getElementById('vietQrSection');
+
+            if (bank && bank.account_no && bank.bank_id) {
+                qrSection.classList.remove('hidden');
+                document.getElementById('lblBankName').innerText = bank.bank_id;
+                document.getElementById('lblAccountNo').innerText = bank.account_no;
+                document.getElementById('lblAccountName').innerText = bank.account_name || 'PACA BAR';
+
+                const qrUrl = window.paca.generateVietQRUrl(order.totalAmount, order.id, order.tableName);
+                document.getElementById('vietQrImage').src = qrUrl;
+            } else {
+                qrSection.classList.add('hidden');
+            }
+
+            document.getElementById('successModal').classList.remove('hidden');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+
+        // --- TABLE PICKER ---
+        function openTablePickerModal() {
+            const grid = document.getElementById('tablesGrid');
+            const tables = window.paca.tables || [];
+
+            grid.innerHTML = tables.map(t => `
+                <button onclick="selectTableById('${t.id}')" class="p-2.5 rounded-xl border text-center font-bold text-xs transition ${currentTable?.id === t.id ? 'bg-paca-navy text-paca-cream border-paca-navy retro-shadow-sm' : 'bg-gray-50 text-gray-700 border-gray-200'}">
+                    ${t.name}
+                </button>
+            `).join('');
+
+            document.getElementById('tablePickerModal').classList.remove('hidden');
+        }
+
+        function closeTablePickerModal() {
+            document.getElementById('tablePickerModal').classList.add('hidden');
+        }
+
+        function selectTableById(tableId) {
+            const table = window.paca.tables.find(t => t.id === tableId);
+            if (table) selectTable(table);
+            closeTablePickerModal();
+        }
+
+        function selectTable(table) {
+            currentTable = table;
+            updateTableLabel();
+        }
+
+        function updateTableLabel() {
+            const lbl = document.getElementById('lblCurrentTable');
+            if (currentTable) {
+                lbl.innerText = currentTable.name;
+            } else {
+                lbl.innerText = "Chọn bàn";
+            }
+        }
+
+        // --- OFF-MENU ---
+        function openCustomDishModal() {
+            document.getElementById('customDishName').value = '';
+            document.getElementById('customDishNote').value = '';
+            document.getElementById('customDishModal').classList.remove('hidden');
+        }
+
+        function closeCustomDishModal() {
+            document.getElementById('customDishModal').classList.add('hidden');
+        }
+
+        function addCustomDishToCart() {
+            const name = document.getElementById('customDishName').value.trim();
+            const note = document.getElementById('customDishNote').value.trim();
+
+            if (!name) {
+                alert("Vui lòng nhập tên món!");
+                return;
+            }
+
+            cart.push({
+                id: 'custom_' + Date.now().toString(36),
+                name: `[OFF-MENU] ${name}`,
+                name_vi: name,
+                price: 180000,
+                quantity: 1,
+                station: 'bar',
+                itemNote: note || 'Món pha chế theo yêu cầu riêng'
+            });
+
+            closeCustomDishModal();
+            updateCartUI();
+            alert(`Đã thêm món "${name}" vào giỏ hàng!`);
+        }
+
+        // --- STANDARD LIST MENU RENDERING ---
+        function renderStandardDishCard(it) {
+            const isSoldOut = it.is_available === false;
+            const hasOptions = (it.variants && it.variants.length > 0) || (it.options && it.options.length > 0);
+
+            // Retro circular SOLD OUT stamp (tilted ~12deg)
+            const soldOutStamp = isSoldOut ? `
+                <div class="absolute -top-2.5 -right-2 z-10 pointer-events-none select-none" style="transform: rotate(12deg);">
+                    <div style="
+                        border: 2px dashed #ce1126;
+                        background: rgba(254, 242, 242, 0.96);
+                        color: #ce1126;
+                        box-shadow: 0 2px 6px rgba(206, 17, 38, 0.25);
+                        border-radius: 9999px;
+                        padding: 2px 8px;
+                        font-family: 'Playfair Display', serif;
+                        font-weight: 900;
+                        font-size: 10px;
+                        letter-spacing: 0.8px;
+                        text-transform: uppercase;
+                        display: flex;
+                        align-items: center;
+                        gap: 3px;
+                    ">
+                        <span style="font-size: 7px;">●</span> SOLD OUT
+                    </div>
+                </div>
+            ` : '';
+
+            let actionBtn = '';
+            if (isSoldOut) {
+                actionBtn = `<span class="bg-gray-100 text-gray-400 text-xs font-bold px-3 py-1.5 rounded-xl cursor-not-allowed border border-gray-200">Hết món</span>`;
+            } else if (hasOptions) {
+                actionBtn = `<button onclick="event.stopPropagation(); openDetailModal('${it.id}')" class="bg-paca-navy hover:bg-paca-dark text-paca-cream text-xs font-bold px-3.5 py-1.5 rounded-xl shadow active:scale-95">Tuỳ chọn ▾</button>`;
+            } else {
+                actionBtn = `<button onclick="event.stopPropagation(); quickAddToCart('${it.id}')" class="bg-paca-crimson hover:bg-paca-red text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow active:scale-95">+ Thêm</button>`;
+            }
+
+            return `
+                <div onclick="${isSoldOut ? `showToast('Món này tạm hết hàng, bạn vui lòng chọn món khác nhé! 🍹', 'warning')` : (hasOptions ? `openDetailModal('${it.id}')` : `quickAddToCart('${it.id}')`)}" 
+                    class="relative bg-white rounded-2xl p-3 retro-border retro-shadow-sm flex gap-3 items-center cursor-pointer transition hover:-translate-y-0.5 active:scale-[0.99] ${isSoldOut ? 'opacity-75' : ''}">
+                    ${soldOutStamp}
+                    ${it.image ? `
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-paca-navy/5 flex-shrink-0 border border-gray-200">
+                            <img src="${it.image}" alt="${it.name}" class="w-full h-full object-cover">
+                        </div>
+                    ` : ''}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-1.5">
+                            <div class="font-serif font-black text-sm text-paca-navy truncate uppercase">${it.name}</div>
+                            ${it.badge ? `<span class="bg-amber-100 text-amber-900 text-[9px] font-extrabold px-1.5 py-0.5 rounded border border-amber-300 uppercase">${it.badge}</span>` : ''}
+                        </div>
+                        <div class="text-[11px] text-gray-500 font-medium truncate">${it.name_vi || ''}</div>
+                        ${it.ingredients ? `<div class="text-[10px] text-gray-400 font-mono truncate mt-0.5">${it.ingredients}</div>` : ''}
+                        <div class="font-extrabold text-sm text-paca-crimson mt-1">${window.paca.formatMoney(it.price)}</div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        ${actionBtn}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStandardMenu() {
+            const container = document.getElementById('standardItemsContainer');
+            const items = window.paca?.menu?.items || [];
+            container.innerHTML = items.map(it => renderStandardDishCard(it)).join('');
+        }
+
+        function filterStandardMenu() {
+            const kw = document.getElementById('searchInput').value.trim().toLowerCase();
+            const container = document.getElementById('standardItemsContainer');
+            const items = window.paca?.menu?.items || [];
+
+            const filtered = items.filter(it => it.name.toLowerCase().includes(kw) || (it.name_vi || '').toLowerCase().includes(kw));
+            container.innerHTML = filtered.map(it => renderStandardDishCard(it)).join('');
+        }
+    </script>
+</body>
+</html>

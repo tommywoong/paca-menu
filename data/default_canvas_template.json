@@ -1,0 +1,1748 @@
+{
+  "version": "2.1",
+  "title": "PACA 2025 Full Online Menu Poster",
+  "baseWidth": 800,
+  "pages": [
+    {
+      "id": "page_cover",
+      "title": "Trang Mở Đầu",
+      "width": 800,
+      "height": 920,
+      "bg": "#6d100c",
+      "bgImage": "assets/canva/a353b44b4ccd31adfc7f396cd09c4e6d.jpg",
+      "bgOverlay": "rgba(109, 16, 12, 0.82)",
+      "elements": [
+        {
+          "id": "cov_star1",
+          "type": "text",
+          "x": 120,
+          "y": 80,
+          "w": 40,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "✦",
+            "size": 36,
+            "color": "#f6dcaf"
+          }
+        },
+        {
+          "id": "cov_star2",
+          "type": "text",
+          "x": 640,
+          "y": 120,
+          "w": 40,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "✦",
+            "size": 28,
+            "color": "#f6dcaf"
+          }
+        },
+        {
+          "id": "cov_title",
+          "type": "text",
+          "x": 80,
+          "y": 60,
+          "w": 640,
+          "h": 80,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "PACA",
+            "font": "Playfair Display",
+            "size": 64,
+            "weight": "900",
+            "color": "#f6dcaf",
+            "align": "center",
+            "letterSpacing": 6
+          }
+        },
+        {
+          "id": "cov_subtitle",
+          "type": "text",
+          "x": 80,
+          "y": 145,
+          "w": 640,
+          "h": 30,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "TINY COZY BAR IN THE HEART OF DALAT",
+            "size": 13,
+            "weight": "700",
+            "color": "#ffffff",
+            "align": "center",
+            "letterSpacing": 2
+          }
+        },
+        {
+          "id": "nav_link_1",
+          "type": "link_nav",
+          "x": 50,
+          "y": 220,
+          "w": 700,
+          "h": 50,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "MENU OF THE WEEK",
+            "targetPageId": "page_week",
+            "size": 26,
+            "weight": "800",
+            "color": "#ffffff",
+            "align": "center",
+            "underline": true,
+            "icon": "🍸"
+          }
+        },
+        {
+          "id": "nav_link_2",
+          "type": "link_nav",
+          "x": 50,
+          "y": 305,
+          "w": 700,
+          "h": 50,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "BITES (MÓN NHẮM)",
+            "targetPageId": "page_bites",
+            "size": 26,
+            "weight": "800",
+            "color": "#ffffff",
+            "align": "center",
+            "underline": true,
+            "icon": "🍟"
+          }
+        },
+        {
+          "id": "nav_link_3",
+          "type": "link_nav",
+          "x": 50,
+          "y": 390,
+          "w": 700,
+          "h": 50,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "COCKTAIL (CLASSIC & SIGNATURE)",
+            "targetPageId": "page_cocktail",
+            "size": 23,
+            "weight": "800",
+            "color": "#ffffff",
+            "align": "center",
+            "underline": true,
+            "icon": "🍹"
+          }
+        },
+        {
+          "id": "nav_link_4",
+          "type": "link_nav",
+          "x": 50,
+          "y": 475,
+          "w": 700,
+          "h": 50,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "BEER (CRAFT & BOTTLE)",
+            "targetPageId": "page_beer",
+            "size": 24,
+            "weight": "800",
+            "color": "#ffffff",
+            "align": "center",
+            "underline": true,
+            "icon": "🍺"
+          }
+        },
+        {
+          "id": "nav_link_5",
+          "type": "link_nav",
+          "x": 50,
+          "y": 560,
+          "w": 700,
+          "h": 50,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "WINE & SHOTS",
+            "targetPageId": "page_wine_shots",
+            "size": 26,
+            "weight": "800",
+            "color": "#ffffff",
+            "align": "center",
+            "underline": true,
+            "icon": "🍷"
+          }
+        },
+        {
+          "id": "cov_quote",
+          "type": "text",
+          "x": 50,
+          "y": 780,
+          "w": 700,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "First come, first served. Everyone’s welcome. Always.",
+            "size": 14,
+            "weight": "600",
+            "color": "#f6dcaf",
+            "align": "center",
+            "italic": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_intro",
+      "title": "Lời Chào & Giới Thiệu",
+      "width": 800,
+      "height": 1150,
+      "bg": "#afd8f8",
+      "elements": [
+        {
+          "id": "intro_logo",
+          "type": "text",
+          "x": 200,
+          "y": 30,
+          "w": 400,
+          "h": 100,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "PACA",
+            "font": "Playfair Display",
+            "size": 84,
+            "weight": "900",
+            "color": "#10234d",
+            "align": "center"
+          }
+        },
+        {
+          "id": "intro_text_en",
+          "type": "text",
+          "x": 80,
+          "y": 140,
+          "w": 640,
+          "h": 110,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "Hey there — welcome to our tiny, cozy bar in the heart of Đà Lạt!\nWe’re all about good drinks, good vibes, and swapping stories.\nFrom signature cocktails to rotating craft beers and tasty bites, we’ve got just enough to keep things fun and flavorful.",
+            "size": 15,
+            "weight": "600",
+            "color": "#10234d",
+            "align": "center",
+            "lineSpacing": 1.4
+          }
+        },
+        {
+          "id": "intro_tagline",
+          "type": "text",
+          "x": 100,
+          "y": 260,
+          "w": 600,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "First come, first served. Everyone’s welcome. Always.",
+            "size": 15,
+            "weight": "800",
+            "color": "#10234d",
+            "align": "center"
+          }
+        },
+        {
+          "id": "intro_illustration",
+          "type": "image",
+          "x": 160,
+          "y": 310,
+          "w": 480,
+          "h": 500,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "src": "assets/canva/ab7108ccb6bf45b98ea0c03821f39e1d.png",
+            "fit": "contain"
+          }
+        },
+        {
+          "id": "intro_callout_box",
+          "type": "shape",
+          "x": 100,
+          "y": 850,
+          "w": 600,
+          "h": 140,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "shapeType": "rect",
+            "fill": "#ffffff",
+            "border": "3px solid #10234d",
+            "radius": 18,
+            "shadow": "5px 5px 0px #10234d"
+          }
+        },
+        {
+          "id": "intro_callout_text",
+          "type": "text",
+          "x": 120,
+          "y": 870,
+          "w": 560,
+          "h": 100,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "Our cocktails are carefully crafted by a single bartender, so good things might take a little time.\nThanks for your patience. ❤️",
+            "size": 16,
+            "weight": "700",
+            "color": "#10234d",
+            "align": "center",
+            "lineSpacing": 1.4
+          }
+        },
+        {
+          "id": "intro_star_dec",
+          "type": "text",
+          "x": 670,
+          "y": 830,
+          "w": 40,
+          "h": 40,
+          "rotate": 12,
+          "zIndex": 4,
+          "props": {
+            "text": "✦",
+            "size": 32,
+            "color": "#ce1126"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_week",
+      "title": "Menu of the Week",
+      "width": 800,
+      "height": 1850,
+      "bg": "#f6dcaf",
+      "elements": [
+        {
+          "id": "week_title",
+          "type": "text",
+          "x": 80,
+          "y": 35,
+          "w": 640,
+          "h": 65,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "MENU OF THE WEEK",
+            "size": 48,
+            "weight": "900",
+            "color": "#ce1126",
+            "align": "center",
+            "letterSpacing": 2
+          }
+        },
+        {
+          "id": "week_badge",
+          "type": "shape",
+          "x": 240,
+          "y": 110,
+          "w": 320,
+          "h": 38,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "shapeType": "rect",
+            "fill": "#afd8f8",
+            "border": "2px solid #10234d",
+            "radius": 19,
+            "shadow": "3px 3px 0px #10234d"
+          }
+        },
+        {
+          "id": "week_badge_text",
+          "type": "text",
+          "x": 250,
+          "y": 117,
+          "w": 300,
+          "h": 24,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "ALL COCKTAILS -10K FROM ROUND 2",
+            "size": 12,
+            "weight": "800",
+            "color": "#10234d",
+            "align": "center"
+          }
+        },
+        {
+          "id": "card_w01",
+          "type": "product_card",
+          "x": 30,
+          "y": 175,
+          "w": 355,
+          "h": 290,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "w01",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#940b05",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "SCARLET BLOOM",
+            "price": "180",
+            "badge": "Signature",
+            "ingredients": "Tequila • Lychee Cordial • Campari • Choco Bitter • Sour Water",
+            "desc_vi": "Tequila và Campari đắng nhẹ, cân bằng bởi vị vải ngọt thanh và hương hoa dịu nhẹ."
+          }
+        },
+        {
+          "id": "card_w02",
+          "type": "product_card",
+          "x": 415,
+          "y": 175,
+          "w": 355,
+          "h": 290,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "w02",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#10234d",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "ASTRAL STAR",
+            "price": "180",
+            "badge": "Refreshing",
+            "ingredients": "Gin • Home-made Limecello • Starfruit Cordial • Juniper Liqueur",
+            "desc_vi": "Gin thảo mộc tươi mát kết hợp cùng cordial khế và limecello chua thanh sảng khoái."
+          }
+        },
+        {
+          "id": "card_w03",
+          "type": "product_card",
+          "x": 30,
+          "y": 495,
+          "w": 355,
+          "h": 290,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "w03",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#10234d",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "HOP & PEAR",
+            "price": "180",
+            "badge": "Highball",
+            "ingredients": "Whisky • Pear Cordial • Soda",
+            "desc_vi": "Thanh nhẹ, bừng sáng vị lê ngọt dịu quyện cùng whisky và sủi bọt soda đã miệng."
+          }
+        },
+        {
+          "id": "card_w04",
+          "type": "product_card",
+          "x": 415,
+          "y": 495,
+          "w": 355,
+          "h": 290,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "w04",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#940b05",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "NOCTURNE CACAO",
+            "price": "180",
+            "badge": "Nightcap",
+            "ingredients": "Gin • Coffee Liqueur • Cherry Cordial • Orangecello",
+            "desc_vi": "Cà phê đắng nhẹ quyện cùng gin, vị cam tươi và anh đào mọng nước cho đêm muộn."
+          }
+        },
+        {
+          "id": "card_w05",
+          "type": "product_card",
+          "x": 30,
+          "y": 815,
+          "w": 355,
+          "h": 290,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "w05",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#940b05",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "COLD DRIFT",
+            "price": "180",
+            "badge": "Easy Sip",
+            "ingredients": "Rum • Apple Cordial • Home-made Lemoncello",
+            "desc_vi": "Rum mượt mà hòa cùng vị táo xanh giòn ngọt và lemoncello chua mát."
+          }
+        },
+        {
+          "id": "card_w06",
+          "type": "product_card",
+          "x": 415,
+          "y": 815,
+          "w": 355,
+          "h": 290,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "w06",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#10234d",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "HEATWAVE GOLD",
+            "price": "180",
+            "badge": "Tropical & Spicy",
+            "ingredients": "Whiskey • Mango Cordial • Sour Water • Spicy Bitter",
+            "desc_vi": "Vị xoài nhiệt đới chín mọng trên nền whisky, nhấn nhá chút cay nồng kích thích vị giác."
+          }
+        },
+        {
+          "id": "card_w07",
+          "type": "product_card",
+          "x": 30,
+          "y": 1135,
+          "w": 355,
+          "h": 290,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "w07",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#10234d",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "VELVET BANANE",
+            "price": "180",
+            "badge": "Creamy & Tart",
+            "ingredients": "Whisky • Banana Liqueur • Cranberry Soda",
+            "desc_vi": "Biến tấu giữa whisky, chuối béo dịu và cranberry soda chua nhẹ sủi bọt."
+          }
+        },
+        {
+          "id": "card_w08",
+          "type": "product_card",
+          "x": 415,
+          "y": 1135,
+          "w": 355,
+          "h": 290,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "w08",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#940b05",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "SILK SONIC",
+            "price": "180",
+            "badge": "Crisp G&T",
+            "ingredients": "Gin • Pear Cordial • Lemoncello • Tonic",
+            "desc_vi": "Biến tấu Gin & Tonic kinh điển, hòa quyện vị lê ngọt dịu cùng lemoncello."
+          }
+        },
+        {
+          "id": "card_w09",
+          "type": "product_card",
+          "x": 30,
+          "y": 1455,
+          "w": 355,
+          "h": 290,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "w09",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#940b05",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "ONYX",
+            "price": "180",
+            "badge": "Spirit-Forward",
+            "ingredients": "Aged Whisky • Cacao Liqueur • Home-made Cardamom",
+            "desc_vi": "Whisky đậm đà quyện cùng cacao đắng nhẹ, điểm xuyết bạch đậu khấu khói êm đằm."
+          }
+        },
+        {
+          "id": "card_w10",
+          "type": "product_card",
+          "x": 415,
+          "y": 1455,
+          "w": 355,
+          "h": 290,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "w10",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#10234d",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "BOTANICAL FLORA",
+            "price": "180",
+            "badge": "Dry & Elegant",
+            "ingredients": "Gin • Home-made Lemoncello • White Wine",
+            "desc_vi": "Gu uống thanh lịch và khô nhẹ, kết hợp gin thảo mộc, vang trắng cùng lemoncello."
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_bites",
+      "title": "Món Nhắm (Bites)",
+      "width": 800,
+      "height": 1950,
+      "bg": "#f9f2e7",
+      "elements": [
+        {
+          "id": "bites_title",
+          "type": "text",
+          "x": 80,
+          "y": 30,
+          "w": 640,
+          "h": 65,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "BITES & NHÂM NHI",
+            "size": 48,
+            "weight": "900",
+            "color": "#940b05",
+            "align": "center",
+            "letterSpacing": 2
+          }
+        },
+        {
+          "id": "bites_subtitle",
+          "type": "text",
+          "x": 100,
+          "y": 95,
+          "w": 600,
+          "h": 30,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "Tasty bites to pair with your drinks",
+            "size": 14,
+            "weight": "600",
+            "color": "#10234d",
+            "align": "center",
+            "italic": true
+          }
+        },
+        {
+          "id": "bites_art",
+          "type": "image",
+          "x": 200,
+          "y": 135,
+          "w": 400,
+          "h": 320,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "src": "assets/canva/0ed9724561aeefbf35f76b1414bc4841.png",
+            "fit": "contain"
+          }
+        },
+        {
+          "id": "card_b01",
+          "type": "product_card",
+          "x": 30,
+          "y": 480,
+          "w": 355,
+          "h": 330,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "b01",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "GARLIC FISH SAUCE FRIES",
+            "price": "70",
+            "badge": "Best Seller",
+            "ingredients": "Khoai tây chiên giòn rụm xốc sốt nước mắm tỏi ớt đậm đà, thơm lừng",
+            "image": "assets/canva/0e6ad945841bfc9bde3aefe8930e6839.png"
+          }
+        },
+        {
+          "id": "card_b02",
+          "type": "product_card",
+          "x": 415,
+          "y": 480,
+          "w": 355,
+          "h": 330,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "b02",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "BACON & CHEESE FRIES",
+            "price": "95",
+            "badge": "Must Try",
+            "ingredients": "Khoai tây chiên phủ ngập sốt phô mai cheddar tan chảy và thịt xông khói giòn",
+            "image": "assets/canva/c243f99dc58032a0f023c28ba843eac2.png"
+          }
+        },
+        {
+          "id": "card_b03",
+          "type": "product_card",
+          "x": 30,
+          "y": 830,
+          "w": 355,
+          "h": 330,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "b03",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "CHEESE FRIES",
+            "price": "70",
+            "badge": "Cheesy",
+            "ingredients": "Khoai tây chiên vàng giòn rưới đẫm xốt phô mai béo ngậy thơm ngon",
+            "image": "assets/canva/2478f97ef54304ee79763d99641719e0.png"
+          }
+        },
+        {
+          "id": "card_b05",
+          "type": "product_card",
+          "x": 415,
+          "y": 830,
+          "w": 355,
+          "h": 330,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "b05",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "CREAMY ONION FRIES",
+            "price": "70",
+            "badge": "New",
+            "ingredients": "Khoai tây chiên phủ sốt kem hành tây thơm béo mịn màng đặc trưng",
+            "image": "assets/canva/5dc4519f512c639864a5c59fcd450574.jpg"
+          }
+        },
+        {
+          "id": "card_b06",
+          "type": "product_card",
+          "x": 30,
+          "y": 1180,
+          "w": 355,
+          "h": 330,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "b06",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "FRIED WONTON CHIPS",
+            "price": "55",
+            "badge": "Snack",
+            "ingredients": "Lá hoành thánh chiên phồng giòn tan chấm tương ớt cay ngọt vui miệng",
+            "image": "assets/canva/192a266e9d811dc75d8647348854481c.jpg"
+          }
+        },
+        {
+          "id": "card_b04",
+          "type": "product_card",
+          "x": 415,
+          "y": 1180,
+          "w": 355,
+          "h": 330,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "b04",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "CLASSIC FRENCH FRIES",
+            "price": "55",
+            "badge": "Classic",
+            "ingredients": "Khoai tây cọng truyền thống chiên ráo dầu, giòn lâu ăn kèm sốt",
+            "image": "assets/canva/0e6ad945841bfc9bde3aefe8930e6839.png"
+          }
+        },
+        {
+          "id": "card_b07",
+          "type": "product_card",
+          "x": 30,
+          "y": 1530,
+          "w": 355,
+          "h": 340,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "b07",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#10234d",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "FRIED MAC & CHEESE",
+            "price": "55",
+            "badge": "Popular",
+            "ingredients": "Nui chiên giòn lắc bột phô mai mặn ngọt giòn rụm",
+            "desc_vi": "Món nhắm lai rai giòn rụm cực kỳ hợp khi thưởng thức cùng bia và cocktail.",
+            "image": ""
+          }
+        },
+        {
+          "id": "card_b08",
+          "type": "product_card",
+          "x": 415,
+          "y": 1530,
+          "w": 355,
+          "h": 340,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "b08",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#940b05",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "POPCORN CHICKEN CHEESE",
+            "price": "95",
+            "badge": "M/L Options",
+            "ingredients": "Gà viên sốt cay phủ phô mai chảy. Size M (95k), Size L (125k), Extra Cheese (+30k)",
+            "desc_vi": "Món ăn kèm hoàn hảo với vị cay dịu và phô mai kéo sợi thơm phức.",
+            "image": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_cocktail",
+      "title": "Cocktail (Classic & Signature)",
+      "width": 800,
+      "height": 1800,
+      "bg": "#afd8f8",
+      "elements": [
+        {
+          "id": "cocktail_title",
+          "type": "text",
+          "x": 80,
+          "y": 30,
+          "w": 640,
+          "h": 65,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "COCKTAIL MENU",
+            "size": 48,
+            "weight": "900",
+            "color": "#10234d",
+            "align": "center",
+            "letterSpacing": 2
+          }
+        },
+        {
+          "id": "cocktail_sub",
+          "type": "text",
+          "x": 100,
+          "y": 95,
+          "w": 600,
+          "h": 60,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "“Tụi mình không làm đủ mọi loại cocktail đâu nha, chỉ giữ lại những món tụi mình thật sự mê.”",
+            "size": 13,
+            "weight": "600",
+            "color": "#10234d",
+            "align": "center",
+            "italic": true
+          }
+        },
+        {
+          "id": "cocktail_art",
+          "type": "image",
+          "x": 260,
+          "y": 160,
+          "w": 280,
+          "h": 260,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "src": "assets/canva/c2d4608440211aa525baf5236b84862f.png",
+            "fit": "contain"
+          }
+        },
+        {
+          "id": "sec_highlight",
+          "type": "text",
+          "x": 80,
+          "y": 440,
+          "w": 640,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "✨ HIGHLIGHT OF PACA",
+            "size": 20,
+            "weight": "900",
+            "color": "#940b05",
+            "align": "center"
+          }
+        },
+        {
+          "id": "card_c01",
+          "type": "product_card",
+          "x": 30,
+          "y": 490,
+          "w": 355,
+          "h": 260,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "c01",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#940b05",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "GOLDEN PEAR",
+            "price": "180",
+            "badge": "Signature",
+            "ingredients": "Bourbon Whisky • Pear, Apple & Cinnamon • Orgeat Foam",
+            "desc_vi": "Bourbon hoà cùng lê, táo và quế — ngọt dịu, mượt và mát."
+          }
+        },
+        {
+          "id": "card_c02",
+          "type": "product_card",
+          "x": 415,
+          "y": 490,
+          "w": 355,
+          "h": 260,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "c02",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#10234d",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "TROPICAL VEIL",
+            "price": "170",
+            "badge": "Tropical",
+            "ingredients": "Rum • Mango Puree • Cointreau • Coconut Syrup • Lime",
+            "desc_vi": "Rum gặp xoài và syrup dừa trong sắc thái nhiệt đới tươi mát."
+          }
+        },
+        {
+          "id": "card_c03",
+          "type": "product_card",
+          "x": 30,
+          "y": 770,
+          "w": 355,
+          "h": 260,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "c03",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#10234d",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "PINK BLOOM",
+            "price": "170",
+            "badge": "Floral & Tart",
+            "ingredients": "Lychee Puree • Cherry Blossom • Campari Hint",
+            "desc_vi": "Vải và hoa anh đào cùng chút Campari — đắng nhẹ, ngọt ngào trôi trôi."
+          }
+        },
+        {
+          "id": "card_c04",
+          "type": "product_card",
+          "x": 415,
+          "y": 770,
+          "w": 355,
+          "h": 260,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "c04",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#940b05",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "MIDNIGHT CHERRY",
+            "price": "170",
+            "badge": "Nightcap",
+            "ingredients": "Cherry • Gin • Coffee Liqueur • Sweet Vermouth",
+            "desc_vi": "Cherry và cà phê hòa quyện — đậm đà, chua nhẹ cho đêm muộn."
+          }
+        },
+        {
+          "id": "sec_classics",
+          "type": "text",
+          "x": 80,
+          "y": 1050,
+          "w": 640,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "🥃 OLD BUT GOLD (CLASSICS - 190K)",
+            "size": 20,
+            "weight": "900",
+            "color": "#10234d",
+            "align": "center"
+          }
+        },
+        {
+          "id": "card_c05",
+          "type": "product_card",
+          "x": 30,
+          "y": 1100,
+          "w": 355,
+          "h": 260,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "c05",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "OLD FASHIONED",
+            "price": "190",
+            "badge": "Classic",
+            "ingredients": "Whisky • Angostura Bitters • Sugar • Orange Twist",
+            "desc_vi": "Vị whisky nguyên bản ấm nồng trên nền cam bitters cổ điển."
+          }
+        },
+        {
+          "id": "card_c06",
+          "type": "product_card",
+          "x": 415,
+          "y": 1100,
+          "w": 355,
+          "h": 260,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "c06",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "NEGRONI",
+            "price": "190",
+            "badge": "Classic",
+            "ingredients": "Tanqueray Gin • Sweet Vermouth • Campari",
+            "desc_vi": "Cân bằng hoàn hảo giữa vị đắng Campari và thảo mộc khô."
+          }
+        },
+        {
+          "id": "card_c07",
+          "type": "product_card",
+          "x": 30,
+          "y": 1380,
+          "w": 355,
+          "h": 260,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "c07",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "WHISKY SOUR",
+            "price": "190",
+            "badge": "Classic",
+            "ingredients": "Whisky • Fresh Lemon • Simple Syrup • Egg White",
+            "desc_vi": "Vị chua thanh mát bọc trong lớp bọt lòng trắng trứng êm ái."
+          }
+        },
+        {
+          "id": "card_c08",
+          "type": "product_card",
+          "x": 415,
+          "y": 1380,
+          "w": 355,
+          "h": 260,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "c08",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "MARGARITA",
+            "price": "160",
+            "badge": "Classic",
+            "ingredients": "Jose Cuervo Tequila • Cointreau • Lime Juice • Salt Rim",
+            "desc_vi": "Chua mặn bừng sáng từ Tequila và viền muối kinh điển."
+          }
+        },
+        {
+          "id": "off_menu_note",
+          "type": "text",
+          "x": 100,
+          "y": 1670,
+          "w": 600,
+          "h": 60,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "Muốn gọi món ngoài menu? Cứ hỏi thử! Có nguyên liệu là tụi mình làm liền nhé.",
+            "size": 13,
+            "weight": "700",
+            "color": "#10234d",
+            "align": "center",
+            "italic": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_beer",
+      "title": "Bia & Đồ Uống Lên Men (Beer & Cider)",
+      "width": 800,
+      "height": 1700,
+      "bg": "#f6dcaf",
+      "elements": [
+        {
+          "id": "beer_title",
+          "type": "text",
+          "x": 80,
+          "y": 30,
+          "w": 640,
+          "h": 65,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "CRAFT BEER & CIDER",
+            "size": 48,
+            "weight": "900",
+            "color": "#ce1126",
+            "align": "center",
+            "letterSpacing": 2
+          }
+        },
+        {
+          "id": "beer_sub",
+          "type": "text",
+          "x": 100,
+          "y": 95,
+          "w": 600,
+          "h": 30,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "ALL CRAFT BEER -10.000đ FROM ROUND 2",
+            "size": 13,
+            "weight": "800",
+            "color": "#10234d",
+            "align": "center"
+          }
+        },
+        {
+          "id": "beer_tap_art",
+          "type": "image",
+          "x": 100,
+          "y": 140,
+          "w": 250,
+          "h": 320,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "src": "assets/canva/deba341107bd22b404047b04b080f63b.png",
+            "fit": "contain"
+          }
+        },
+        {
+          "id": "beer_pizza_art",
+          "type": "image",
+          "x": 420,
+          "y": 140,
+          "w": 300,
+          "h": 320,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "src": "assets/canva/1652457453919f440e4caa53cfb9bee1.png",
+            "fit": "contain"
+          }
+        },
+        {
+          "id": "sec_ontap",
+          "type": "text",
+          "x": 80,
+          "y": 480,
+          "w": 640,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "🍻 BIA THỦ CÔNG RÓT VÒI (ON TAP)",
+            "size": 20,
+            "weight": "900",
+            "color": "#940b05",
+            "align": "center"
+          }
+        },
+        {
+          "id": "card_be01",
+          "type": "product_card",
+          "x": 30,
+          "y": 530,
+          "w": 355,
+          "h": 270,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "be01",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "SUNNY PINT (PILSNER)",
+            "price": "65",
+            "badge": "ABV 5.2%",
+            "ingredients": "Hoppy Pilsner thơm lừng hoa bia, hậu vị đắng giòn thanh mát sảng khoái"
+          }
+        },
+        {
+          "id": "card_be02",
+          "type": "product_card",
+          "x": 415,
+          "y": 530,
+          "w": 355,
+          "h": 270,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "be02",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "CRISPY BOI (PILSNER)",
+            "price": "65",
+            "badge": "Classic",
+            "ingredients": "Pilsner truyền thống, malt cân bằng giòn tan rất dễ uống"
+          }
+        },
+        {
+          "id": "sec_bottle",
+          "type": "text",
+          "x": 80,
+          "y": 820,
+          "w": 640,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "🍺 BIA CHAI & LON (BOTTLE & CAN)",
+            "size": 20,
+            "weight": "900",
+            "color": "#10234d",
+            "align": "center"
+          }
+        },
+        {
+          "id": "card_be05",
+          "type": "product_card",
+          "x": 30,
+          "y": 870,
+          "w": 355,
+          "h": 320,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "be05",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "HOEGAARDEN WITBIER",
+            "price": "45",
+            "badge": "250ml",
+            "ingredients": "Bia lúa mì Bỉ nồng nàn vị vỏ cam curacao và hạt ngò rí",
+            "image": "assets/canva/ea093b2144fcd44344cfc2c4f1b8f149.png"
+          }
+        },
+        {
+          "id": "card_be06",
+          "type": "product_card",
+          "x": 415,
+          "y": 870,
+          "w": 355,
+          "h": 320,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "be06",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#ffffff",
+            "color": "#10234d",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "CORONA EXTRA",
+            "price": "85",
+            "badge": "355ml",
+            "ingredients": "Bia Mexico kinh điển uống cùng lát chanh tươi mát lạnh sảng khoái",
+            "image": "assets/canva/32ce3196c738a55c6e125673a1c9709f.png"
+          }
+        },
+        {
+          "id": "sec_cider",
+          "type": "text",
+          "x": 80,
+          "y": 1210,
+          "w": 640,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "🍎 CIDER & NƯỚC TRÁI CÂY LÊN MEN",
+            "size": 20,
+            "weight": "900",
+            "color": "#10234d",
+            "align": "center"
+          }
+        },
+        {
+          "id": "card_be03",
+          "type": "product_card",
+          "x": 30,
+          "y": 1260,
+          "w": 355,
+          "h": 270,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "be03",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#10234d",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "APPLE CIDER",
+            "price": "75",
+            "badge": "330ml",
+            "ingredients": "Nước táo lên men tự nhiên giòn ngọt, sủi tăm tươi mát"
+          }
+        },
+        {
+          "id": "card_be04",
+          "type": "product_card",
+          "x": 415,
+          "y": 1260,
+          "w": 355,
+          "h": 270,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "be04",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#940b05",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "KISO - TEPACHE (DỨA)",
+            "price": "65",
+            "badge": "Mexico Recipe",
+            "ingredients": "Ủ từ vỏ dứa chín, đường thốt nốt và quế. Chua thanh sủi bọt cực đã"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_wine_shots",
+      "title": "Rượu Vang, Shots & Thông Tin Quán",
+      "width": 800,
+      "height": 1600,
+      "bg": "#f9f2e7",
+      "elements": [
+        {
+          "id": "wine_title",
+          "type": "text",
+          "x": 80,
+          "y": 30,
+          "w": 640,
+          "h": 65,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "WINE & SHOT MENU",
+            "size": 48,
+            "weight": "900",
+            "color": "#940b05",
+            "align": "center",
+            "letterSpacing": 2
+          }
+        },
+        {
+          "id": "wine_art",
+          "type": "image",
+          "x": 100,
+          "y": 110,
+          "w": 280,
+          "h": 340,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "src": "assets/canva/b39e83bcd3e781d72ac36b3fee710acb.png",
+            "fit": "contain"
+          }
+        },
+        {
+          "id": "jack_art",
+          "type": "image",
+          "x": 430,
+          "y": 110,
+          "w": 280,
+          "h": 340,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "src": "assets/canva/8ccdcdb3a2f18990e491a76889d7f24d.png",
+            "fit": "contain"
+          }
+        },
+        {
+          "id": "sec_wine_label",
+          "type": "text",
+          "x": 80,
+          "y": 470,
+          "w": 640,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "🍷 WINE BY THE GLASS",
+            "size": 20,
+            "weight": "900",
+            "color": "#940b05",
+            "align": "center"
+          }
+        },
+        {
+          "id": "card_w_merlot",
+          "type": "product_card",
+          "x": 220,
+          "y": 520,
+          "w": 360,
+          "h": 260,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "w_merlot",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#940b05",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "CHATEAU DALAT MERLOT",
+            "price": "85",
+            "badge": "150ml Glass",
+            "ingredients": "Vang đỏ Đà Lạt êm dịu, hương dâu tằm và gỗ sồi phảng phất",
+            "desc_vi": "Rất hợp khi nhâm nhi cùng các món snack giòn rụm của quán."
+          }
+        },
+        {
+          "id": "sec_shots_label",
+          "type": "text",
+          "x": 80,
+          "y": 800,
+          "w": 640,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "text": "⚡ SHOT MENU (40ml - 120.000đ)",
+            "size": 20,
+            "weight": "900",
+            "color": "#10234d",
+            "align": "center"
+          }
+        },
+        {
+          "id": "card_s01",
+          "type": "product_card",
+          "x": 30,
+          "y": 850,
+          "w": 355,
+          "h": 240,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "s01",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#10234d",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "BLACK LABEL WHISKY",
+            "price": "120",
+            "badge": "40ml Shot",
+            "ingredients": "Blended Scotch Whisky đậm vị khói than bùn đặc trưng"
+          }
+        },
+        {
+          "id": "card_s02",
+          "type": "product_card",
+          "x": 415,
+          "y": 850,
+          "w": 355,
+          "h": 240,
+          "rotate": 0,
+          "zIndex": 2,
+          "binding": {
+            "productId": "s02",
+            "action": "open_modal"
+          },
+          "props": {
+            "bg": "#10234d",
+            "color": "#ffffff",
+            "border": "2px solid #10234d",
+            "shadow": "4px 4px 0px #10234d",
+            "title": "TANQUERAY NO. 10",
+            "price": "120",
+            "badge": "40ml Shot",
+            "ingredients": "London Dry Gin chưng cất cùng cam chanh tươi thơm nức"
+          }
+        },
+        {
+          "id": "ft_box",
+          "type": "shape",
+          "x": 60,
+          "y": 1130,
+          "w": 680,
+          "h": 380,
+          "rotate": 0,
+          "zIndex": 2,
+          "props": {
+            "shapeType": "rect",
+            "fill": "#10234d",
+            "border": "3px solid #f6dcaf",
+            "radius": 24,
+            "shadow": "6px 6px 0px #ce1126"
+          }
+        },
+        {
+          "id": "ft_name",
+          "type": "text",
+          "x": 100,
+          "y": 1160,
+          "w": 600,
+          "h": 60,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "PACA - TINY COZY BAR",
+            "font": "Playfair Display",
+            "size": 36,
+            "weight": "900",
+            "color": "#f6dcaf",
+            "align": "center"
+          }
+        },
+        {
+          "id": "ft_hours",
+          "type": "text",
+          "x": 100,
+          "y": 1230,
+          "w": 600,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "🕒 OPEN DAILY: 4:00 PM – 11:00 PM",
+            "size": 16,
+            "weight": "800",
+            "color": "#ffffff",
+            "align": "center"
+          }
+        },
+        {
+          "id": "ft_addr",
+          "type": "text",
+          "x": 100,
+          "y": 1280,
+          "w": 600,
+          "h": 60,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "📍 5A (10-1) Pasteur, Phường 4, TP. Đà Lạt\n(Bên trong khuôn viên EM Koffie)",
+            "size": 15,
+            "weight": "600",
+            "color": "#afd8f8",
+            "align": "center",
+            "lineSpacing": 1.4
+          }
+        },
+        {
+          "id": "ft_note",
+          "type": "text",
+          "x": 100,
+          "y": 1360,
+          "w": 600,
+          "h": 50,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "First come, first served. Everyone’s welcome. Always. ❤️",
+            "size": 14,
+            "weight": "700",
+            "color": "#f6dcaf",
+            "align": "center",
+            "italic": true
+          }
+        },
+        {
+          "id": "ft_social",
+          "type": "text",
+          "x": 100,
+          "y": 1420,
+          "w": 600,
+          "h": 40,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "Follow tụi mình trên Instagram & Facebook: @pacabar.dalat",
+            "size": 13,
+            "weight": "600",
+            "color": "#ffffff",
+            "align": "center"
+          }
+        }
+      ]
+    }
+  ]
+}
