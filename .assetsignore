@@ -1,0 +1,12 @@
+.git
+.git/**
+*.py
+*.bat
+*.log
+.system_generated/**
+node_modules/**
+shot_*.png
+admin_*.png
+index_*.png
+studio_*.png
+test_*.png
