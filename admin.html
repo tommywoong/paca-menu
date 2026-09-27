@@ -1370,6 +1370,61 @@
 
             // URL Param routing for direct link and automated visual verification
             const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('demo') === '1') {
+                const sampleOrders = [
+                    {
+                        id: 'PACA-2145-8821',
+                        tableId: 'b02',
+                        tableName: 'Bàn 02 (Trong Nhà)',
+                        items: [
+                            { name: 'PACA Signature Gin Tonic', quantity: 2, price: 165000, subtotal: 330000, station: 'bar', itemNote: 'Ít ngọt, nhiều đá' },
+                            { name: 'Khoai Tây Chiên Truffle', quantity: 1, price: 95000, subtotal: 95000, station: 'kitchen', itemNote: 'Tương cà riêng' }
+                        ],
+                        totalAmount: 425000,
+                        paymentStatus: 'paid',
+                        paymentMethod: 'vietqr',
+                        status: 'preparing',
+                        createdAt: new Date().toISOString(),
+                        createdAtFormatted: '21:45 - 27/09',
+                        reprintCount: 0
+                    },
+                    {
+                        id: 'PACA-2130-1042',
+                        tableId: 'b05',
+                        tableName: 'Bàn 05 (Ban Công)',
+                        items: [
+                            { name: 'Espresso Martini Dalat Coldbrew', quantity: 2, price: 180000, subtotal: 360000, station: 'bar' }
+                        ],
+                        totalAmount: 360000,
+                        paymentStatus: 'awaiting_check',
+                        paymentMethod: 'vietqr',
+                        status: 'pending',
+                        createdAt: new Date(Date.now() - 900000).toISOString(),
+                        createdAtFormatted: '21:30 - 27/09',
+                        reprintCount: 0
+                    },
+                    {
+                        id: 'PACA-2015-3912',
+                        tableId: 'takeaway',
+                        tableName: 'Đơn Mang Về (Takeaway)',
+                        items: [
+                            { name: 'Craft Beer Heart of Darkness', quantity: 4, price: 120000, subtotal: 480000, station: 'bar' }
+                        ],
+                        totalAmount: 480000,
+                        paymentStatus: 'paid',
+                        paymentMethod: 'cash',
+                        status: 'paid',
+                        createdAt: new Date(Date.now() - 3600000).toISOString(),
+                        createdAtFormatted: '20:15 - 27/09',
+                        reprintCount: 1
+                    }
+                ];
+                window.paca.orders = sampleOrders;
+                window.paca.saveOrders();
+                renderOrders();
+                renderRevenueStats();
+            }
+
             if (urlParams.get('modal') === 'manualOrder') {
                 openManualOrderModal();
                 addDishToManualCart('w01');
@@ -1385,6 +1440,11 @@
                     });
                 }
                 openVietQrFullscreen(ord.id);
+            } else if (urlParams.get('modal') === 'deleteConfirm') {
+                const targetId = urlParams.get('orderId') || window.paca.orders[0]?.id;
+                if (targetId) openDeleteOrderConfirmModal(targetId);
+            } else if (urlParams.get('tab') === 'revenue') {
+                switchTab('tabRevenue');
             } else if (urlParams.get('tab') === 'settings') {
                 switchTab('tabSettings');
                 switchBillTemplateEditor('cashier');
