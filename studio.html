@@ -278,6 +278,35 @@
                     </div>
                 </div>
 
+                <!-- Product Card Specific -->
+                <div id="productCardInspectorBox" class="space-y-2 hidden">
+                    <div class="bg-gray-800/80 p-2.5 rounded-xl border border-gray-700 space-y-2">
+                        <span class="text-amber-300 font-bold block text-[11px]">🍸 Chi tiết Thẻ Món Bán:</span>
+                        <div>
+                            <label class="font-bold text-gray-400 block mb-0.5 text-[10px]">Tên hiển thị:</label>
+                            <input type="text" id="propCardTitle" oninput="updatePropCard('title')" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-2.5 py-1 text-white text-xs">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="font-bold text-gray-400 block mb-0.5 text-[10px]">Giá (k):</label>
+                                <input type="number" id="propCardPrice" oninput="updatePropCard('price')" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-2.5 py-1 text-white text-xs">
+                            </div>
+                            <div>
+                                <label class="font-bold text-gray-400 block mb-0.5 text-[10px]">Huy hiệu:</label>
+                                <input type="text" id="propCardBadge" placeholder="BEST SELLER..." oninput="updatePropCard('badge')" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-2.5 py-1 text-white text-xs">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="font-bold text-gray-400 block mb-0.5 text-[10px]">Thành phần:</label>
+                            <input type="text" id="propCardIngredients" oninput="updatePropCard('ingredients')" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-2.5 py-1 text-white text-xs">
+                        </div>
+                        <div>
+                            <label class="font-bold text-gray-400 block mb-0.5 text-[10px]">Mô tả tiếng Việt:</label>
+                            <textarea id="propCardDesc" rows="2" oninput="updatePropCard('desc_vi')" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-2.5 py-1 text-white text-xs"></textarea>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- PRODUCT BINDING (SMART PICKER INTEGRATED) -->
                 <div class="bg-amber-950/40 border border-amber-500/40 rounded-xl p-3 space-y-2">
                     <div class="flex items-center space-x-1.5 text-amber-300 font-bold">
@@ -443,6 +472,7 @@
                 onSelectionChange: (el) => updateInspector(el),
                 onDesignChange: () => updatePageTabs()
             });
+            await engine.init();
 
             updatePageTabs();
             populateProductBindingsSelect();
@@ -663,9 +693,9 @@
             document.getElementById('propX').innerText = el.x;
             document.getElementById('propY').innerText = el.y;
 
-            // Text
+            // Text or Nav Link
             const textBox = document.getElementById('textInspectorBox');
-            if (el.type === 'text') {
+            if (el.type === 'text' || el.type === 'link_nav') {
                 textBox.classList.remove('hidden');
                 document.getElementById('propTextContent').value = el.props.text || '';
                 document.getElementById('propFontSize').value = el.props.size || 16;
@@ -676,17 +706,50 @@
 
             // Shape
             const shapeBox = document.getElementById('shapeInspectorBox');
-            if (el.type === 'shape' || el.type === 'product_card') {
+            if (el.type === 'shape') {
                 shapeBox.classList.remove('hidden');
                 document.getElementById('propShapeFill').value = el.props.fill || el.props.bg || '#940b05';
             } else {
                 shapeBox.classList.add('hidden');
             }
 
+            // Product Card Details
+            const cardBox = document.getElementById('productCardInspectorBox');
+            if (el.type === 'product_card') {
+                if (cardBox) {
+                    cardBox.classList.remove('hidden');
+                    document.getElementById('propCardTitle').value = el.props.title || '';
+                    document.getElementById('propCardPrice').value = el.props.price || '';
+                    document.getElementById('propCardBadge').value = el.props.badge || '';
+                    document.getElementById('propCardIngredients').value = el.props.ingredients || '';
+                    document.getElementById('propCardDesc').value = el.props.desc_vi || '';
+                }
+            } else if (cardBox) {
+                cardBox.classList.add('hidden');
+            }
+
             // Binding
             const bindSelect = document.getElementById('propBindingSelect');
             bindSelect.value = el.binding?.productId || '';
             updateBoundProductInfo(el.binding?.productId);
+        }
+
+        function updatePropCard(field) {
+            const el = engine.getSelectedElement();
+            if (!el || el.type !== 'product_card') return;
+            const title = document.getElementById('propCardTitle').value;
+            const price = document.getElementById('propCardPrice').value;
+            const badge = document.getElementById('propCardBadge').value;
+            const ingredients = document.getElementById('propCardIngredients').value;
+            const desc_vi = document.getElementById('propCardDesc').value;
+
+            engine.updateSelectedProps({
+                title,
+                price: Number(price) || price,
+                badge,
+                ingredients,
+                desc_vi
+            });
         }
 
         function updateBoundProductInfo(productId) {

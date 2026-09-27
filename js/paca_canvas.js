@@ -43,7 +43,7 @@ class PacaCanvasEngine {
         if (local) {
             try {
                 const parsed = JSON.parse(local);
-                if (parsed && (parsed.version === '2.1' || parsed.version >= '2.1') && parsed.pages && parsed.pages.length >= 7) {
+                if (parsed && Array.isArray(parsed.pages) && parsed.pages.length > 0) {
                     this.design = parsed;
                     return this.design;
                 }
@@ -851,6 +851,23 @@ class PacaCanvasEngine {
             node.style.fontStyle = el.props.italic ? 'italic' : 'normal';
             node.style.color = el.props.color || '#000';
             node.innerText = el.props.text;
+        } else if (el.type === 'link_nav') {
+            node.style.display = 'flex';
+            node.style.alignItems = 'center';
+            node.style.justifyContent = 'center';
+            node.innerHTML = `
+                <span style="
+                    font-size: ${el.props.size || 22}px;
+                    font-weight: ${el.props.weight || 'bold'};
+                    color: ${el.props.color || '#fff'};
+                    text-decoration: ${el.props.underline ? 'underline' : 'none'};
+                    font-family: ${el.props.font || 'Playfair Display, serif'};
+                    letter-spacing: 1px;
+                ">
+                    ${el.props.icon ? `<span class="mr-1">${el.props.icon}</span>` : ''}
+                    ${el.props.text || 'Liên kết'}
+                </span>
+            `;
         } else if (el.type === 'shape') {
             node.style.backgroundColor = el.props.fill || 'transparent';
             if (el.props.border) node.style.border = el.props.border;
@@ -884,11 +901,19 @@ class PacaCanvasEngine {
             `;
         }
 
-        // Selection & Drag handling
+        // Selection & Drag handling (Mouse + Touch)
         node.onmousedown = (e) => {
             e.stopPropagation();
             this.selectElement(el.id);
             this.startElementDrag(e, el);
+        };
+
+        node.ontouchstart = (e) => {
+            e.stopPropagation();
+            this.selectElement(el.id);
+            if (e.touches && e.touches.length === 1) {
+                this.startElementDrag(e.touches[0], el, true);
+            }
         };
 
         // Resize Handles if selected
@@ -913,7 +938,7 @@ class PacaCanvasEngine {
         return node;
     }
 
-    startElementDrag(e, el) {
+    startElementDrag(e, el, isTouch = false) {
         if (el.locked) return;
         this.recordState();
 
@@ -922,9 +947,11 @@ class PacaCanvasEngine {
         const initialElX = el.x;
         const initialElY = el.y;
 
-        const onMouseMove = (moveEvent) => {
-            const dx = (moveEvent.clientX - startX) / this.zoom;
-            const dy = (moveEvent.clientY - startY) / this.zoom;
+        const onMove = (moveEvent) => {
+            const point = isTouch ? (moveEvent.touches && moveEvent.touches[0]) : moveEvent;
+            if (!point) return;
+            const dx = (point.clientX - startX) / this.zoom;
+            const dy = (point.clientY - startY) / this.zoom;
             el.x = Math.round(initialElX + dx);
             el.y = Math.round(initialElY + dy);
             
@@ -935,15 +962,25 @@ class PacaCanvasEngine {
             }
         };
 
-        const onMouseUp = () => {
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
+        const onEnd = () => {
+            if (isTouch) {
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('touchend', onEnd);
+            } else {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onEnd);
+            }
             this.saveDraft();
             if (this.onSelectionChange) this.onSelectionChange(el);
         };
 
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
+        if (isTouch) {
+            document.addEventListener('touchmove', onMove, { passive: false });
+            document.addEventListener('touchend', onEnd);
+        } else {
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onEnd);
+        }
     }
 
     startElementResize(e, el, handle) {
@@ -1074,7 +1111,21 @@ class PacaCanvasEngine {
         const el = this.getSelectedElement();
         if (!el) return;
         el.props = { ...el.props, ...newProps };
-        this.render();
+        const node = document.getElementById(`studio_el_${el.id}`);
+        if (node && (el.type === 'text' || el.type === 'link_nav') && newProps.text !== undefined) {
+            if (el.type === 'link_nav') {
+                const span = node.querySelector('span');
+                if (span) span.innerText = (el.props.icon ? el.props.icon + ' ' : '') + newProps.text;
+            } else {
+                node.innerText = newProps.text;
+            }
+        } else if (node && el.type === 'text' && newProps.size !== undefined) {
+            node.style.fontSize = `${newProps.size}px`;
+        } else if (node && el.type === 'text' && newProps.color !== undefined) {
+            node.style.color = newProps.color;
+        } else {
+            this.render();
+        }
         this.saveDraft();
     }
 

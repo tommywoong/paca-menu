@@ -586,9 +586,16 @@
                 <div id="tableQrCodeDiv"></div>
             </div>
 
-            <div class="text-xs text-gray-600">
-                <p class="font-bold text-paca-navy" id="qrModalLinkPreview"></p>
-                <p class="text-[11px] text-gray-500 mt-1">Khách quét mã này trên điện thoại sẽ tự động chọn đúng số bàn.</p>
+            <div class="text-xs text-gray-600 space-y-1.5 pt-1">
+                <p class="text-[12px] font-semibold text-paca-navy">Quét mã để mở menu & gọi món tự động</p>
+                <p class="text-[11px] text-gray-500">Mã QR đã mã hoá số bàn. Khách dùng camera quét sẽ vào thẳng bàn này.</p>
+                <!-- Raw link is hidden to keep modal clean and discreet -->
+                <p id="qrModalLinkPreview" class="hidden"></p>
+                <div>
+                    <button type="button" onclick="copyTableQrLink()" class="inline-flex items-center gap-1.5 text-[11px] text-paca-navy hover:text-paca-crimson bg-gray-100 hover:bg-gray-200 border border-gray-300 px-3 py-1 rounded-xl transition font-medium active:scale-95">
+                        <span>📋</span> <span id="copyLinkBtnText">Sao chép liên kết</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Action buttons -->
@@ -1598,6 +1605,25 @@
                 link.download = `QR_PACA_${activeQrTable.id}.png`;
                 link.href = img.src;
                 link.click();
+            }
+        }
+
+        function copyTableQrLink() {
+            if (!activeQrTable) return;
+            const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            const fullUrl = `${baseUrl}/index.html?table=${activeQrTable.id}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(fullUrl).then(() => {
+                    const btn = document.getElementById('copyLinkBtnText');
+                    if (btn) {
+                        btn.innerText = '✓ Đã sao chép!';
+                        setTimeout(() => { btn.innerText = 'Sao chép liên kết'; }, 2000);
+                    }
+                }).catch(() => {
+                    prompt("Liên kết đặt món bàn " + activeQrTable.name + ":", fullUrl);
+                });
+            } else {
+                prompt("Liên kết đặt món bàn " + activeQrTable.name + ":", fullUrl);
             }
         }
 
