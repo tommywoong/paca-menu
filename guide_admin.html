@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infographic Hướng Dẫn Quản Trị - PACA Bar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        paca: {
+                            navy: '#10234d',
+                            cream: '#fbf9f4',
+                            dark: '#0a1733',
+                            crimson: '#be123c',
+                            red: '#9f1239',
+                            warmBg: '#f4efe6'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+                        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .retro-border {
+            border: 2px solid #10234d;
+            box-shadow: 4px 4px 0px #10234d;
+        }
+        .step-pill {
+            background: linear-gradient(135deg, #10234d 0%, #1e3a8a 100%);
+        }
+    </style>
+</head>
+<body class="bg-paca-cream text-gray-800 font-sans pb-20">
+
+    <!-- Header -->
+    <header class="bg-paca-navy text-white py-4 px-4 sticky top-0 z-30 shadow-lg border-b border-paca-dark">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="admin.html" class="w-9 h-9 rounded-xl bg-paca-cream text-paca-navy flex items-center justify-center font-serif font-black text-lg border border-paca-navy shadow hover:scale-105 transition">
+                    P
+                </a>
+                <div>
+                    <h1 class="font-serif font-black text-base text-paca-cream tracking-wide uppercase">CẨM NANG VẬN HÀNH QUẢN TRỊ</h1>
+                    <p class="text-[11px] text-blue-200">Hướng dẫn sử dụng trực quan từng bước hệ thống PACA Bar</p>
+                </div>
+            </div>
+            <a href="admin.html" class="bg-paca-crimson hover:bg-paca-red text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow active:scale-95 transition">
+                <span>←</span>
+                <span>Vào Trang Admin</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Hero Banner -->
+    <section class="max-w-4xl mx-auto px-4 pt-6 pb-2">
+        <div class="bg-gradient-to-r from-paca-dark via-paca-navy to-paca-crimson text-white rounded-3xl p-6 shadow-xl border-2 border-paca-navy space-y-2">
+            <div class="inline-block bg-paca-cream/15 text-paca-cream text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-white/20">
+                QUY TRÌNH THỰC TẾ 5 BƯỚC KHÉP KÍN
+            </div>
+            <h2 class="font-serif font-black text-xl sm:text-2xl text-paca-cream leading-tight">
+                HƯỚNG DẪN QUẢN LÝ ĐƠN HÀNG, IN PHIẾU & BÁO CÁO DOANH THU
+            </h2>
+            <p class="text-xs sm:text-sm text-blue-100 max-w-2xl leading-relaxed">
+                Tài liệu infographic kèm ảnh chụp màn hình thực tế, giúp nhân viên thu ngân, bartender, đầu bếp và chủ quán nắm vững toàn bộ quy trình chỉ trong 3 phút.
+            </p>
+        </div>
+    </section>
+
+    <!-- Main Content: 5 Steps -->
+    <main class="max-w-4xl mx-auto px-4 pt-4 space-y-6">
+
+        <!-- ==================== BƯỚC 1: TIẾP NHẬN ĐƠN ==================== -->
+        <article class="bg-white rounded-3xl retro-border p-5 space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-full step-pill text-white font-black text-sm flex items-center justify-center shadow">1</span>
+                    <div>
+                        <h3 class="font-serif font-bold text-base text-paca-navy">BƯỚC 1: TIẾP NHẬN & QUẢN LÝ ĐƠN REALTIME</h3>
+                        <p class="text-xs text-gray-500">Chuông báo tức thì • Xem chi tiết bàn, món và ghi chú pha chế</p>
+                    </div>
+                </div>
+                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2.5 py-1 rounded-full">Cloud Sync 0.5s</span>
+            </div>
+
+            <!-- Screenshot Callout -->
+            <div class="space-y-2">
+                <div class="rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm bg-gray-50">
+                    <img src="image/infographics/infographic_admin_step1_order_card.png" alt="Thẻ đơn hàng chi tiết" class="w-full h-auto">
+                </div>
+                <p class="text-[11px] text-gray-500 italic text-center">Ảnh chụp giao diện thẻ đơn hàng thực tế trên trang Admin</p>
+            </div>
+
+            <!-- Instructions List -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div class="bg-paca-warmBg p-3 rounded-2xl border border-gray-200 space-y-1">
+                    <div class="font-bold text-paca-navy flex items-center gap-1.5">
+                        <span>🔔</span> 1. Chuông Báo & Thông Tin Bàn
+                    </div>
+                    <p class="text-gray-600 text-[11px] leading-relaxed">
+                        Khi khách quét QR gửi món, màn hình Admin tự động phát chuông ting-ting. Thẻ đơn hiển thị rõ số bàn (Ví dụ: <b>Bàn 02 (Trong Nhà)</b>), mã đơn và giờ đặt.
+                    </p>
+                </div>
+
+                <div class="bg-paca-warmBg p-3 rounded-2xl border border-gray-200 space-y-1">
+                    <div class="font-bold text-paca-navy flex items-center gap-1.5">
+                        <span>📝</span> 2. Tên Món & Ghi Chú Riêng
+                    </div>
+                    <p class="text-gray-600 text-[11px] leading-relaxed">
+                        Danh sách từng món kèm số lượng. Ghi chú của khách (Ví dụ: <i>"Ít ngọt, nhiều đá"</i>, <i>"Tương cà riêng"</i>) được làm nổi bật màu đỏ để quầy làm đúng khẩu vị.
+                    </p>
+                </div>
+            </div>
+        </article>
+
+
+        <!-- ==================== BƯỚC 2: IN PHIẾU PHÂN TRẠM ==================== -->
+        <article class="bg-white rounded-3xl retro-border p-5 space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-full step-pill text-white font-black text-sm flex items-center justify-center shadow">2</span>
+                    <div>
+                        <h3 class="font-serif font-bold text-base text-paca-navy">BƯỚC 2: IN PHIẾU PHÂN TRẠM BAR / BẾP / THU NGÂN</h3>
+                        <p class="text-xs text-gray-500">Tự động bỏ dấu tiếng Việt khi in • Chống lỗi font máy in nhiệt POS</p>
+                    </div>
+                </div>
+                <span class="bg-blue-100 text-blue-800 text-[10px] font-black px-2.5 py-1 rounded-full">K80 / K58 POS</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                <!-- Screenshot Print Preview Modal -->
+                <div class="md:col-span-6 space-y-1">
+                    <div class="rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm bg-gray-50 flex justify-center">
+                        <img src="image/infographics/infographic_admin_step2_print.png" alt="Bản xem trước phiếu in nhiệt" class="w-full max-w-[340px] h-auto">
+                    </div>
+                    <p class="text-[10px] text-gray-500 italic text-center">Giao diện xem trước phiếu Bar tự động định dạng chuẩn ESC/POS</p>
+                </div>
+
+                <!-- Explanation Points -->
+                <div class="md:col-span-6 space-y-2.5 text-xs">
+                    <div class="p-3 bg-gray-50 rounded-2xl border border-gray-200 space-y-1">
+                        <div class="font-bold text-paca-navy">🖨️ Nút In Riêng Biệt Cho Từng Quầy:</div>
+                        <ul class="list-disc pl-4 space-y-1 text-gray-600 text-[11px]">
+                            <li><b>🖨️ Thu Ngân:</b> In phiếu tạm tính hoặc phiếu thanh toán đầy đủ tiền và mã VietQR.</li>
+                            <li><b>🍸 Quầy Bar:</b> Chỉ in các món đồ uống, cocktail, bia kèm ghi chú; <b>tuyệt đối không in tiền</b>.</li>
+                            <li><b>🍳 Quầy Bếp:</b> Chỉ in các món đồ ăn, snack, khai vị.</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 space-y-1">
+                        <div class="font-bold text-amber-900 flex items-center gap-1">
+                            <span>🛡️</span> Cơ Chế Chống Lỗi Font Máy In:
+                        </div>
+                        <p class="text-amber-800 text-[11px] leading-relaxed">
+                            Màn hình xem trước vẫn hiển thị 100% tiếng Việt có dấu chuẩn đẹp. Khi lệnh in gửi ra máy nhiệt POS, hệ thống <b>tự động chuyển không dấu sạch ASCII</b> để tránh bị in ra ký tự rác <code>???, á¾á...</code>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+
+        <!-- ==================== BƯỚC 3: XÁC NHẬN THANH TOÁN ==================== -->
+        <article class="bg-white rounded-3xl retro-border p-5 space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-full step-pill text-white font-black text-sm flex items-center justify-center shadow">3</span>
+                    <div>
+                        <h3 class="font-serif font-bold text-base text-paca-navy">BƯỚC 3: XÁC NHẬN THANH TOÁN & ĐIỀU PHỐI ĐƠN</h3>
+                        <p class="text-xs text-gray-500">Mã VietQR toàn màn hình • Nút bấm nhận tiền một chạm</p>
+                    </div>
+                </div>
+                <span class="bg-amber-100 text-amber-900 text-[10px] font-black px-2.5 py-1 rounded-full">VietQR Tự Động</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 space-y-1.5">
+                    <div class="font-bold text-amber-700 flex items-center gap-1">
+                        <span>💳</span> 1. Mở VietQR Cho Khách
+                    </div>
+                    <p class="text-gray-600 text-[11px] leading-relaxed">
+                        Bấm nút <code>💳 VietQR</code> trên đơn, màn hình phóng to mã QR thanh toán ngân hàng với số tiền và mã đơn điền tự động. Khách quét trên App ngân hàng là chuyển khoản xong ngay.
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 space-y-1.5">
+                    <div class="font-bold text-emerald-700 flex items-center gap-1">
+                        <span>✓</span> 2. Xác Nhận Đã Nhận Tiền
+                    </div>
+                    <p class="text-gray-600 text-[11px] leading-relaxed">
+                        Khi thấy biến động số dư ngân hàng hoặc nhận tiền mặt, thu ngân bấm <code>✓ Đã Nhận Tiền</code>. Hệ thống gắn nhãn <span class="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded text-[10px]">🟢 Đã TT</span> và cộng vào doanh thu.
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 space-y-1.5">
+                    <div class="font-bold text-blue-700 flex items-center gap-1">
+                        <span>🍹</span> 3. Chuyển Đang Làm ➔ Hoàn Tất
+                    </div>
+                    <p class="text-gray-600 text-[11px] leading-relaxed">
+                        Bấm <code>Làm 🍹</code> để thông báo quầy đang pha chế/nấu món. Khi nhân viên bưng đồ ra bàn thành công, bấm <code>Xong ✓</code> để hoàn tất đơn hàng.
+                    </p>
+                </div>
+            </div>
+        </article>
+
+
+        <!-- ==================== BƯỚC 4: BÁO CÁO DOANH THU ==================== -->
+        <article class="bg-white rounded-3xl retro-border p-5 space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-full step-pill text-white font-black text-sm flex items-center justify-center shadow">4</span>
+                    <div>
+                        <h3 class="font-serif font-bold text-base text-paca-navy">BƯỚC 4: BÁO CÁO DOANH THU NÂNG CAO</h3>
+                        <p class="text-xs text-gray-500">Mặc định lọc từ ngày 01 đến hôm nay • Xuất Excel (CSV) tiếng Việt</p>
+                    </div>
+                </div>
+                <span class="bg-purple-100 text-purple-900 text-[10px] font-black px-2.5 py-1 rounded-full">Bộ Lọc Đa Tiêu Chí</span>
+            </div>
+
+            <!-- Screenshots: Filters Bar -->
+            <div class="space-y-2">
+                <div class="font-bold text-xs text-paca-navy">1. Thanh Bộ Lọc Ngày Tháng & Nút Chọn Nhanh:</div>
+                <div class="rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm bg-gray-50">
+                    <img src="image/infographics/infographic_admin_step4_filters.png" alt="Thanh bộ lọc doanh thu" class="w-full h-auto">
+                </div>
+            </div>
+
+            <!-- Screenshots: KPI Grid -->
+            <div class="space-y-2 pt-2">
+                <div class="font-bold text-xs text-paca-navy">2. 4 Thẻ KPI Chỉ Số Tài Chính Tự Động Tính Theo Bộ Lọc:</div>
+                <div class="rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm bg-gray-50">
+                    <img src="image/infographics/infographic_admin_step4_kpis.png" alt="4 Thẻ KPI Doanh Thu" class="w-full h-auto">
+                </div>
+            </div>
+
+            <!-- Screenshots: Top Items & Table -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                <div class="space-y-1">
+                    <div class="font-bold text-xs text-paca-navy">3. Top Món & Doanh Thu Từng Ngày:</div>
+                    <div class="rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm bg-gray-50">
+                        <img src="image/infographics/infographic_admin_step4_insights.png" alt="Top món bán chạy và doanh thu ngày" class="w-full h-auto">
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <div class="font-bold text-xs text-paca-navy">4. Bảng Đơn Chi Tiết & Nút Xuất Excel:</div>
+                    <div class="rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm bg-gray-50">
+                        <img src="image/infographics/infographic_admin_step4_table.png" alt="Bảng đơn hàng chi tiết" class="w-full h-auto">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Notes -->
+            <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 text-xs space-y-1 text-gray-700">
+                <div class="font-bold text-paca-navy">💡 Điểm nổi bật của Báo Cáo Doanh Thu PACA:</div>
+                <ul class="list-disc pl-4 space-y-0.5 text-[11px]">
+                    <li><b>Tự động tính từ ngày 01 đầu tháng:</b> Thu ngân mở lên là có ngay số liệu tháng hiện tại, không cần chỉnh tay.</li>
+                    <li><b>Nút chọn nhanh 1 chạm:</b> Chuyển ngay giữa Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Tất cả.</li>
+                    <li><b>Xuất Excel (CSV) chuẩn UTF-8:</b> Bấm nút <code>📥 Xuất Excel (CSV)</code> góc trên bên phải để tải file bảng tính, mở bằng Excel tiếng Việt có dấu chuẩn đẹp không bao giờ bị lỗi font.</li>
+                </ul>
+            </div>
+        </article>
+
+
+        <!-- ==================== BƯỚC 5: XÓA ĐƠN AN TOÀN ==================== -->
+        <article class="bg-white rounded-3xl retro-border p-5 space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-full step-pill text-white font-black text-sm flex items-center justify-center shadow">5</span>
+                    <div>
+                        <h3 class="font-serif font-bold text-base text-red-600">BƯỚC 5: XÓA ĐƠN HÀNG AN TOÀN (CẢNH BÁO 2 LỚP)</h3>
+                        <p class="text-xs text-gray-500">Chống xóa nhầm 100% • Tự động trừ khỏi doanh thu và đồng bộ đám mây</p>
+                    </div>
+                </div>
+                <span class="bg-red-100 text-red-800 text-[10px] font-black px-2.5 py-1 rounded-full">Bảo Mật 2 Lớp</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                <!-- Screenshot Delete Modal -->
+                <div class="md:col-span-6 space-y-1">
+                    <div class="rounded-2xl border-2 border-gray-200 overflow-hidden shadow-sm bg-gray-50 flex justify-center">
+                        <img src="image/infographics/infographic_admin_step3_delete.png" alt="Hộp thoại cảnh báo xóa đơn 2 lớp" class="w-full max-w-[340px] h-auto">
+                    </div>
+                    <p class="text-[10px] text-gray-500 italic text-center">Giao diện hộp thoại cảnh báo xóa đơn hàng vĩnh viễn</p>
+                </div>
+
+                <!-- Explanation Steps -->
+                <div class="md:col-span-6 space-y-3 text-xs">
+                    <div class="p-3 bg-red-50 border-l-4 border-red-500 rounded-r-2xl space-y-1 text-red-900">
+                        <div class="font-bold flex items-center gap-1 text-red-700">
+                            <span>⚠️</span> Quy Tắc Bảo Vệ 2 Lớp:
+                        </div>
+                        <p class="text-[11px] leading-relaxed">
+                            Để tránh nhân viên bấm nhầm xóa mất đơn của khách hoặc đơn đã thu tiền, hệ thống thiết lập cơ chế khóa 2 nhịp:
+                        </p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex items-start gap-2 bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                            <span class="font-black text-paca-crimson">Lớp 1:</span>
+                            <div class="text-[11px] text-gray-700">
+                                <b>Tích ô kiểm nhận thức rủi ro:</b> Bắt buộc tích vào ô <i>"Tôi hiểu rõ hệ quả và xác nhận muốn xóa vĩnh viễn đơn hàng này"</i> thì nút xóa mới mở khóa.
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2 bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                            <span class="font-black text-paca-crimson">Lớp 2:</span>
+                            <div class="text-[11px] text-gray-700">
+                                <b>Bấm xác nhận lần thứ 2:</b> Khi bấm lần 1, nút chuyển sang màu đỏ rực: <b>"BẤM LẦN NỮA ĐỂ XÓA VĨNH VIỄN!"</b>. Chỉ khi bấm nhịp 2, đơn mới chính thức bị xóa.
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-2 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">
+                            <span class="font-black text-emerald-700">Đồng bộ:</span>
+                            <div class="text-[11px] text-emerald-800">
+                                Khi xóa thành công, hệ thống phát tín hiệu đám mây, toàn bộ điện thoại và máy tính khác đang mở Admin đều tự động biến mất đơn đó ngay lập tức.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+    </main>
+
+    <!-- Footer Quick CTA -->
+    <footer class="max-w-4xl mx-auto px-4 pt-6 text-center">
+        <div class="bg-paca-navy text-white rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 border border-paca-dark">
+            <div class="text-left">
+                <div class="font-serif font-bold text-sm text-paca-cream">PACA - TINY COZY COCKTAIL BAR</div>
+                <div class="text-[11px] text-blue-200">5A Pasteur, Phường 4, TP. Đà Lạt • Hệ Thống Menu Điện Tử & POS Realtime</div>
+            </div>
+            <a href="admin.html" class="bg-paca-cream hover:bg-white text-paca-navy font-black text-xs px-5 py-2.5 rounded-xl shadow active:scale-95 transition whitespace-nowrap">
+                MỞ TRANG QUẢN TRỊ ADMIN →
+            </a>
+        </div>
+    </footer>
+
+</body>
+</html>
