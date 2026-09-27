@@ -1210,15 +1210,68 @@ ${order.note ? `📝 *Ghi chú:* _${order.note}_\n` : ''}
         return this.generateKitchenTicketHtml(order, 'bar', isReprint, reprintInfo);
     }
 
-    // In ra trình duyệt
-    printHtml(htmlContent) {
+    // --- VIETNAMESE ACCENT REMOVER FOR THERMAL PRINTERS ---
+    removeVietnameseTones(str) {
+        if (!str || typeof str !== 'string') return str || '';
+        str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+        str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+        str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+        str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+        str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+        str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+        str = str.replace(/đ/g, "d");
+        str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, "A");
+        str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, "E");
+        str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, "I");
+        str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, "O");
+        str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, "U");
+        str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, "Y");
+        str = str.replace(/Đ/g, "D");
+        // Combining diacritical marks
+        str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        // Currency symbol đ -> d
+        str = str.replace(/đ/g, "d").replace(/Đ/g, "D");
+        return str;
+    }
+
+    convertHtmlToUnaccented(html) {
+        if (!html) return html;
+        if (typeof window !== 'undefined' && window.DOMParser) {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const walk = (node) => {
+                    if (node.nodeType === 3) { // Node.TEXT_NODE
+                        node.nodeValue = this.removeVietnameseTones(node.nodeValue);
+                    } else if (node.nodeType === 1 && node.nodeName !== 'SCRIPT' && node.nodeName !== 'STYLE') {
+                        for (let child of node.childNodes) {
+                            walk(child);
+                        }
+                    }
+                };
+                if (doc.body) walk(doc.body);
+                return '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+            } catch (e) {
+                console.warn("DOMParser unaccent fallback:", e);
+            }
+        }
+        return html.replace(/>([^<]+)</g, (m, txt) => '>' + this.removeVietnameseTones(txt) + '<');
+    }
+
+    // In ra máy in nhiệt (tự động bỏ dấu tiếng Việt khi in thật để chống lỗi font máy in POS)
+    printHtml(htmlContent, autoStripAccents = true) {
+        let finalHtml = htmlContent;
+        if (autoStripAccents) {
+            finalHtml = this.convertHtmlToUnaccented(htmlContent);
+        }
+
         const printWindow = window.open('', '_blank', 'width=450,height=650');
         if (!printWindow) {
             alert("Trình duyệt đã chặn cửa sổ in pop-up. Vui lòng bật quyền cho phép pop-up.");
             return false;
         }
         printWindow.document.open();
-        printWindow.document.write(htmlContent);
+        printWindow.document.write(finalHtml);
         printWindow.document.close();
         printWindow.focus();
         setTimeout(() => {

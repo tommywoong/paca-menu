@@ -509,6 +509,17 @@
                             </div>
                         </div>
 
+                        <!-- Font protection switch -->
+                        <div class="bg-blue-50/80 p-2.5 rounded-xl border border-blue-200 flex items-center justify-between">
+                            <div>
+                                <span class="font-bold text-paca-navy text-xs flex items-center gap-1">
+                                    <span>🛡️</span> Bỏ dấu Tiếng Việt khi in bill (Chống lỗi font máy in POS)
+                                </span>
+                                <p class="text-[10px] text-gray-600">Xem trước trên màn hình vẫn đầy đủ dấu chuẩn đẹp. Khi in ra máy in nhiệt sẽ tự động chuyển thành không dấu để không bị lỗi font rác.</p>
+                            </div>
+                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2.5 py-1 rounded-full border border-emerald-300">Đã kích hoạt</span>
+                        </div>
+
                         <!-- Bottom Actions -->
                         <div class="pt-2 flex flex-wrap items-center justify-between gap-2 border-t">
                             <div class="flex items-center gap-2">
@@ -1102,11 +1113,17 @@
                     <!-- Thermal paper content rendered here -->
                 </div>
             </div>
-            <div class="p-3 bg-white border-t flex justify-end gap-2">
-                <button onclick="closePrintPreviewModal()" class="bg-gray-100 text-gray-700 font-bold px-4 py-2 rounded-xl text-xs">Đóng</button>
-                <button onclick="executeModalPrint()" class="bg-paca-crimson text-white font-bold px-5 py-2 rounded-xl text-xs hover:bg-paca-red shadow">
-                    🖨️ In Ngay
-                </button>
+            <div class="p-3 bg-white border-t flex items-center justify-between gap-2">
+                <div class="text-[10px] text-gray-500 font-medium flex items-center gap-1">
+                    <span>🛡️</span>
+                    <span>Tự động bỏ dấu khi in (chống lỗi font máy in)</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="closePrintPreviewModal()" class="bg-gray-100 text-gray-700 font-bold px-3.5 py-2 rounded-xl text-xs hover:bg-gray-200">Đóng</button>
+                    <button onclick="executeModalPrint()" class="bg-paca-crimson text-white font-bold px-4 py-2 rounded-xl text-xs hover:bg-paca-red shadow">
+                        🖨️ In Ngay
+                    </button>
+                </div>
             </div>
         </div>
     </div>
