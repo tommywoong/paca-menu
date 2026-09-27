@@ -171,6 +171,9 @@ class PacaService {
         this.orders = [];
         this.billTemplates = null;
         this.broadcastChannel = null;
+        this.cloudSyncTopic = 'paca_orders_live_da_lat_2025';
+        this.cloudEventSource = null;
+        this.cloudSyncTimer = null;
         this.initBroadcast();
     }
 
@@ -608,15 +611,123 @@ class PacaService {
         this.orders.unshift(newOrder);
         this.saveOrders();
 
-        // Broadcast to all admin windows/tabs
+        // Broadcast to all admin windows/tabs locally
         if (this.broadcastChannel) {
             this.broadcastChannel.postMessage({ type: 'NEW_ORDER', order: newOrder });
         }
+
+        // Broadcast to Cloud Sync (so all admin phones/screens receive immediately across internet)
+        this.pushOrderToCloud(newOrder, 'CREATE_ORDER');
 
         // Trigger Telegram notification
         this.sendTelegramOrder(newOrder);
 
         return newOrder;
+    }
+
+    // --- REALTIME CLOUD ORDER SYNC ---
+    async pushOrderToCloud(order, action = 'CREATE_ORDER') {
+        try {
+            const payload = JSON.stringify({ action, order, timestamp: Date.now() });
+            await fetch(`https://ntfy.sh/${this.cloudSyncTopic}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+                body: payload
+            });
+        } catch (e) {
+            console.warn("Failed to push order to cloud sync", e);
+        }
+    }
+
+    async syncCloudOrders(onUpdateCallback) {
+        try {
+            const res = await fetch(`https://ntfy.sh/${this.cloudSyncTopic}/json?poll=1&since=24h`, { cache: 'no-store' });
+            const text = await res.text();
+            if (!text) return;
+            const lines = text.trim().split('\n');
+            let hasChanges = false;
+            for (const line of lines) {
+                try {
+                    const item = JSON.parse(line);
+                    if (item.event === 'message' && item.message) {
+                        const payload = JSON.parse(item.message);
+                        if (payload.action === 'CREATE_ORDER' && payload.order) {
+                            const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
+                            if (existingIdx === -1) {
+                                this.orders.unshift(payload.order);
+                                hasChanges = true;
+                            }
+                        } else if (payload.action === 'UPDATE_ORDER' && payload.order) {
+                            const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
+                            if (existingIdx !== -1) {
+                                this.orders[existingIdx] = { ...this.orders[existingIdx], ...payload.order };
+                                hasChanges = true;
+                            } else {
+                                this.orders.unshift(payload.order);
+                                hasChanges = true;
+                            }
+                        }
+                    }
+                } catch (err) {}
+            }
+            if (hasChanges) {
+                this.saveOrders();
+                if (onUpdateCallback) onUpdateCallback();
+            }
+        } catch (e) {
+            console.warn("Cloud sync poll error:", e);
+        }
+    }
+
+    startCloudOrderSync(onNewOrderCallback, onUpdateCallback) {
+        // 1. Initial catch-up for past 24h
+        this.syncCloudOrders(() => {
+            if (onUpdateCallback) onUpdateCallback();
+        });
+
+        // 2. Realtime SSE connection (instant live push)
+        if (this.cloudEventSource) {
+            try { this.cloudEventSource.close(); } catch(e){}
+        }
+        try {
+            this.cloudEventSource = new EventSource(`https://ntfy.sh/${this.cloudSyncTopic}/sse`);
+            this.cloudEventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.event === 'message' && data.message) {
+                        const payload = JSON.parse(data.message);
+                        if (payload.action === 'CREATE_ORDER' && payload.order) {
+                            const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
+                            if (existingIdx === -1) {
+                                this.orders.unshift(payload.order);
+                                this.saveOrders();
+                                if (onNewOrderCallback) onNewOrderCallback(payload.order);
+                            }
+                        } else if (payload.action === 'UPDATE_ORDER' && payload.order) {
+                            const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
+                            if (existingIdx !== -1) {
+                                this.orders[existingIdx] = { ...this.orders[existingIdx], ...payload.order };
+                            } else {
+                                this.orders.unshift(payload.order);
+                            }
+                            this.saveOrders();
+                            if (onUpdateCallback) onUpdateCallback(payload.order);
+                        }
+                    }
+                } catch (err) {}
+            };
+        } catch (e) {
+            console.warn("Cloud EventSource init error", e);
+        }
+
+        // 3. Fallback poll interval every 5 seconds
+        if (!this.cloudSyncTimer) {
+            this.cloudSyncTimer = setInterval(() => {
+                this.syncCloudOrders(() => {
+                    if (onUpdateCallback) onUpdateCallback();
+                });
+            }, 5000);
+        }
     }
 
     // --- PAYMENT CONFIRMATION (IDEMPOTENT) ---
@@ -641,6 +752,8 @@ class PacaService {
         if (this.broadcastChannel) {
             this.broadcastChannel.postMessage({ type: 'ORDER_PAYMENT_CONFIRMED', orderId, order });
         }
+        this.pushOrderToCloud(order, 'UPDATE_ORDER');
+
         return order;
     }
 
@@ -653,6 +766,7 @@ class PacaService {
         if (this.broadcastChannel) {
             this.broadcastChannel.postMessage({ type: 'ORDER_STATUS_CHANGED', orderId, status: order.status });
         }
+        this.pushOrderToCloud(order, 'UPDATE_ORDER');
         return order;
     }
 
@@ -665,6 +779,7 @@ class PacaService {
             if (this.broadcastChannel) {
                 this.broadcastChannel.postMessage({ type: 'ORDER_STATUS_CHANGED', orderId, status: newStatus });
             }
+            this.pushOrderToCloud(order, 'UPDATE_ORDER');
             return order;
         }
         return null;

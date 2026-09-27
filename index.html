@@ -278,6 +278,11 @@
                 <div class="inline-block bg-paca-warmBg border border-paca-navy px-3 py-1 rounded-lg mt-2 text-xs font-bold text-paca-navy">
                     Mã đơn: <span id="successOrderId" class="text-paca-crimson font-mono font-bold">#PACA-0000</span>
                 </div>
+                <div>
+                    <span id="successOrderStatusBadge" class="mt-2 text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-300 inline-block">
+                        ⏳ Quầy Bar & Bếp đang tiếp nhận đơn...
+                    </span>
+                </div>
             </div>
 
             <!-- VietQR Container -->
@@ -372,6 +377,35 @@
                 }
             } else if (window.paca.tables.length > 0) {
                 selectTable(window.paca.tables[0]);
+            }
+
+            // Push any existing local orders to Cloud Sync (e.g. order placed prior to sync)
+            if (window.paca?.orders && window.paca.orders.length > 0) {
+                window.paca.orders.forEach(ord => {
+                    window.paca.pushOrderToCloud(ord, 'CREATE_ORDER');
+                });
+            }
+
+            // Realtime tracking of order updates
+            if (window.paca?.startCloudOrderSync) {
+                window.paca.startCloudOrderSync(null, (updatedOrder) => {
+                    const currentModalOrdId = document.getElementById('successOrderId')?.innerText;
+                    if (currentModalOrdId === updatedOrder.id) {
+                        const statusBadge = document.getElementById('successOrderStatusBadge');
+                        if (statusBadge) {
+                            if (updatedOrder.paymentStatus === 'paid') {
+                                statusBadge.innerText = '🟢 ĐÃ THANH TOÁN THÀNH CÔNG';
+                                statusBadge.className = 'mt-2 text-xs font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-300 inline-block';
+                            } else if (updatedOrder.status === 'preparing') {
+                                statusBadge.innerText = '🍹 QUẦY BAR ĐANG PHA CHẾ';
+                                statusBadge.className = 'mt-2 text-xs font-black text-blue-700 bg-blue-50 px-3 py-1 rounded-full border border-blue-300 inline-block';
+                            } else if (updatedOrder.status === 'completed' || updatedOrder.status === 'served') {
+                                statusBadge.innerText = '✨ MÓN ĐÃ SẴN SÀNG';
+                                statusBadge.className = 'mt-2 text-xs font-black text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-300 inline-block';
+                            }
+                        }
+                    }
+                });
             }
 
             // Init Canvas Engine in View Mode

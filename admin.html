@@ -1163,7 +1163,7 @@
                 switchBillTemplateEditor('cashier');
             }
 
-            // Listen for order events
+            // Listen for local order events
             if (window.paca.broadcastChannel) {
                 window.paca.broadcastChannel.onmessage = (event) => {
                     if (event.data?.type === 'NEW_ORDER') {
@@ -1179,6 +1179,23 @@
                         renderRevenueStats();
                     }
                 };
+            }
+
+            // Realtime Cloud Order Sync (Connects all phones/devices across the internet)
+            if (window.paca.startCloudOrderSync) {
+                window.paca.startCloudOrderSync(
+                    (newOrder) => {
+                        if (!isAudioMuted) {
+                            window.paca.playNotificationSound();
+                        }
+                        renderOrders();
+                        renderRevenueStats();
+                    },
+                    (updatedOrder) => {
+                        renderOrders();
+                        renderRevenueStats();
+                    }
+                );
             }
         });
 
