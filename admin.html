@@ -247,43 +247,197 @@
         </section>
 
 
-        <!-- ==================== TAB 4: REVENUE (THỐNG KÊ DOANH THU) ==================== -->
+        <!-- ==================== TAB 4: REVENUE (THỐNG KÊ DOANH THU & BÁO CÁO NÂNG CAO) ==================== -->
         <section id="tabRevenue" class="tab-content hidden space-y-4">
-            <div>
-                <h2 class="font-bold text-base text-paca-navy">Báo Cáo Doanh Thu PACA</h2>
-                <p class="text-xs text-gray-500">Theo dõi dòng tiền trực tiếp từ các đơn hàng đã phục vụ.</p>
-            </div>
-
-            <!-- KPI Cards -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
-                <div class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-sm">
-                    <div class="text-[11px] font-bold text-gray-500 uppercase">Hôm Nay</div>
-                    <div class="font-extrabold text-base text-paca-crimson mt-1" id="repTodayRev">0 đ</div>
-                    <div class="text-[10px] text-gray-500" id="repTodayCount">0 đơn</div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div>
+                    <h2 class="font-bold text-base text-paca-navy">Báo Cáo Doanh Thu PACA</h2>
+                    <p class="text-xs text-gray-500">Phân tích dòng tiền thực tế, hiệu suất bán món và danh sách đơn hàng theo kỳ lọc.</p>
                 </div>
-                <div class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-sm">
-                    <div class="text-[11px] font-bold text-gray-500 uppercase">Tuần Này</div>
-                    <div class="font-extrabold text-base text-paca-navy mt-1" id="repWeekRev">0 đ</div>
-                    <div class="text-[10px] text-gray-500" id="repWeekCount">0 đơn</div>
-                </div>
-                <div class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-sm">
-                    <div class="text-[11px] font-bold text-gray-500 uppercase">Tháng Này</div>
-                    <div class="font-extrabold text-base text-paca-navy mt-1" id="repMonthRev">0 đ</div>
-                    <div class="text-[10px] text-gray-500" id="repMonthCount">0 đơn</div>
-                </div>
-                <div class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-sm">
-                    <div class="text-[11px] font-bold text-gray-500 uppercase">Tổng Doanh Thu</div>
-                    <div class="font-extrabold text-base text-emerald-600 mt-1" id="repTotalRev">0 đ</div>
-                    <div class="text-[10px] text-gray-500" id="repTotalCount">0 đơn</div>
+                <div class="flex items-center gap-2">
+                    <button onclick="exportRevenueCsv()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow active:scale-95 transition">
+                        <span>📥</span>
+                        <span>Xuất Excel (CSV)</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Top Selling Items -->
+            <!-- COMPREHENSIVE FILTER TOOLBAR -->
             <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm space-y-3">
-                <h3 class="font-bold text-sm text-paca-navy flex items-center gap-1.5">
-                    <span>🏆</span> Top 5 Món Bán Chạy Nhất (Best Sellers)
-                </h3>
-                <div id="topItemsList" class="space-y-2 text-xs">
+                <div class="flex items-center justify-between border-b pb-2">
+                    <div class="flex items-center gap-1.5 font-bold text-xs text-paca-navy">
+                        <span>🔍</span>
+                        <span>BỘ LỌC DOANH THU & THỜI GIAN</span>
+                    </div>
+                    <button onclick="resetRevenueFilters()" class="text-xs font-bold text-paca-crimson hover:underline flex items-center gap-1">
+                        <span>🔄</span>
+                        <span>Đặt lại mặc định (Tháng này)</span>
+                    </button>
+                </div>
+
+                <!-- Date Range & Quick Presets -->
+                <div class="space-y-2">
+                    <!-- Quick Presets -->
+                    <div class="flex items-center space-x-1.5 overflow-x-auto hide-scrollbar pb-1 text-xs font-bold" id="revPresetButtons">
+                        <button onclick="setRevenuePreset('today')" class="rev-preset-btn px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-preset="today">Hôm nay</button>
+                        <button onclick="setRevenuePreset('yesterday')" class="rev-preset-btn px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-preset="yesterday">Hôm qua</button>
+                        <button onclick="setRevenuePreset('last7days')" class="rev-preset-btn px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-preset="last7days">7 ngày qua</button>
+                        <button onclick="setRevenuePreset('thisMonth')" class="rev-preset-btn px-3 py-1.5 rounded-xl bg-paca-navy text-white shadow-sm whitespace-nowrap" data-preset="thisMonth">Tháng này (Mặc định)</button>
+                        <button onclick="setRevenuePreset('lastMonth')" class="rev-preset-btn px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-preset="lastMonth">Tháng trước</button>
+                        <button onclick="setRevenuePreset('allTime')" class="rev-preset-btn px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-preset="allTime">Tất cả thời gian</button>
+                    </div>
+
+                    <!-- Custom Inputs & Secondary Filters Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 pt-1 text-xs">
+                        <!-- From Date -->
+                        <div>
+                            <label class="font-bold text-gray-700 block mb-1">Từ ngày (00:00):</label>
+                            <input type="date" id="revDateFrom" onchange="applyRevenueFilters()" 
+                                class="w-full border border-gray-300 rounded-xl px-2.5 py-2 font-bold text-gray-800 bg-white focus:outline-none focus:border-paca-navy">
+                        </div>
+
+                        <!-- To Date -->
+                        <div>
+                            <label class="font-bold text-gray-700 block mb-1">Đến ngày (23:59):</label>
+                            <input type="date" id="revDateTo" onchange="applyRevenueFilters()" 
+                                class="w-full border border-gray-300 rounded-xl px-2.5 py-2 font-bold text-gray-800 bg-white focus:outline-none focus:border-paca-navy">
+                        </div>
+
+                        <!-- Payment Method Filter -->
+                        <div>
+                            <label class="font-bold text-gray-700 block mb-1">Hình thức thanh toán:</label>
+                            <select id="revPaymentSelect" onchange="applyRevenueFilters()" 
+                                class="w-full border border-gray-300 rounded-xl px-2.5 py-2 font-bold text-gray-800 bg-white">
+                                <option value="all">Tất cả hình thức</option>
+                                <option value="vietqr">Chuyển khoản VietQR</option>
+                                <option value="cash">Tiền mặt</option>
+                            </select>
+                        </div>
+
+                        <!-- Table Filter -->
+                        <div>
+                            <label class="font-bold text-gray-700 block mb-1">Vị trí / Bàn ngồi:</label>
+                            <select id="revTableSelect" onchange="applyRevenueFilters()" 
+                                class="w-full border border-gray-300 rounded-xl px-2.5 py-2 font-bold text-gray-800 bg-white">
+                                <option value="all">Tất cả bàn / vị trí</option>
+                                <option value="takeaway">Mang về (Takeaway)</option>
+                                <!-- Populated dynamically by JS -->
+                            </select>
+                        </div>
+
+                        <!-- Order Status Filter -->
+                        <div>
+                            <label class="font-bold text-gray-700 block mb-1">Trạng thái đơn:</label>
+                            <select id="revStatusSelect" onchange="applyRevenueFilters()" 
+                                class="w-full border border-gray-300 rounded-xl px-2.5 py-2 font-bold text-gray-800 bg-white">
+                                <option value="paid" selected>Đã thanh toán (Thực thu)</option>
+                                <option value="all_except_cancelled">Tất cả đơn (Trừ hủy)</option>
+                                <option value="unpaid">Chờ thanh toán</option>
+                                <option value="cancelled">Đơn đã hủy</option>
+                                <option value="all">Tất cả trạng thái</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Filter Summary Pill -->
+                <div class="bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 flex flex-wrap items-center justify-between gap-2 text-[11px] text-gray-600">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-bold text-paca-navy">⚡ Đang lọc:</span>
+                        <span id="revFilterSummaryText" class="font-medium text-gray-700">Từ ngày 01 đến hôm nay</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-500">Tìm thấy: <b id="revFoundOrdersCount" class="text-paca-navy">0</b> đơn trong kỳ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Cards Grid (4 Thẻ chỉ số động theo bộ lọc) -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
+                <!-- Paid Revenue -->
+                <div class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
+                    <div class="text-[11px] font-bold text-emerald-700 uppercase flex items-center justify-center gap-1">
+                        <span>🟢</span> Doanh Thu Thực Thu
+                    </div>
+                    <div class="font-extrabold text-base sm:text-lg text-emerald-600 mt-1" id="repPaidRev">0 đ</div>
+                    <div class="text-[10px] text-gray-500 mt-0.5">Tiền mặt & Chuyển khoản đã nhận</div>
+                </div>
+
+                <!-- Paid Orders & AOV -->
+                <div class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-sm">
+                    <div class="text-[11px] font-bold text-paca-navy uppercase flex items-center justify-center gap-1">
+                        <span>🍹</span> Đơn Thành Công
+                    </div>
+                    <div class="font-extrabold text-base sm:text-lg text-paca-navy mt-1" id="repPaidCount">0 đơn</div>
+                    <div class="text-[10px] text-gray-500 mt-0.5">TB: <b id="repAov" class="text-gray-700">0 đ/đơn</b></div>
+                </div>
+
+                <!-- Unpaid / Pending -->
+                <div class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-sm">
+                    <div class="text-[11px] font-bold text-amber-700 uppercase flex items-center justify-center gap-1">
+                        <span>⏳</span> Chờ Thu Tiền
+                    </div>
+                    <div class="font-extrabold text-base sm:text-lg text-amber-600 mt-1" id="repUnpaidRev">0 đ</div>
+                    <div class="text-[10px] text-gray-500 mt-0.5" id="repUnpaidCount">0 đơn chưa thanh toán</div>
+                </div>
+
+                <!-- Cancelled -->
+                <div class="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-sm">
+                    <div class="text-[11px] font-bold text-red-600 uppercase flex items-center justify-center gap-1">
+                        <span>✕</span> Đã Hủy / Hao Hụt
+                    </div>
+                    <div class="font-extrabold text-base sm:text-lg text-red-500 mt-1" id="repCancelledRev">0 đ</div>
+                    <div class="text-[10px] text-gray-500 mt-0.5" id="repCancelledCount">0 đơn đã hủy</div>
+                </div>
+            </div>
+
+            <!-- TWO COLUMNS: TOP ITEMS & DAILY REVENUE BREAKDOWN -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <!-- Top Best Sellers in Period -->
+                <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <h3 class="font-bold text-xs sm:text-sm text-paca-navy flex items-center gap-1.5">
+                            <span>🏆</span> Top Món Bán Chạy Trong Kỳ Lọc
+                        </h3>
+                        <span class="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full">Xếp theo số lượng</span>
+                    </div>
+                    <div id="topItemsList" class="space-y-2 text-xs max-h-[360px] overflow-y-auto pr-1">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Daily Breakdown in Period -->
+                <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <h3 class="font-bold text-xs sm:text-sm text-paca-navy flex items-center gap-1.5">
+                            <span>📅</span> Doanh Thu Từng Ngày Trong Kỳ Lọc
+                        </h3>
+                        <span class="text-[10px] bg-blue-50 text-blue-900 font-bold px-2 py-0.5 rounded-full">Theo ngày</span>
+                    </div>
+                    <div id="dailyBreakdownList" class="space-y-2 text-xs max-h-[360px] overflow-y-auto pr-1">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETAILED ORDERS LIST IN FILTERED PERIOD -->
+            <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2.5">
+                    <div>
+                        <h3 class="font-bold text-sm text-paca-navy flex items-center gap-1.5">
+                            <span>📋</span> Danh Sách Đơn Hàng Trong Kỳ Lọc
+                        </h3>
+                        <p class="text-[11px] text-gray-500">Xem chi tiết từng đơn, đối soát thu ngân và in lại hóa đơn.</p>
+                    </div>
+                    <div class="relative w-full sm:w-64">
+                        <input type="text" id="revSearchOrderInput" placeholder="Tìm mã đơn, tên bàn..." oninput="filterRevenueOrdersTable()" 
+                            class="w-full bg-gray-50 border border-gray-300 rounded-xl py-1.5 pl-8 pr-3 text-xs focus:outline-none focus:border-paca-navy">
+                        <span class="absolute left-2.5 top-1.5 text-gray-400">🔍</span>
+                    </div>
+                </div>
+
+                <!-- Table or List -->
+                <div id="revOrdersTableContainer" class="space-y-2.5">
                     <!-- Rendered by JS -->
                 </div>
             </div>
@@ -1128,6 +1282,62 @@
         </div>
     </div>
 
+    <!-- ==================== MODAL: XÓA ĐƠN HÀNG VĨNH VIỄN (CẢNH BÁO 2 LỚP) ==================== -->
+    <div id="orderDeleteConfirmModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl retro-border p-4 space-y-3.5 shadow-2xl animate-scale-up">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b pb-2.5">
+                <div class="flex items-center gap-2 text-red-600">
+                    <span class="text-2xl">🗑️</span>
+                    <div>
+                        <h3 class="font-serif font-black text-sm text-red-600 uppercase tracking-wide">XÓA ĐƠN HÀNG VĨNH VIỄN</h3>
+                        <p class="text-[10px] text-gray-500">Cảnh báo bảo mật hệ thống 2 lớp</p>
+                    </div>
+                </div>
+                <button onclick="closeDeleteOrderConfirmModal()" class="w-7 h-7 rounded-full bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 flex items-center justify-center text-sm">✕</button>
+            </div>
+
+            <input type="hidden" id="deleteTargetOrderId">
+
+            <!-- Target Order Info Card -->
+            <div id="deleteOrderTargetSummary" class="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-1.5 text-xs">
+                <!-- Populated dynamically by JS -->
+            </div>
+
+            <!-- Danger warning banner -->
+            <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-r-xl text-xs text-red-900 space-y-1">
+                <div class="font-black flex items-center gap-1 text-red-700">
+                    <span>⚠️</span> CẢNH BÁO NGUY HIỂM:
+                </div>
+                <p class="text-[11px] leading-relaxed text-red-800">
+                    Đơn hàng này sẽ bị <b>xóa vĩnh viễn</b> khỏi máy chủ và cơ sở dữ liệu trên tất cả các thiết bị (Cloud Sync). Nếu đơn này đã thanh toán, số tiền sẽ bị <b>trừ khỏi báo cáo doanh thu</b>. Thao tác này <b>KHÔNG THỂ HOÀN TÁC</b>!
+                </p>
+            </div>
+
+            <!-- Confirmation Step 1: Checkbox -->
+            <div class="bg-amber-50/80 p-3 rounded-xl border border-amber-200 text-xs">
+                <label class="flex items-start gap-2.5 cursor-pointer">
+                    <input type="checkbox" id="chkDeleteOrderAcknowledge" onchange="onDeleteOrderCheckboxChanged()" class="w-4 h-4 text-red-600 rounded mt-0.5 cursor-pointer">
+                    <span class="text-gray-800 font-bold leading-tight">
+                        Tôi hiểu rõ hệ quả và xác nhận muốn xóa vĩnh viễn đơn hàng này khỏi hệ thống.
+                    </span>
+                </label>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="pt-2 border-t flex items-center justify-between gap-2">
+                <button onclick="closeDeleteOrderConfirmModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs px-4 py-2.5 rounded-xl transition">
+                    Đóng / Giữ lại đơn
+                </button>
+                <button id="btnExecuteDeleteOrder" onclick="handleDeleteOrderExecutionClick()" disabled 
+                    class="bg-gray-300 text-gray-500 cursor-not-allowed font-black text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow transition">
+                    <span id="btnDeleteOrderIcon">🔒</span>
+                    <span id="btnDeleteOrderText">Xác nhận xóa (0/2)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="js/paca_core.js"></script>
     <script>
@@ -1190,7 +1400,7 @@
                         window.paca.loadOrders();
                         renderOrders();
                         renderRevenueStats();
-                    } else if (event.data?.type === 'ORDER_STATUS_CHANGED') {
+                    } else if (event.data?.type === 'ORDER_STATUS_CHANGED' || event.data?.type === 'ORDER_DELETED') {
                         window.paca.loadOrders();
                         renderOrders();
                         renderRevenueStats();
@@ -1443,10 +1653,16 @@
                                     </button>
                                 ` : ''}
                                 ${ord.status !== 'cancelled' && ord.status !== 'paid' ? `
-                                    <button onclick="changeOrderStatus('${ord.id}', 'cancelled')" class="text-gray-400 hover:text-red-600 text-xs p-1">
+                                    <button onclick="changeOrderStatus('${ord.id}', 'cancelled')" class="text-gray-400 hover:text-red-600 text-xs p-1" title="Hủy đơn">
                                         Hủy
                                     </button>
                                 ` : ''}
+
+                                <button onclick="openDeleteOrderConfirmModal('${ord.id}')" title="Xóa vĩnh viễn đơn hàng" 
+                                    class="bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 text-[11px] font-bold px-2 py-1.5 rounded-xl border border-red-200 flex items-center gap-1 transition active:scale-95">
+                                    <span>🗑️</span>
+                                    <span>Xóa</span>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1467,6 +1683,127 @@
             window.paca.confirmPayment(orderId, "Admin", "vietqr");
             renderOrders();
             renderRevenueStats();
+        }
+
+        // ==================== ORDER DELETION (2-STEP CONFIRMATION) ====================
+        let pendingDeleteOrderId = null;
+        let deleteOrderStep = 1; // 1: Waiting checkbox, 2: Ready for second explicit click
+
+        function openDeleteOrderConfirmModal(orderId) {
+            const order = window.paca.orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            pendingDeleteOrderId = orderId;
+            deleteOrderStep = 1;
+
+            document.getElementById('deleteTargetOrderId').value = orderId;
+
+            // Render order summary
+            const itemsList = (order.items || []).map(i => `${i.name} (x${i.quantity})`).join(', ');
+            let statusText = 'Chờ xử lý';
+            if (order.status === 'preparing') statusText = 'Đang làm';
+            if (order.paymentStatus === 'paid') statusText = 'ĐÃ THANH TOÁN ✓';
+            if (order.status === 'cancelled') statusText = 'Đã hủy';
+
+            document.getElementById('deleteOrderTargetSummary').innerHTML = `
+                <div class="flex justify-between items-center pb-1 border-b border-gray-200">
+                    <span class="font-extrabold text-paca-navy text-sm">${order.tableName}</span>
+                    <span class="font-mono text-gray-500 font-bold">${order.id}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500">Thời gian tạo:</span>
+                    <span class="font-medium text-gray-700">${order.createdAtFormatted}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500">Trạng thái:</span>
+                    <span class="font-bold ${order.paymentStatus === 'paid' ? 'text-emerald-700' : 'text-amber-700'}">${statusText}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500">Món trong đơn:</span>
+                    <span class="font-medium text-gray-700 truncate max-w-[220px]" title="${itemsList}">${itemsList}</span>
+                </div>
+                <div class="flex justify-between items-center pt-1 border-t border-gray-200 text-sm">
+                    <span class="font-bold text-gray-800">Tổng tiền đơn:</span>
+                    <span class="font-extrabold text-paca-crimson">${window.paca.formatMoney(order.totalAmount)}</span>
+                </div>
+            `;
+
+            // Reset acknowledge checkbox and button
+            const chk = document.getElementById('chkDeleteOrderAcknowledge');
+            chk.checked = false;
+            updateDeleteOrderButtonState();
+
+            document.getElementById('orderDeleteConfirmModal').classList.remove('hidden');
+        }
+
+        function closeDeleteOrderConfirmModal() {
+            document.getElementById('orderDeleteConfirmModal').classList.add('hidden');
+            pendingDeleteOrderId = null;
+            deleteOrderStep = 1;
+        }
+
+        function onDeleteOrderCheckboxChanged() {
+            const chk = document.getElementById('chkDeleteOrderAcknowledge');
+            deleteOrderStep = chk.checked ? 1 : 0;
+            updateDeleteOrderButtonState();
+        }
+
+        function updateDeleteOrderButtonState() {
+            const chk = document.getElementById('chkDeleteOrderAcknowledge');
+            const btn = document.getElementById('btnExecuteDeleteOrder');
+            const icon = document.getElementById('btnDeleteOrderIcon');
+            const txt = document.getElementById('btnDeleteOrderText');
+
+            if (!chk.checked) {
+                btn.disabled = true;
+                btn.className = "bg-gray-300 text-gray-500 cursor-not-allowed font-black text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow transition";
+                icon.innerText = "🔒";
+                txt.innerText = "Xác nhận xóa (0/2)";
+            } else if (deleteOrderStep === 1) {
+                btn.disabled = false;
+                btn.className = "bg-orange-600 hover:bg-orange-700 text-white font-black text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow active:scale-95 transition animate-pulse";
+                icon.innerText = "⚠️";
+                txt.innerText = "Bước 1: Mở khóa xóa";
+            } else if (deleteOrderStep === 2) {
+                btn.disabled = false;
+                btn.className = "bg-red-600 hover:bg-red-700 text-white font-black text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition ring-2 ring-red-300";
+                icon.innerText = "🗑️";
+                txt.innerText = "BẤM LẦN NỮA ĐỂ XÓA VĨNH VIỄN!";
+            }
+        }
+
+        function handleDeleteOrderExecutionClick() {
+            const chk = document.getElementById('chkDeleteOrderAcknowledge');
+            if (!chk.checked) return;
+
+            if (deleteOrderStep === 1) {
+                deleteOrderStep = 2;
+                updateDeleteOrderButtonState();
+                return;
+            }
+
+            if (deleteOrderStep === 2) {
+                executePermanentDeleteOrder();
+            }
+        }
+
+        function executePermanentDeleteOrder() {
+            if (!pendingDeleteOrderId) return;
+            const targetId = pendingDeleteOrderId;
+            
+            const removed = window.paca.deleteOrder(targetId);
+            closeDeleteOrderConfirmModal();
+            renderOrders();
+            renderRevenueStats();
+
+            // Confirmation notification toast
+            if (removed) {
+                const toast = document.createElement('div');
+                toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-2.5 rounded-xl shadow-2xl z-50 text-xs font-bold flex items-center gap-2 border border-gray-700 animate-bounce';
+                toast.innerHTML = `<span>🗑️</span> Đã xóa vĩnh viễn đơn #${targetId}!`;
+                document.body.appendChild(toast);
+                setTimeout(() => { toast.remove(); }, 3500);
+            }
         }
 
         // --- REPRINT & PRINT PREVIEW ---
@@ -2281,41 +2618,353 @@
         }
 
 
-        // ==================== TAB 4: REVENUE ====================
-        function renderRevenueStats() {
-            const stats = window.paca.getRevenueStats();
+        // ==================== TAB 4: REVENUE & ADVANCED REPORTING ====================
+        let revActivePreset = 'thisMonth';
+        let currentRevenueReport = null;
+        let revFilteredOrdersCache = [];
+        let isRevFiltersInitialized = false;
 
-            document.getElementById('repTodayRev').innerText = window.paca.formatMoney(stats.today.revenue);
-            document.getElementById('repTodayCount').innerText = `${stats.today.count} đơn`;
+        function initRevenueFilters() {
+            if (!isRevFiltersInitialized) {
+                const now = new Date();
+                const y = now.getFullYear();
+                const m = String(now.getMonth() + 1).padStart(2, '0');
+                const d = String(now.getDate()).padStart(2, '0');
 
-            document.getElementById('repWeekRev').innerText = window.paca.formatMoney(stats.week.revenue);
-            document.getElementById('repWeekCount').innerText = `${stats.week.count} đơn`;
+                const dateFromInput = document.getElementById('revDateFrom');
+                const dateToInput = document.getElementById('revDateTo');
 
-            document.getElementById('repMonthRev').innerText = window.paca.formatMoney(stats.month.revenue);
-            document.getElementById('repMonthCount').innerText = `${stats.month.count} đơn`;
+                if (dateFromInput && !dateFromInput.value) {
+                    dateFromInput.value = `${y}-${m}-01`;
+                }
+                if (dateToInput && !dateToInput.value) {
+                    dateToInput.value = `${y}-${m}-${d}`;
+                }
 
-            document.getElementById('repTotalRev').innerText = window.paca.formatMoney(stats.total.revenue);
-            document.getElementById('repTotalCount').innerText = `${stats.total.count} đơn`;
+                // Populate Tables dropdown
+                populateRevenueTableSelect();
 
-            // Top selling list
+                isRevFiltersInitialized = true;
+            }
+        }
+
+        function populateRevenueTableSelect() {
+            const select = document.getElementById('revTableSelect');
+            if (!select) return;
+            const curVal = select.value || 'all';
+            let html = `
+                <option value="all">Tất cả bàn / vị trí</option>
+                <option value="takeaway">Mang về (Takeaway)</option>
+            `;
+            (window.paca.tables || []).forEach(t => {
+                html += `<option value="${t.id}">${t.name} (${t.zone || 'Chung'})</option>`;
+            });
+            select.innerHTML = html;
+            select.value = curVal;
+        }
+
+        function setRevenuePreset(preset) {
+            revActivePreset = preset;
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+
+            const dateFromInput = document.getElementById('revDateFrom');
+            const dateToInput = document.getElementById('revDateTo');
+
+            if (preset === 'today') {
+                dateFromInput.value = `${y}-${m}-${d}`;
+                dateToInput.value = `${y}-${m}-${d}`;
+            } else if (preset === 'yesterday') {
+                const yday = new Date(now.getTime() - 86400000);
+                const ym = String(yday.getMonth() + 1).padStart(2, '0');
+                const yd = String(yday.getDate()).padStart(2, '0');
+                dateFromInput.value = `${yday.getFullYear()}-${ym}-${yd}`;
+                dateToInput.value = `${yday.getFullYear()}-${ym}-${yd}`;
+            } else if (preset === 'last7days') {
+                const past7 = new Date(now.getTime() - (6 * 86400000));
+                const p7m = String(past7.getMonth() + 1).padStart(2, '0');
+                const p7d = String(past7.getDate()).padStart(2, '0');
+                dateFromInput.value = `${past7.getFullYear()}-${p7m}-${p7d}`;
+                dateToInput.value = `${y}-${m}-${d}`;
+            } else if (preset === 'thisMonth') {
+                // MẶC ĐỊNH: TỪ NGÀY 01 CỦA THÁNG HIỆN TẠI ĐẾN NGÀY HIỆN TẠI
+                dateFromInput.value = `${y}-${m}-01`;
+                dateToInput.value = `${y}-${m}-${d}`;
+            } else if (preset === 'lastMonth') {
+                const firstDayLastMonth = new Date(y, now.getMonth() - 1, 1);
+                const lastDayLastMonth = new Date(y, now.getMonth(), 0);
+                const lm = String(firstDayLastMonth.getMonth() + 1).padStart(2, '0');
+                const lmd = String(lastDayLastMonth.getDate()).padStart(2, '0');
+                dateFromInput.value = `${firstDayLastMonth.getFullYear()}-${lm}-01`;
+                dateToInput.value = `${firstDayLastMonth.getFullYear()}-${lm}-${lmd}`;
+            } else if (preset === 'allTime') {
+                dateFromInput.value = '2024-01-01';
+                dateToInput.value = `${y}-${m}-${d}`;
+            }
+
+            // Update preset buttons styling
+            document.querySelectorAll('.rev-preset-btn').forEach(btn => {
+                if (btn.getAttribute('data-preset') === preset) {
+                    btn.className = 'rev-preset-btn px-3 py-1.5 rounded-xl bg-paca-navy text-white shadow-sm whitespace-nowrap';
+                } else {
+                    btn.className = 'rev-preset-btn px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap';
+                }
+            });
+
+            applyRevenueFilters();
+        }
+
+        function resetRevenueFilters() {
+            document.getElementById('revPaymentSelect').value = 'all';
+            document.getElementById('revTableSelect').value = 'all';
+            document.getElementById('revStatusSelect').value = 'paid';
+            const searchInp = document.getElementById('revSearchOrderInput');
+            if (searchInp) searchInp.value = '';
+            setRevenuePreset('thisMonth');
+        }
+
+        function applyRevenueFilters() {
+            initRevenueFilters();
+
+            const fromDate = document.getElementById('revDateFrom').value;
+            const toDate = document.getElementById('revDateTo').value;
+            const paymentMethod = document.getElementById('revPaymentSelect').value;
+            const tableId = document.getElementById('revTableSelect').value;
+            const status = document.getElementById('revStatusSelect').value;
+
+            const report = window.paca.getFilteredRevenueReport({
+                fromDate,
+                toDate,
+                paymentMethod,
+                tableId,
+                status
+            });
+
+            currentRevenueReport = report;
+            revFilteredOrdersCache = report.filteredOrders || [];
+
+            // 1. Update filter summary text
+            let paymentTxt = paymentMethod === 'all' ? 'Tất cả HT' : (paymentMethod === 'vietqr' ? 'Chuyển khoản' : 'Tiền mặt');
+            let tableTxt = tableId === 'all' ? 'Tất cả bàn' : (tableId === 'takeaway' ? 'Mang về' : `Bàn ${tableId}`);
+            let statusTxt = 'Đã thanh toán';
+            if (status === 'all_except_cancelled') statusTxt = 'Trừ đơn hủy';
+            if (status === 'unpaid') statusTxt = 'Chờ TT';
+            if (status === 'cancelled') statusTxt = 'Đã hủy';
+            if (status === 'all') statusTxt = 'Tất cả trạng thái';
+
+            document.getElementById('revFilterSummaryText').innerText = 
+                `${report.fromDate} ➔ ${report.toDate} • ${tableTxt} • ${paymentTxt} • ${statusTxt}`;
+            document.getElementById('revFoundOrdersCount').innerText = revFilteredOrdersCache.length;
+
+            // 2. Update KPI cards
+            document.getElementById('repPaidRev').innerText = window.paca.formatMoney(report.paidRevenue);
+            document.getElementById('repPaidCount').innerText = `${report.paidOrdersCount} đơn`;
+            document.getElementById('repAov').innerText = `${window.paca.formatMoney(report.averageOrderValue)}/đơn`;
+
+            document.getElementById('repUnpaidRev').innerText = window.paca.formatMoney(report.unpaidAmount);
+            document.getElementById('repUnpaidCount').innerText = `${report.unpaidOrdersCount} đơn chưa TT`;
+
+            document.getElementById('repCancelledRev').innerText = window.paca.formatMoney(report.cancelledAmount);
+            document.getElementById('repCancelledCount').innerText = `${report.cancelledOrdersCount} đơn đã hủy`;
+
+            // 3. Render Top Selling Items in filtered period
             const topList = document.getElementById('topItemsList');
-            if (stats.topItems.length === 0) {
-                topList.innerHTML = `<div class="text-gray-400 italic text-center py-2">Chưa có dữ liệu bán món</div>`;
+            if (!report.topItems || report.topItems.length === 0) {
+                topList.innerHTML = `<div class="text-gray-400 italic text-center py-6">Chưa có dữ liệu món bán trong kỳ lọc này</div>`;
+            } else {
+                const totalItemQty = report.topItems.reduce((sum, i) => sum + i.quantity, 0);
+                topList.innerHTML = report.topItems.map((it, idx) => {
+                    const pct = totalItemQty > 0 ? Math.round((it.quantity / totalItemQty) * 100) : 0;
+                    const stationIcon = it.station === 'kitchen' ? '🍳' : '🍸';
+                    return `
+                        <div class="p-2.5 rounded-xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="w-5 h-5 rounded-full ${idx < 3 ? 'bg-amber-500 text-white' : 'bg-gray-200 text-gray-700'} flex items-center justify-center font-bold text-[10px] flex-shrink-0">
+                                        ${idx + 1}
+                                    </span>
+                                    <div class="truncate">
+                                        <span class="font-bold text-gray-800">${stationIcon} ${it.name}</span>
+                                        ${it.name_vi && it.name_vi !== it.name ? `<span class="text-[10px] text-gray-500 block truncate">(${it.name_vi})</span>` : ''}
+                                    </div>
+                                </div>
+                                <div class="text-right flex-shrink-0 ml-2">
+                                    <span class="font-extrabold text-paca-crimson text-xs">${it.quantity} ly/phần</span>
+                                    <div class="text-[10px] font-bold text-gray-600">${window.paca.formatMoney(it.revenue)}</div>
+                                </div>
+                            </div>
+                            <!-- Mini Progress Bar -->
+                            <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-paca-navy h-full rounded-full" style="width: ${Math.max(5, pct)}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // 4. Render Daily Breakdown
+            const dailyList = document.getElementById('dailyBreakdownList');
+            if (!report.dailyBreakdown || report.dailyBreakdown.length === 0) {
+                dailyList.innerHTML = `<div class="text-gray-400 italic text-center py-6">Chưa có doanh thu theo ngày trong kỳ lọc này</div>`;
+            } else {
+                dailyList.innerHTML = report.dailyBreakdown.map(d => {
+                    const parts = d.date.split('-');
+                    const formattedDate = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : d.date;
+                    const aovDay = d.count > 0 ? Math.round(d.revenue / d.count) : 0;
+                    return `
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base">📅</span>
+                                <div>
+                                    <div class="font-bold text-paca-navy text-xs">${formattedDate}</div>
+                                    <div class="text-[10px] text-gray-500">${d.count} đơn hoàn tất (TB: ${window.paca.formatMoney(aovDay)})</div>
+                                </div>
+                            </div>
+                            <div class="font-extrabold text-emerald-700 text-xs">
+                                ${window.paca.formatMoney(d.revenue)}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // 5. Render Filtered Orders Table
+            renderRevenueOrdersTable(revFilteredOrdersCache);
+        }
+
+        function filterRevenueOrdersTable() {
+            const kw = (document.getElementById('revSearchOrderInput')?.value || '').trim().toLowerCase();
+            if (!kw) {
+                renderRevenueOrdersTable(revFilteredOrdersCache);
+                return;
+            }
+            const filtered = revFilteredOrdersCache.filter(o => 
+                (o.id || '').toLowerCase().includes(kw) ||
+                (o.tableName || '').toLowerCase().includes(kw) ||
+                (o.note || '').toLowerCase().includes(kw) ||
+                (o.items || []).some(i => (i.name || '').toLowerCase().includes(kw))
+            );
+            renderRevenueOrdersTable(filtered);
+        }
+
+        function renderRevenueOrdersTable(ordersList) {
+            const container = document.getElementById('revOrdersTableContainer');
+            if (!container) return;
+
+            if (!ordersList || ordersList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-400 italic">
+                        Không có đơn hàng nào khớp với bộ lọc hiện tại.
+                    </div>
+                `;
                 return;
             }
 
-            topList.innerHTML = stats.topItems.map((it, idx) => `
-                <div class="flex items-center justify-between p-2 rounded-xl bg-gray-50 border border-gray-100">
-                    <div class="flex items-center gap-2">
-                        <span class="w-5 h-5 rounded-full bg-paca-navy text-paca-cream flex items-center justify-center font-bold text-[10px]">${idx + 1}</span>
-                        <span class="font-bold text-gray-800">${it.name}</span>
+            container.innerHTML = ordersList.map(ord => {
+                let payBadge = '';
+                if (ord.paymentStatus === 'paid') {
+                    payBadge = `<span class="bg-emerald-100 text-emerald-800 font-bold text-[10px] px-2 py-0.5 rounded-full">🟢 Đã TT (${ord.paymentMethod === 'cash' ? 'Tiền mặt' : 'VietQR'})</span>`;
+                } else if (ord.paymentStatus === 'awaiting_check') {
+                    payBadge = `<span class="bg-amber-100 text-amber-900 font-bold text-[10px] px-2 py-0.5 rounded-full">🟡 Chờ KT</span>`;
+                } else {
+                    payBadge = `<span class="bg-red-50 text-red-700 font-bold text-[10px] px-2 py-0.5 rounded-full">🔴 Chưa TT</span>`;
+                }
+
+                let statusBadge = '';
+                if (ord.status === 'cancelled') {
+                    statusBadge = `<span class="bg-red-100 text-red-800 font-bold text-[10px] px-2 py-0.5 rounded-full">✕ Đã hủy</span>`;
+                } else if (ord.status === 'paid') {
+                    statusBadge = `<span class="bg-emerald-100 text-emerald-800 font-bold text-[10px] px-2 py-0.5 rounded-full">✓ Hoàn tất</span>`;
+                } else {
+                    statusBadge = `<span class="bg-blue-100 text-blue-800 font-bold text-[10px] px-2 py-0.5 rounded-full">⏳ ${ord.status}</span>`;
+                }
+
+                const itemsText = (ord.items || []).map(i => `${i.name} (x${i.quantity})`).join(', ');
+
+                return `
+                    <div class="bg-gray-50 hover:bg-gray-100/80 p-3 rounded-2xl border border-gray-200 transition space-y-2 text-xs">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-gray-200 pb-1.5">
+                            <div class="flex items-center gap-2">
+                                <span class="font-extrabold text-paca-navy text-sm">${ord.tableName}</span>
+                                <span class="font-mono text-gray-500 font-bold text-[11px]">${ord.id}</span>
+                                ${payBadge}
+                                ${statusBadge}
+                            </div>
+                            <div class="text-[11px] text-gray-500">
+                                <span>⏰ ${ord.createdAtFormatted}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div class="text-gray-700 text-[11px] leading-relaxed flex-1">
+                                <span class="font-medium text-gray-500">Món:</span> ${itemsText}
+                                ${ord.note ? `<div class="text-amber-800 italic mt-0.5">└ Ghi chú: ${ord.note}</div>` : ''}
+                            </div>
+                            <div class="text-right flex items-center justify-between sm:justify-end gap-3 flex-shrink-0">
+                                <div>
+                                    <div class="text-[10px] text-gray-500">Tổng tiền</div>
+                                    <div class="font-black text-sm text-paca-crimson">${window.paca.formatMoney(ord.totalAmount)}</div>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <button onclick="openPrintPreview('${ord.id}', 'cashier')" title="Xem trước / in hóa đơn" 
+                                        class="bg-white hover:bg-gray-100 text-paca-navy text-xs font-bold px-2 py-1.5 rounded-xl border border-gray-300 shadow-sm">
+                                        🖨️ In
+                                    </button>
+                                    <button onclick="openDeleteOrderConfirmModal('${ord.id}')" title="Xóa vĩnh viễn đơn này" 
+                                        class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-2 py-1.5 rounded-xl border border-red-200 shadow-sm">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <span class="font-bold text-paca-crimson">${it.quantity} ly/phần</span>
-                        <div class="text-[10px] text-gray-500">${window.paca.formatMoney(it.revenue)}</div>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        }
+
+        function exportRevenueCsv() {
+            if (!currentRevenueReport || !currentRevenueReport.filteredOrders || currentRevenueReport.filteredOrders.length === 0) {
+                alert("Không có dữ liệu đơn hàng trong kỳ lọc này để xuất file!");
+                return;
+            }
+
+            const orders = currentRevenueReport.filteredOrders;
+            const headers = ["Mã đơn", "Bàn / Vị trí", "Thời gian", "Danh sách món", "Tạm tính (đ)", "Giảm giá (đ)", "Phụ thu (đ)", "Tổng cộng (đ)", "Phương thức TT", "Trạng thái thanh toán", "Trạng thái đơn", "Ghi chú"];
+            
+            const rows = orders.map(o => {
+                const itemsStr = (o.items || []).map(i => `${i.name} (x${i.quantity})`).join('; ');
+                return [
+                    `"${o.id || ''}"`,
+                    `"${o.tableName || ''}"`,
+                    `"${o.createdAtFormatted || ''}"`,
+                    `"${itemsStr.replace(/"/g, '""')}"`,
+                    o.rawSubtotal || o.totalAmount || 0,
+                    o.discount?.amount || 0,
+                    o.surcharge?.amount || 0,
+                    o.totalAmount || 0,
+                    `"${o.paymentMethod === 'cash' ? 'Tiền mặt' : 'VietQR Chuyển khoản'}"`,
+                    `"${o.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}"`,
+                    `"${o.status || ''}"`,
+                    `"${(o.note || '').replace(/"/g, '""')}"`
+                ].join(',');
+            });
+
+            const csvContent = "\uFEFF" + headers.join(',') + "\n" + rows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `PACA_BaoCaoDoanhThu_${currentRevenueReport.fromDate}_${currentRevenueReport.toDate}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Backward compatibility entry point
+        function renderRevenueStats() {
+            applyRevenueFilters();
         }
 
 

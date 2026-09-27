@@ -625,6 +625,20 @@ class PacaService {
         return newOrder;
     }
 
+    deleteOrder(orderId) {
+        const idx = this.orders.findIndex(o => o.id === orderId);
+        if (idx !== -1) {
+            const removed = this.orders.splice(idx, 1)[0];
+            this.saveOrders();
+            if (this.broadcastChannel) {
+                this.broadcastChannel.postMessage({ type: 'ORDER_DELETED', orderId });
+            }
+            this.pushOrderToCloud({ id: orderId }, 'DELETE_ORDER');
+            return removed;
+        }
+        return null;
+    }
+
     // --- REALTIME CLOUD ORDER SYNC ---
     async pushOrderToCloud(order, action = 'CREATE_ORDER') {
         try {
@@ -665,6 +679,15 @@ class PacaService {
                             } else {
                                 this.orders.unshift(payload.order);
                                 hasChanges = true;
+                            }
+                        } else if (payload.action === 'DELETE_ORDER') {
+                            const targetId = payload.order?.id || payload.orderId;
+                            if (targetId) {
+                                const existingIdx = this.orders.findIndex(o => o.id === targetId);
+                                if (existingIdx !== -1) {
+                                    this.orders.splice(existingIdx, 1);
+                                    hasChanges = true;
+                                }
                             }
                         }
                     }
@@ -712,6 +735,16 @@ class PacaService {
                             }
                             this.saveOrders();
                             if (onUpdateCallback) onUpdateCallback(payload.order);
+                        } else if (payload.action === 'DELETE_ORDER') {
+                            const targetId = payload.order?.id || payload.orderId;
+                            if (targetId) {
+                                const existingIdx = this.orders.findIndex(o => o.id === targetId);
+                                if (existingIdx !== -1) {
+                                    this.orders.splice(existingIdx, 1);
+                                    this.saveOrders();
+                                    if (onUpdateCallback) onUpdateCallback();
+                                }
+                            }
                         }
                     }
                 } catch (err) {}
@@ -1335,6 +1368,146 @@ ${order.note ? `📝 *Ghi chú:* _${order.note}_\n` : ''}
             month: { revenue: monthRevenue, count: monthOrders },
             total: { revenue: totalRevenue, count: totalOrders },
             topItems
+        };
+    }
+
+    getFilteredRevenueReport(filters = {}) {
+        const now = new Date();
+        const curYear = now.getFullYear();
+        const curMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const curDay = String(now.getDate()).padStart(2, '0');
+
+        // Mặc định từ ngày 1 đầu tháng đến ngày hiện tại
+        const defaultFrom = `${curYear}-${curMonth}-01`;
+        const defaultTo = `${curYear}-${curMonth}-${curDay}`;
+
+        const fromDateStr = filters.fromDate || defaultFrom;
+        const toDateStr = filters.toDate || defaultTo;
+        const paymentMethod = filters.paymentMethod || 'all'; // 'all', 'vietqr', 'cash'
+        const tableId = filters.tableId || 'all'; // 'all', tableId
+        const statusFilter = filters.status || 'paid'; // 'paid', 'all', 'unpaid', 'cancelled', 'all_except_cancelled'
+
+        const startTime = new Date(fromDateStr + 'T00:00:00').getTime();
+        const endTime = new Date(toDateStr + 'T23:59:59.999').getTime();
+
+        let filteredOrders = [];
+        let paidRevenue = 0;
+        let paidOrdersCount = 0;
+        let unpaidAmount = 0;
+        let unpaidOrdersCount = 0;
+        let cancelledAmount = 0;
+        let cancelledOrdersCount = 0;
+        let totalRawSubtotal = 0;
+        let totalDiscount = 0;
+        let totalSurcharge = 0;
+
+        const itemSalesMap = {};
+        const dailyBreakdown = {};
+
+        this.orders.forEach(ord => {
+            const ordTime = new Date(ord.createdAt).getTime();
+            if (isNaN(ordTime)) return;
+            if (ordTime < startTime || ordTime > endTime) return;
+
+            // Filter Table
+            if (tableId !== 'all') {
+                if (tableId === 'MANG_VE' || tableId === 'takeaway') {
+                    if (ord.tableId !== 'MANG_VE' && ord.tableId !== 'takeaway') return;
+                } else if (ord.tableId !== tableId) {
+                    return;
+                }
+            }
+
+            // Filter Payment Method
+            if (paymentMethod !== 'all') {
+                const method = ord.paymentMethod || 'vietqr';
+                if (method !== paymentMethod) return;
+            }
+
+            // Match Status Filter
+            let isStatusMatch = true;
+            if (statusFilter === 'paid') {
+                isStatusMatch = (ord.paymentStatus === 'paid' && ord.status !== 'cancelled');
+            } else if (statusFilter === 'unpaid') {
+                isStatusMatch = (ord.paymentStatus !== 'paid' && ord.status !== 'cancelled');
+            } else if (statusFilter === 'cancelled') {
+                isStatusMatch = (ord.status === 'cancelled');
+            } else if (statusFilter === 'all_except_cancelled') {
+                isStatusMatch = (ord.status !== 'cancelled');
+            } else if (statusFilter === 'all') {
+                isStatusMatch = true;
+            }
+
+            // Record overall metrics for period
+            if (ord.status === 'cancelled') {
+                cancelledAmount += (ord.totalAmount || 0);
+                cancelledOrdersCount += 1;
+            } else if (ord.paymentStatus === 'paid') {
+                paidRevenue += (ord.totalAmount || 0);
+                paidOrdersCount += 1;
+                totalRawSubtotal += (ord.rawSubtotal || ord.totalAmount || 0);
+                totalDiscount += (ord.discount?.amount || 0);
+                totalSurcharge += (ord.surcharge?.amount || 0);
+
+                // Group món bán chạy
+                (ord.items || []).forEach(it => {
+                    const key = it.name;
+                    if (!itemSalesMap[key]) {
+                        itemSalesMap[key] = {
+                            name: it.name,
+                            name_vi: it.name_vi || it.name,
+                            quantity: 0,
+                            revenue: 0,
+                            station: it.station || 'bar'
+                        };
+                    }
+                    itemSalesMap[key].quantity += (it.quantity || 1);
+                    itemSalesMap[key].revenue += (it.subtotal || (it.price * it.quantity));
+                });
+
+                // Group daily
+                const d = new Date(ord.createdAt);
+                const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                if (!dailyBreakdown[dayKey]) {
+                    dailyBreakdown[dayKey] = { date: dayKey, revenue: 0, count: 0 };
+                }
+                dailyBreakdown[dayKey].revenue += (ord.totalAmount || 0);
+                dailyBreakdown[dayKey].count += 1;
+            } else {
+                unpaidAmount += (ord.totalAmount || 0);
+                unpaidOrdersCount += 1;
+            }
+
+            if (isStatusMatch) {
+                filteredOrders.push(ord);
+            }
+        });
+
+        const topItems = Object.values(itemSalesMap)
+            .sort((a, b) => b.quantity - a.quantity)
+            .slice(0, 10);
+
+        const aov = paidOrdersCount > 0 ? Math.round(paidRevenue / paidOrdersCount) : 0;
+
+        return {
+            fromDate: fromDateStr,
+            toDate: toDateStr,
+            paymentMethod,
+            tableId,
+            statusFilter,
+            paidRevenue,
+            paidOrdersCount,
+            averageOrderValue: aov,
+            unpaidAmount,
+            unpaidOrdersCount,
+            cancelledAmount,
+            cancelledOrdersCount,
+            totalRawSubtotal,
+            totalDiscount,
+            totalSurcharge,
+            topItems,
+            dailyBreakdown: Object.values(dailyBreakdown).sort((a, b) => b.date.localeCompare(a.date)),
+            filteredOrders
         };
     }
 
