@@ -194,32 +194,50 @@ class PacaService {
 
     // --- CONFIG ---
     async loadConfig() {
+        let serverConfig = null;
+        try {
+            const res = await fetch('data/config.json?v=' + Date.now());
+            if (res.ok) serverConfig = await res.json();
+        } catch (e) {}
+
         const local = localStorage.getItem(PACA_STORAGE_KEYS.CONFIG);
         if (local) {
             try {
                 this.config = JSON.parse(local);
+                if (serverConfig) {
+                    // Always ensure valid telegram_config from server if local is empty/disabled
+                    if ((!this.config.telegram_config?.bot_token || !this.config.telegram_config?.chat_id) && serverConfig.telegram_config?.bot_token) {
+                        this.config.telegram_config = serverConfig.telegram_config;
+                        this.saveConfig(this.config);
+                    }
+                }
                 return this.config;
             } catch (e) {
                 console.warn("Invalid local config, fallback to default", e);
             }
         }
-        try {
-            const res = await fetch('data/config.json');
-            this.config = await res.json();
+        if (serverConfig) {
+            this.config = serverConfig;
             this.saveConfig(this.config);
-        } catch (e) {
-            this.config = {
-                shop_name: "PACA - TINY COZY BAR",
-                shop_address: "5A (10-1) Pasteur, TP. Đà Lạt",
-                shop_phone: "09xx xxx xxx",
-                shop_open_hours: "16:00 - 23:00 Hàng Ngày",
-                currency: "đ",
-                admin_pin: "1234",
-                bank_config: { bank_id: "MB", account_no: "", account_name: "" },
-                printer_config: { paper_size: "k80", print_mode: "web_dialog" },
-                telegram_config: { bot_token: "", chat_id: "", is_enabled: false }
-            };
+            return this.config;
         }
+
+        this.config = {
+            shop_name: "PACA - TINY COZY BAR",
+            shop_address: "5A (10-1) Pasteur, TP. Đà Lạt",
+            shop_phone: "09xx xxx xxx",
+            shop_open_hours: "16:00 - 23:00 Hàng Ngày",
+            currency: "đ",
+            admin_pin: "1234",
+            bank_config: { bank_id: "MB", account_no: "", account_name: "" },
+            printer_config: { paper_size: "k80", print_mode: "web_dialog" },
+            telegram_config: {
+                bot_token: "8939279124:AAEj46DdHIjiVz-VQKBipqsPvrKIzvj45Rw",
+                chat_id: "-5304065828",
+                is_enabled: true
+            }
+        };
+        this.saveConfig(this.config);
         return this.config;
     }
 
