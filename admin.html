@@ -1931,7 +1931,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20260930_strict_lock"></script>
+    <script src="js/paca_core.js?v=20260930_nopin_3"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -2018,8 +2018,16 @@
             });
         }
 
+        function removeLegacyPinHint() {
+            document.querySelectorAll('#pinAuthModal p, body p').forEach(p => {
+                if ((p.textContent || '').includes('PIN mẫu')) p.remove();
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
+            removeLegacyPinHint();
             await window.paca.init();
+            removeLegacyPinHint();
 
             // Populate banks select
             const bankSelect = document.getElementById('cfgBankSelect');
@@ -3403,6 +3411,10 @@
         function openPinAuthModal(isForced = false) {
             enteredPin = '';
             updatePinDotsDisplay();
+            // Force remove any legacy cached PIN hint element from DOM
+            document.querySelectorAll('#pinAuthModal p').forEach(p => {
+                if ((p.textContent || '').includes('PIN mẫu')) p.remove();
+            });
             const users = window.paca.users || [];
             const curUser = window.paca.getCurrentUser();
             const isLocked = !curUser || isForced;
