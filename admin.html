@@ -49,6 +49,37 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+        /* Smooth horizontal scrolling and sleek desktop scrollbar */
+        .desktop-scroll-container {
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+            scroll-behavior: smooth;
+        }
+        .desktop-scroll-container.is-dragging {
+            cursor: grabbing !important;
+        }
+        @media (min-width: 640px) {
+            .show-scrollbar-pc::-webkit-scrollbar {
+                height: 5px;
+                display: block;
+            }
+            .show-scrollbar-pc::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 9999px;
+            }
+            .show-scrollbar-pc::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 9999px;
+            }
+            .show-scrollbar-pc::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+            .show-scrollbar-pc {
+                scrollbar-width: thin;
+                scrollbar-color: #cbd5e1 #f1f5f9;
+            }
+        }
         .retro-shadow-sm {
             box-shadow: 2px 2px 0px #10234d;
         }
@@ -109,7 +140,7 @@
         <section id="tabOrders" class="tab-content space-y-3">
             <!-- Filter & Action row -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
-                <div class="flex items-center space-x-1.5 text-xs font-bold overflow-x-auto hide-scrollbar pb-0.5">
+                <div class="flex items-center space-x-1.5 text-xs font-bold overflow-x-auto hide-scrollbar show-scrollbar-pc pb-0.5 desktop-scroll-container">
                     <button onclick="setOrderFilter('all')" class="order-filter-btn px-3 py-1.5 rounded-xl bg-paca-navy text-white whitespace-nowrap" data-filter="all">
                         Tất cả (<span id="cntAll">0</span>)
                     </button>
@@ -228,9 +259,21 @@
                     </a>
                 </div>
 
-                <!-- Category selector for editing -->
-                <div class="flex space-x-2 overflow-x-auto hide-scrollbar pb-1 text-xs font-bold" id="adminMenuCategoryTabs">
-                    <!-- Tabs rendered by JS -->
+                <!-- Category selector for editing with desktop scroll controls -->
+                <div class="flex items-center gap-1.5 bg-gray-50/90 p-1.5 rounded-2xl border border-gray-200">
+                    <button type="button" onclick="scrollAdminMenuTabs(-240)" 
+                        class="hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-xl bg-white border border-gray-300 shadow-sm text-gray-700 hover:bg-gray-100 hover:text-paca-navy active:scale-90 transition flex-shrink-0 cursor-pointer text-xs font-black" 
+                        title="Cuộn sang trái (hoặc lăn chuột)">
+                        ◀
+                    </button>
+                    <div class="flex space-x-2 overflow-x-auto hide-scrollbar show-scrollbar-pc py-0.5 text-xs font-bold flex-1 desktop-scroll-container" id="adminMenuCategoryTabs">
+                        <!-- Tabs rendered by JS -->
+                    </div>
+                    <button type="button" onclick="scrollAdminMenuTabs(240)" 
+                        class="hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-xl bg-white border border-gray-300 shadow-sm text-gray-700 hover:bg-gray-100 hover:text-paca-navy active:scale-90 transition flex-shrink-0 cursor-pointer text-xs font-black" 
+                        title="Cuộn sang phải (hoặc lăn chuột)">
+                        ▶
+                    </button>
                 </div>
 
                 <!-- Menu list -->
@@ -335,7 +378,7 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-1 text-xs overflow-x-auto hide-scrollbar">
+                <div class="flex items-center gap-1 text-xs overflow-x-auto hide-scrollbar show-scrollbar-pc desktop-scroll-container">
                     <button onclick="setInventoryStatusFilter('all')" class="inv-filter-btn px-2.5 py-1.5 rounded-xl font-bold bg-paca-navy text-white whitespace-nowrap text-[11px]" data-inv-filter="all">
                         Tất cả
                     </button>
@@ -417,7 +460,7 @@
                 <!-- Date Range & Quick Presets -->
                 <div class="space-y-2">
                     <!-- Quick Presets -->
-                    <div class="flex items-center space-x-1.5 overflow-x-auto hide-scrollbar pb-1 text-xs font-bold" id="revPresetButtons">
+                    <div class="flex items-center space-x-1.5 overflow-x-auto hide-scrollbar show-scrollbar-pc pb-1 text-xs font-bold desktop-scroll-container" id="revPresetButtons">
                         <button onclick="setRevenuePreset('today')" class="rev-preset-btn px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-preset="today">Hôm nay</button>
                         <button onclick="setRevenuePreset('yesterday')" class="rev-preset-btn px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-preset="yesterday">Hôm qua</button>
                         <button onclick="setRevenuePreset('last7days')" class="rev-preset-btn px-2.5 py-1.5 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-preset="last7days">7 ngày qua</button>
@@ -1551,8 +1594,16 @@
                             <input type="text" id="manDishSearch" placeholder="Tìm tên món, mã món, cocktail..." oninput="filterManualOrderDishes()" class="w-full bg-white border border-gray-300 rounded-xl py-2 pl-8 pr-3 text-xs focus:outline-none focus:border-paca-navy">
                             <span class="absolute left-2.5 top-2 text-gray-400">🔍</span>
                         </div>
-                        <div class="flex space-x-1 overflow-x-auto hide-scrollbar pb-1 text-[11px] font-bold" id="manCategoryTabs">
-                            <!-- Category chips populated by JS -->
+                        <div class="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-200">
+                            <button type="button" onclick="scrollManCategoryTabs(-160)" 
+                                class="hidden sm:inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white border border-gray-300 shadow-sm text-gray-700 hover:bg-gray-100 active:scale-90 transition flex-shrink-0 cursor-pointer text-[10px] font-black" 
+                                title="Trượt trái">◀</button>
+                            <div class="flex space-x-1 overflow-x-auto hide-scrollbar show-scrollbar-pc py-0.5 text-[11px] font-bold flex-1 desktop-scroll-container" id="manCategoryTabs">
+                                <!-- Category chips populated by JS -->
+                            </div>
+                            <button type="button" onclick="scrollManCategoryTabs(160)" 
+                                class="hidden sm:inline-flex items-center justify-center w-6 h-6 rounded-lg bg-white border border-gray-300 shadow-sm text-gray-700 hover:bg-gray-100 active:scale-90 transition flex-shrink-0 cursor-pointer text-[10px] font-black" 
+                                title="Trượt phải">▶</button>
                         </div>
                     </div>
 
@@ -1891,6 +1942,85 @@
         let activeQrTable = null;
         let isAudioMuted = false;
 
+        // Horizontal Scroll, Wheel & Mouse Drag Utility for PC / Desktop
+        function enableHorizontalScrollDrag(elementOrId) {
+            const el = typeof elementOrId === 'string' ? document.getElementById(elementOrId) : elementOrId;
+            if (!el || el._hasDragScrollInit) return;
+            el._hasDragScrollInit = true;
+
+            // 1. Mouse wheel horizontal scrolling on PC
+            el.addEventListener('wheel', (e) => {
+                if (Math.abs(e.deltaY) >= Math.abs(e.deltaX) && el.scrollWidth > el.clientWidth) {
+                    e.preventDefault();
+                    el.scrollLeft += e.deltaY;
+                }
+            }, { passive: false });
+
+            // 2. Mouse Drag-to-scroll on PC
+            let isDown = false;
+            let startX = 0;
+            let scrollLeft = 0;
+            let hasDragged = false;
+
+            el.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return; // Only left mouse button
+                isDown = true;
+                hasDragged = false;
+                startX = e.pageX - el.offsetLeft;
+                scrollLeft = el.scrollLeft;
+                el.classList.add('is-dragging');
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isDown) {
+                    isDown = false;
+                    el.classList.remove('is-dragging');
+                    setTimeout(() => { hasDragged = false; }, 60);
+                }
+            });
+
+            el.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                const x = e.pageX - el.offsetLeft;
+                const walk = (x - startX);
+                if (Math.abs(walk) > 5) {
+                    hasDragged = true;
+                }
+                el.scrollLeft = scrollLeft - walk;
+            });
+
+            // Prevent accidental click if user was dragging
+            el.addEventListener('click', (e) => {
+                if (hasDragged) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+        }
+
+        function scrollAdminMenuTabs(amount) {
+            const el = document.getElementById('adminMenuCategoryTabs');
+            if (el) {
+                el.scrollBy({ left: amount, behavior: 'smooth' });
+            }
+        }
+
+        function scrollManCategoryTabs(amount) {
+            const el = document.getElementById('manCategoryTabs');
+            if (el) {
+                el.scrollBy({ left: amount, behavior: 'smooth' });
+            }
+        }
+
+        function initAllHorizontalScrolls() {
+            enableHorizontalScrollDrag('adminMenuCategoryTabs');
+            enableHorizontalScrollDrag('manCategoryTabs');
+            enableHorizontalScrollDrag('revPresetButtons');
+            document.querySelectorAll('.overflow-x-auto').forEach(el => {
+                enableHorizontalScrollDrag(el);
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             await window.paca.init();
 
@@ -2074,6 +2204,9 @@
                     }
                 );
             }
+
+            // Init all horizontal drag and scroll listeners on PC/Desktop
+            setTimeout(initAllHorizontalScrolls, 100);
         });
 
         // Tab Switching
@@ -2100,13 +2233,17 @@
 
             if (tabId === 'tabOrders') renderOrders();
             if (tabId === 'tabTables') renderTablesAdmin();
-            if (tabId === 'tabMenu') renderAdminMenu();
+            if (tabId === 'tabMenu') {
+                populateMenuCategories();
+                renderAdminMenu();
+            }
             if (tabId === 'tabInventory') renderInventoryTable();
             if (tabId === 'tabRevenue') renderRevenueStats();
             if (tabId === 'tabSettings') {
                 loadSettingsToInputs();
                 renderStaffList();
             }
+            setTimeout(initAllHorizontalScrolls, 50);
         }
 
         function toggleAudioMute() {
@@ -2740,19 +2877,20 @@
             const tabContainer = document.getElementById('adminMenuCategoryTabs');
             if (tabContainer) {
                 let tabsHtml = `
-                    <button onclick="setAdminMenuCategory('all')" class="whitespace-nowrap px-3 py-1.5 rounded-lg ${currentAdminMenuCategory === 'all' ? 'bg-paca-navy text-white' : 'bg-white border text-gray-700'}">
+                    <button onclick="setAdminMenuCategory('all')" data-cat="all" class="whitespace-nowrap px-3 py-1.5 rounded-xl transition-all ${currentAdminMenuCategory === 'all' ? 'bg-paca-navy text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'}">
                         Tất cả món (${window.paca.menu?.items?.length || 0})
                     </button>
                 `;
                 categories.forEach(cat => {
                     const count = (window.paca.menu?.items || []).filter(i => i.category === cat.id).length;
                     tabsHtml += `
-                        <button onclick="setAdminMenuCategory('${cat.id}')" class="whitespace-nowrap px-3 py-1.5 rounded-lg ${currentAdminMenuCategory === cat.id ? 'bg-paca-navy text-white' : 'bg-white border text-gray-700'}">
+                        <button onclick="setAdminMenuCategory('${cat.id}')" data-cat="${cat.id}" class="whitespace-nowrap px-3 py-1.5 rounded-xl transition-all ${currentAdminMenuCategory === cat.id ? 'bg-paca-navy text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-100'}">
                             ${cat.icon || '📁'} ${cat.name_vi || cat.name} (${count})
                         </button>
                     `;
                 });
                 tabContainer.innerHTML = tabsHtml;
+                enableHorizontalScrollDrag(tabContainer);
             }
 
             // Dish Edit category selector
@@ -2770,6 +2908,12 @@
             currentAdminMenuCategory = catId;
             populateMenuCategories();
             renderAdminMenu();
+            setTimeout(() => {
+                const activeBtn = document.querySelector(`#adminMenuCategoryTabs button[data-cat="${catId}"]`);
+                if (activeBtn) {
+                    activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+                }
+            }, 30);
         }
 
         function renderAdminMenu() {
@@ -4747,6 +4891,7 @@
                 `;
             });
             container.innerHTML = html;
+            enableHorizontalScrollDrag(container);
         }
 
         function setManCategory(catId) {
