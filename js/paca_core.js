@@ -268,17 +268,45 @@ class PacaService {
 
     // --- MENU ---
     async loadMenu() {
+        let serverMenu = null;
+        try {
+            const res = await fetch('data/menu.json?v=' + Date.now());
+            if (res.ok) serverMenu = await res.json();
+        } catch (e) {}
+
         const local = localStorage.getItem(PACA_STORAGE_KEYS.MENU);
         if (local) {
             try {
                 this.menu = JSON.parse(local);
                 if (this.menu && this.menu.categories && this.menu.categories.length > 0) {
+                    if (serverMenu && serverMenu.items) {
+                        let hasUpdatedCost = false;
+                        this.menu.items.forEach(it => {
+                            if (it.cost_price === undefined || it.cost_price === null) {
+                                const sIt = serverMenu.items.find(si => si.id === it.id || si.name === it.name);
+                                if (sIt && sIt.cost_price !== undefined) {
+                                    it.cost_price = sIt.cost_price;
+                                    it.costPrice = sIt.cost_price;
+                                    hasUpdatedCost = true;
+                                }
+                            }
+                        });
+                        if (hasUpdatedCost) {
+                            this.saveMenu(this.menu);
+                        }
+                    }
                     this.normalizeCategories();
                     return this.menu;
                 }
             } catch (e) {
                 console.warn("Invalid local menu", e);
             }
+        }
+        if (serverMenu) {
+            this.menu = serverMenu;
+            this.normalizeCategories();
+            this.saveMenu(this.menu);
+            return this.menu;
         }
         try {
             const res = await fetch('data/menu.json');
@@ -344,6 +372,36 @@ class PacaService {
             this.broadcastChannel.postMessage({ type: 'MENU_ITEM_SAVED', item: itemData });
         }
         return itemData;
+    }
+
+    getDishCostPrice(item) {
+        if (!item) return 0;
+        if (item.costPrice !== undefined && item.costPrice !== null && !isNaN(item.costPrice)) return Number(item.costPrice);
+        if (item.cost_price !== undefined && item.cost_price !== null && !isNaN(item.cost_price)) return Number(item.cost_price);
+        const itemId = item.productId || item.id;
+        const found = (this.menu?.items || []).find(d => d.id === itemId || d.name === item.name);
+        if (found && (found.cost_price !== undefined || found.costPrice !== undefined)) {
+            return Number(found.cost_price || found.costPrice || 0);
+        }
+        return 0;
+    }
+
+    saveBatchCostPrices(itemsCostMap) {
+        if (!this.menu || !this.menu.items) return 0;
+        let changeCount = 0;
+        this.menu.items.forEach(item => {
+            if (itemsCostMap[item.id] !== undefined) {
+                const val = Math.max(0, parseInt(itemsCostMap[item.id]) || 0);
+                item.cost_price = val;
+                item.costPrice = val;
+                changeCount++;
+            }
+        });
+        this.saveMenu(this.menu);
+        if (this.broadcastChannel) {
+            this.broadcastChannel.postMessage({ type: 'MENU_BATCH_COST_SAVED' });
+        }
+        return changeCount;
     }
 
     deleteMenuItem(itemId) {
@@ -563,15 +621,22 @@ class PacaService {
         const orderId = `PACA-${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}-${randomNum}`;
 
         let rawSubtotal = 0;
+        let totalCost = 0;
         const processedItems = items.map(item => {
             const subtotal = item.price * item.quantity;
             rawSubtotal += subtotal;
+            const costPrice = this.getDishCostPrice(item);
+            const itemTotalCost = costPrice * item.quantity;
+            totalCost += itemTotalCost;
             return {
                 id: item.id,
                 productId: item.productId || item.id,
                 name: item.name,
                 name_vi: item.name_vi || item.name,
                 price: item.price,
+                costPrice: costPrice,
+                cost_price: costPrice,
+                totalCost: itemTotalCost,
                 originalPrice: item.originalPrice || item.price,
                 quantity: item.quantity,
                 subtotal: subtotal,
@@ -586,6 +651,8 @@ class PacaService {
         const discountAmount = Math.min(rawSubtotal, Math.max(0, discount.amount || 0));
         const surchargeAmount = Math.max(0, surcharge.amount || 0);
         const finalTotal = Math.max(0, rawSubtotal - discountAmount + surchargeAmount);
+        const grossProfit = Math.max(0, finalTotal - totalCost);
+        const profitMargin = finalTotal > 0 ? Math.round((grossProfit / finalTotal) * 100) : 0;
 
         const newOrder = {
             id: orderId,
@@ -595,6 +662,9 @@ class PacaService {
             source,
             items: processedItems,
             rawSubtotal,
+            totalCost,
+            grossProfit,
+            profitMargin,
             discount: {
                 amount: discountAmount,
                 reason: discount.reason || "",
@@ -1410,6 +1480,7 @@ ${order.note ? `📝 *Ghi chú:* _${order.note}_\n` : ''}
 
         let filteredOrders = [];
         let paidRevenue = 0;
+        let paidCost = 0;
         let paidOrdersCount = 0;
         let unpaidAmount = 0;
         let unpaidOrdersCount = 0;
@@ -1456,19 +1527,14 @@ ${order.note ? `📝 *Ghi chú:* _${order.note}_\n` : ''}
                 isStatusMatch = true;
             }
 
-            // Record overall metrics for period
-            if (ord.status === 'cancelled') {
-                cancelledAmount += (ord.totalAmount || 0);
-                cancelledOrdersCount += 1;
-            } else if (ord.paymentStatus === 'paid') {
-                paidRevenue += (ord.totalAmount || 0);
-                paidOrdersCount += 1;
-                totalRawSubtotal += (ord.rawSubtotal || ord.totalAmount || 0);
-                totalDiscount += (ord.discount?.amount || 0);
-                totalSurcharge += (ord.surcharge?.amount || 0);
+            // Calculate Order Cost & Profit
+            let orderTotalCost = 0;
+            (ord.items || []).forEach(it => {
+                const itemCostPrice = this.getDishCostPrice(it);
+                const itemCostTotal = itemCostPrice * (it.quantity || 1);
+                orderTotalCost += itemCostTotal;
 
-                // Group món bán chạy
-                (ord.items || []).forEach(it => {
+                if (ord.paymentStatus === 'paid' && ord.status !== 'cancelled') {
                     const key = it.name;
                     if (!itemSalesMap[key]) {
                         itemSalesMap[key] = {
@@ -1476,20 +1542,51 @@ ${order.note ? `📝 *Ghi chú:* _${order.note}_\n` : ''}
                             name_vi: it.name_vi || it.name,
                             quantity: 0,
                             revenue: 0,
+                            costPrice: itemCostPrice,
+                            totalCost: 0,
+                            profit: 0,
+                            profitMargin: 0,
                             station: it.station || 'bar'
                         };
                     }
+                    const itRev = (it.subtotal || (it.price * it.quantity));
                     itemSalesMap[key].quantity += (it.quantity || 1);
-                    itemSalesMap[key].revenue += (it.subtotal || (it.price * it.quantity));
-                });
+                    itemSalesMap[key].revenue += itRev;
+                    itemSalesMap[key].totalCost += itemCostTotal;
+                    itemSalesMap[key].profit = itemSalesMap[key].revenue - itemSalesMap[key].totalCost;
+                    itemSalesMap[key].profitMargin = itemSalesMap[key].revenue > 0
+                        ? Math.round((itemSalesMap[key].profit / itemSalesMap[key].revenue) * 100)
+                        : 0;
+                }
+            });
+
+            ord.calculatedTotalCost = orderTotalCost;
+            ord.calculatedGrossProfit = Math.max(0, (ord.totalAmount || 0) - orderTotalCost);
+            ord.calculatedProfitMargin = (ord.totalAmount > 0)
+                ? Math.round((ord.calculatedGrossProfit / ord.totalAmount) * 100)
+                : 0;
+
+            // Record overall metrics for period
+            if (ord.status === 'cancelled') {
+                cancelledAmount += (ord.totalAmount || 0);
+                cancelledOrdersCount += 1;
+            } else if (ord.paymentStatus === 'paid') {
+                paidRevenue += (ord.totalAmount || 0);
+                paidCost += orderTotalCost;
+                paidOrdersCount += 1;
+                totalRawSubtotal += (ord.rawSubtotal || ord.totalAmount || 0);
+                totalDiscount += (ord.discount?.amount || 0);
+                totalSurcharge += (ord.surcharge?.amount || 0);
 
                 // Group daily
                 const d = new Date(ord.createdAt);
                 const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                 if (!dailyBreakdown[dayKey]) {
-                    dailyBreakdown[dayKey] = { date: dayKey, revenue: 0, count: 0 };
+                    dailyBreakdown[dayKey] = { date: dayKey, revenue: 0, cost: 0, profit: 0, count: 0 };
                 }
                 dailyBreakdown[dayKey].revenue += (ord.totalAmount || 0);
+                dailyBreakdown[dayKey].cost += orderTotalCost;
+                dailyBreakdown[dayKey].profit += Math.max(0, (ord.totalAmount || 0) - orderTotalCost);
                 dailyBreakdown[dayKey].count += 1;
             } else {
                 unpaidAmount += (ord.totalAmount || 0);
@@ -1501,8 +1598,15 @@ ${order.note ? `📝 *Ghi chú:* _${order.note}_\n` : ''}
             }
         });
 
+        const grossProfit = Math.max(0, paidRevenue - paidCost);
+        const profitMargin = paidRevenue > 0 ? Math.round((grossProfit / paidRevenue) * 100) : 0;
+
         const topItems = Object.values(itemSalesMap)
             .sort((a, b) => b.quantity - a.quantity)
+            .slice(0, 10);
+
+        const topProfitableItems = Object.values(itemSalesMap)
+            .sort((a, b) => b.profit - a.profit)
             .slice(0, 10);
 
         const aov = paidOrdersCount > 0 ? Math.round(paidRevenue / paidOrdersCount) : 0;
@@ -1514,6 +1618,9 @@ ${order.note ? `📝 *Ghi chú:* _${order.note}_\n` : ''}
             tableId,
             statusFilter,
             paidRevenue,
+            paidCost,
+            grossProfit,
+            profitMargin,
             paidOrdersCount,
             averageOrderValue: aov,
             unpaidAmount,
@@ -1524,6 +1631,7 @@ ${order.note ? `📝 *Ghi chú:* _${order.note}_\n` : ''}
             totalDiscount,
             totalSurcharge,
             topItems,
+            topProfitableItems,
             dailyBreakdown: Object.values(dailyBreakdown).sort((a, b) => b.date.localeCompare(a.date)),
             filteredOrders
         };

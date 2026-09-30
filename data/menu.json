@@ -110,7 +110,8 @@
         "Sour Water"
       ],
       "badge": "Signature",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 45000
     },
     {
       "id": "w02",
@@ -129,7 +130,8 @@
         "Juniper Liqueur"
       ],
       "badge": "Refreshing",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 45000
     },
     {
       "id": "w03",
@@ -147,7 +149,8 @@
         "Soda"
       ],
       "badge": "Highball",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 45000
     },
     {
       "id": "w04",
@@ -166,7 +169,8 @@
         "Orangecello"
       ],
       "badge": "Nightcap",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 45000
     },
     {
       "id": "w05",
@@ -184,7 +188,8 @@
         "Home-made Lemoncello"
       ],
       "badge": "Easy Sip",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 45000
     },
     {
       "id": "w06",
@@ -202,7 +207,8 @@
         "Spicy Bitter"
       ],
       "badge": "Tropical & Spicy",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 45000
     },
     {
       "id": "w07",
@@ -220,7 +226,8 @@
         "Cranberry Soda"
       ],
       "badge": "SOLD OUT",
-      "is_available": false
+      "is_available": false,
+      "cost_price": 45000
     },
     {
       "id": "w08",
@@ -239,7 +246,8 @@
         "Tonic"
       ],
       "badge": "Crisp G&T",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 45000
     },
     {
       "id": "w09",
@@ -257,7 +265,8 @@
         "Home-made Cardamom Liqueur"
       ],
       "badge": "Spirit-Forward",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 45000
     },
     {
       "id": "w10",
@@ -275,7 +284,8 @@
         "Home-made Lemoncello"
       ],
       "badge": "Dry & Elegant",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 45000
     },
     {
       "id": "b01",
@@ -293,7 +303,8 @@
         "Sốt mắm rim đường"
       ],
       "badge": "Best Seller",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 25000
     },
     {
       "id": "b02",
@@ -311,7 +322,8 @@
         "Sốt phô mai tan chảy"
       ],
       "badge": "Must Try",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 33000
     },
     {
       "id": "b03",
@@ -328,7 +340,8 @@
         "Sốt phô mai béo"
       ],
       "badge": "Cheesy",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 25000
     },
     {
       "id": "b04",
@@ -346,7 +359,8 @@
         "Tương ớt / Sốt chấm"
       ],
       "badge": "Classic",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 19000
     },
     {
       "id": "b05",
@@ -363,7 +377,8 @@
         "Sốt kem hành chua béo"
       ],
       "badge": "New",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 25000
     },
     {
       "id": "b06",
@@ -380,7 +395,8 @@
         "Gia vị thảo mộc"
       ],
       "badge": "Snack",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 19000
     },
     {
       "id": "b07",
@@ -397,7 +413,8 @@
         "Bột phô mai mặn béo"
       ],
       "badge": "Popular",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 19000
     },
     {
       "id": "b08",
@@ -436,7 +453,8 @@
           "price": 30000
         }
       ],
-      "is_available": true
+      "is_available": true,
+      "cost_price": 33000
     },
     {
       "id": "c01",
@@ -456,7 +474,8 @@
         "Lime Juice"
       ],
       "badge": "Highlight",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 48000
     },
     {
       "id": "c02",
@@ -475,7 +494,8 @@
         "Gin"
       ],
       "badge": "Floral & Sweet",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 48000
     },
     {
       "id": "c03",
@@ -495,7 +515,8 @@
         "Simple Syrup"
       ],
       "badge": "Dark & Rich",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 48000
     },
     {
       "id": "c04",
@@ -513,7 +534,8 @@
         "Orgeat Foam on top"
       ],
       "badge": "Smooth Foam",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 48000
     },
     {
       "id": "c05",
@@ -532,7 +554,8 @@
         "Orange Peel"
       ],
       "badge": "Old But Gold",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 53000
     },
     {
       "id": "c06",
@@ -550,7 +573,8 @@
         "Campari"
       ],
       "badge": "Old But Gold",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 53000
     },
     {
       "id": "c07",
@@ -569,7 +593,8 @@
         "Angostura"
       ],
       "badge": "Classic",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 53000
     },
     {
       "id": "c08",
@@ -588,7 +613,8 @@
         "Salt Rim"
       ],
       "badge": "Classic",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 45000
     },
     {
       "id": "c09",
@@ -606,7 +632,8 @@
         "Lime & Botanicals"
       ],
       "badge": "Refreshing",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 39000
     },
     {
       "id": "m01",
@@ -625,7 +652,8 @@
         "Thảo mộc"
       ],
       "badge": "No Alcohol / Best Seller",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 24000
     },
     {
       "id": "m02",
@@ -644,7 +672,8 @@
         "Kem mận Gelato"
       ],
       "badge": "Gelato Inside",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 20000
     },
     {
       "id": "m03",
@@ -663,7 +692,8 @@
         "Salted Pineapple Cheese Foam"
       ],
       "badge": "Cheese Foam",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 20000
     },
     {
       "id": "m04",
@@ -682,7 +712,8 @@
         "Chanh"
       ],
       "badge": "Crisp & Sour",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 20000
     },
     {
       "id": "m05",
@@ -701,7 +732,8 @@
         "Logan Berry Foam"
       ],
       "badge": "Sweet Foam",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 20000
     },
     {
       "id": "br01",
@@ -717,7 +749,8 @@
         "Craft Beer on tap 330ml"
       ],
       "badge": "Craft On-Tap -10k",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 26000
     },
     {
       "id": "br02",
@@ -733,7 +766,8 @@
         "Craft Beer on tap 330ml"
       ],
       "badge": "Craft On-Tap -10k",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 26000
     },
     {
       "id": "br03",
@@ -751,7 +785,8 @@
         "Quế thơm"
       ],
       "badge": "Special Ferment",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 26000
     },
     {
       "id": "br04",
@@ -767,7 +802,8 @@
         "Chai 250ml"
       ],
       "badge": "Imported",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 26000
     },
     {
       "id": "br05",
@@ -783,7 +819,8 @@
         "Chai 300ml"
       ],
       "badge": "Imported",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 34000
     },
     {
       "id": "br06",
@@ -799,7 +836,8 @@
         "Lon 250ml"
       ],
       "badge": "Low Carb",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 18000
     },
     {
       "id": "br07",
@@ -815,7 +853,8 @@
         "Ly 330ml"
       ],
       "badge": "Fruity Cider",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 30000
     },
     {
       "id": "wn01",
@@ -831,7 +870,8 @@
         "Ly 150ml"
       ],
       "badge": "By The Glass",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 26000
     },
     {
       "id": "sh01",
@@ -847,7 +887,8 @@
         "Shot 40ml"
       ],
       "badge": "Shot 40ml",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 36000
     },
     {
       "id": "sh02",
@@ -863,7 +904,8 @@
         "Shot 40ml"
       ],
       "badge": "Shot 40ml",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 36000
     },
     {
       "id": "sh03",
@@ -879,7 +921,8 @@
         "Shot 40ml"
       ],
       "badge": "Shot 40ml",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 30000
     },
     {
       "id": "be01",
@@ -891,7 +934,8 @@
       "badge": "ABV 5.2%",
       "description_vi": "Hoppy Pilsner thơm lừng hoa bia tươi, hậu vị đắng giòn thanh mát sảng khoái.",
       "description_en": "Hoppy Pilsner with crisp bitterness and refreshing hop aroma.",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 26000
     },
     {
       "id": "be02",
@@ -903,7 +947,8 @@
       "badge": "Classic",
       "description_vi": "Pilsner truyền thống, vị mạch nha cân bằng giòn tan rất dễ uống.",
       "description_en": "Clean, crisp and classic pilsner for easy drinking.",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 26000
     },
     {
       "id": "be03",
@@ -915,7 +960,8 @@
       "badge": "330ml",
       "description_vi": "Nước táo lên men tự nhiên giòn ngọt, sủi tăm tươi mát dễ uống.",
       "description_en": "Crisp and refreshing naturally fermented apple cider.",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 30000
     },
     {
       "id": "be04",
@@ -927,7 +973,8 @@
       "badge": "Mexico Recipe",
       "description_vi": "Ủ từ vỏ dứa chín, đường thốt nốt và quế theo công thức Mexico. Chua thanh sủi bọt cực đã.",
       "description_en": "Fermented pineapple drink with raw cane sugar and aromatic cinnamon.",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 26000
     },
     {
       "id": "be05",
@@ -940,7 +987,8 @@
       "image": "assets/canva/ea093b2144fcd44344cfc2c4f1b8f149.png",
       "description_vi": "Bia lúa mì Bỉ nồng nàn vị vỏ cam curacao và hạt ngò rí thơm dịu.",
       "description_en": "Authentic Belgian white wheat beer with orange peel and coriander.",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 18000
     },
     {
       "id": "be06",
@@ -953,7 +1001,8 @@
       "image": "assets/canva/32ce3196c738a55c6e125673a1c9709f.png",
       "description_vi": "Bia Mexico kinh điển uống cùng lát chanh tươi mát lạnh sảng khoái.",
       "description_en": "Iconic Mexican lager served ice-cold with fresh lime.",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 34000
     },
     {
       "id": "w_merlot",
@@ -966,7 +1015,8 @@
       "image": "assets/canva/b39e83bcd3e781d72ac36b3fee710acb.png",
       "description_vi": "Vang đỏ Đà Lạt êm dịu, hương dâu tằm chín và gỗ sồi phảng phất.",
       "description_en": "Smooth Dalat red wine by the glass, notes of ripe berries and oak.",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 26000
     },
     {
       "id": "s01",
@@ -979,7 +1029,8 @@
       "image": "assets/canva/8ccdcdb3a2f18990e491a76889d7f24d.png",
       "description_vi": "Blended Scotch Whisky đậm vị khói than bùn, gia vị ấm và vani phong phú.",
       "description_en": "40ml shot of iconic blended Scotch whisky with rich smokiness.",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 36000
     },
     {
       "id": "s02",
@@ -991,7 +1042,8 @@
       "badge": "40ml Shot",
       "description_vi": "London Dry Gin chưng cất cùng cam chanh bưởi tươi thanh mát, hậu vị mượt mà.",
       "description_en": "40ml shot of premium London Dry Gin with fresh whole citrus.",
-      "is_available": true
+      "is_available": true,
+      "cost_price": 36000
     }
   ]
 }
