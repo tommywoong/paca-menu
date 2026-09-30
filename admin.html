@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>PACA - Quản Trị Thu Ngân & Bar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -99,8 +102,8 @@
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-4xl mx-auto px-3 sm:px-4 pt-4">
+    <!-- Main Container (blurred and disabled until PIN unlock) -->
+    <main class="max-w-4xl mx-auto px-3 sm:px-4 pt-4 filter blur-sm pointer-events-none select-none">
 
         <!-- ==================== TAB 1: ORDERS (ĐƠN HÀNG) ==================== -->
         <section id="tabOrders" class="tab-content space-y-3">
@@ -937,8 +940,8 @@
 
     </main>
 
-    <!-- Bottom Mobile Navigation Bar -->
-    <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg">
+    <!-- Bottom Mobile Navigation Bar (blurred and disabled until PIN unlock) -->
+    <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg filter blur-sm pointer-events-none select-none">
         <div class="max-w-4xl mx-auto flex items-center justify-around py-1.5 px-1">
             <button onclick="switchTab('tabOrders')" class="nav-tab-btn flex flex-col items-center py-1 text-paca-crimson font-bold text-xs relative flex-1" data-target="tabOrders">
                 <span class="text-xl">🔔</span>
@@ -1292,7 +1295,7 @@
     </div>
 
     <!-- MODAL: ĐĂNG NHẬP / CHUYỂN CA / KHÓA BẰNG MÃ PIN (PIN KEYPAD AUTH) -->
-    <div id="pinAuthModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div id="pinAuthModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-xs sm:max-w-sm rounded-3xl retro-border p-5 text-center shadow-2xl space-y-4 relative">
             <!-- Modal Header -->
             <div class="flex items-center justify-between pb-2 border-b">
@@ -1880,7 +1883,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js"></script>
+    <script src="js/paca_core.js?v=20260930_strict_lock"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
