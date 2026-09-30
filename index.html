@@ -544,9 +544,12 @@
             if (item.options && item.options.length > 0) {
                 optBox.classList.remove('hidden');
                 optList.innerHTML = item.options.map(opt => `
-                    <label class="flex items-center justify-between p-2 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer">
-                        <span class="font-bold text-xs text-gray-800">${opt.name}</span>
-                        <input type="checkbox" onchange="toggleModalOption('${opt.id}', this.checked)" class="w-4 h-4 rounded text-paca-crimson">
+                    <label class="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 cursor-pointer transition">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-xs text-gray-800">${opt.name}</span>
+                            ${opt.price > 0 ? `<span class="text-[11px] font-bold text-paca-crimson bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-md">+${window.paca.formatMoney(opt.price)}</span>` : '<span class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">Kèm theo</span>'}
+                        </div>
+                        <input type="checkbox" onchange="toggleModalOption('${opt.id}', this.checked)" class="w-4 h-4 rounded text-paca-crimson focus:ring-paca-crimson">
                     </label>
                 `).join('');
             } else {

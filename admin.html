@@ -70,6 +70,14 @@
             </div>
 
             <div class="flex items-center space-x-2">
+                <!-- User Profile & PIN Switch -->
+                <button onclick="openPinAuthModal()" id="btnHeaderUser" class="bg-white/10 hover:bg-white/20 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 border border-white/25 transition active:scale-95" title="Đổi người dùng / Khóa màn hình PIN">
+                    <span id="headerUserIcon">👤</span>
+                    <span class="font-bold text-paca-cream max-w-[85px] sm:max-w-none truncate" id="headerUserName">Quản Lý</span>
+                    <span class="text-[9px] bg-paca-crimson text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider" id="headerUserRoleBadge">ADMIN</span>
+                    <span class="text-xs text-amber-300">🔒</span>
+                </button>
+
                 <button onclick="toggleAudioMute()" id="btnMuteAudio" class="bg-white/10 hover:bg-white/20 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 border border-white/20">
                     <span id="muteIcon">🔔</span>
                     <span id="muteText" class="hidden sm:inline">Chuông</span>
@@ -249,6 +257,121 @@
 
                 <!-- Categories List -->
                 <div id="adminCategoriesList" class="space-y-2.5">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: INVENTORY (QUẢN LÝ KHO HÀNG & TỒN KHO) ==================== -->
+        <section id="tabInventory" class="tab-content hidden space-y-4">
+            <!-- Header & Action Row -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div>
+                    <h2 class="font-bold text-base text-paca-navy flex items-center gap-2">
+                        <span>📦</span>
+                        <span>Quản Lý Kho Hàng & Tồn Kho PACA</span>
+                    </h2>
+                    <p class="text-xs text-gray-500">Kiểm soát số lượng tồn kho thực tế, đơn vị tính, giá vốn nguyên liệu và tự động trừ kho khi hoàn tất đơn.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="openDishEditorModal(null)" class="bg-paca-navy hover:bg-paca-dark text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow active:scale-95 transition">
+                        <span class="text-sm font-black">+</span>
+                        <span>Thêm Món Vào Kho</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5 Financial / Inventory KPI Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                <div class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm">
+                    <div class="text-[11px] font-bold text-gray-500">MẶT HÀNG KHO</div>
+                    <div class="text-lg font-black text-paca-navy mt-1" id="invTotalItems">0</div>
+                    <div class="text-[10px] text-gray-400 mt-0.5">Theo dõi tồn kho</div>
+                </div>
+
+                <div class="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200/80 shadow-sm">
+                    <div class="text-[11px] font-bold text-emerald-800">TỒN AN TOÀN</div>
+                    <div class="text-lg font-black text-emerald-700 mt-1" id="invInStock">0</div>
+                    <div class="text-[10px] text-emerald-600 mt-0.5">&gt; Ngưỡng báo động</div>
+                </div>
+
+                <div class="bg-amber-50/70 p-3 rounded-2xl border border-amber-200/80 shadow-sm">
+                    <div class="text-[11px] font-bold text-amber-800">SẮP HẾT HÀNG</div>
+                    <div class="text-lg font-black text-amber-700 mt-1" id="invLowStock">0</div>
+                    <div class="text-[10px] text-amber-600 mt-0.5">Cần nhập thêm sớm</div>
+                </div>
+
+                <div class="bg-red-50/70 p-3 rounded-2xl border border-red-200/80 shadow-sm">
+                    <div class="text-[11px] font-bold text-red-800">ĐÃ HẾT HÀNG</div>
+                    <div class="text-lg font-black text-red-700 mt-1" id="invOutOfStock">0</div>
+                    <div class="text-[10px] text-red-600 mt-0.5">Tự khóa "Hết món"</div>
+                </div>
+
+                <div class="bg-blue-50/70 p-3 rounded-2xl border border-blue-200/80 shadow-sm col-span-2 sm:col-span-1">
+                    <div class="text-[11px] font-bold text-blue-900">VỐN TỒN KHO</div>
+                    <div class="text-lg font-black text-blue-800 mt-1 truncate" id="invTotalValue">0 đ</div>
+                    <div class="text-[10px] text-blue-600 mt-0.5">Tổng giá trị giá cost</div>
+                </div>
+            </div>
+
+            <!-- Search, Filter & Quick Tools -->
+            <div class="bg-white p-3 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row gap-2.5 sm:items-center justify-between">
+                <div class="flex-1 flex flex-col sm:flex-row gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" id="invSearchInput" oninput="filterInventoryTable()" placeholder="🔍 Tìm tên món, mã SKU..." class="w-full border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-medium focus:ring-1 focus:ring-paca-navy">
+                    </div>
+                    <div class="w-full sm:w-44">
+                        <select id="invCategoryFilter" onchange="filterInventoryTable()" class="w-full border border-gray-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-gray-700">
+                            <option value="all">Tất cả danh mục</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1 text-xs overflow-x-auto hide-scrollbar">
+                    <button onclick="setInventoryStatusFilter('all')" class="inv-filter-btn px-2.5 py-1.5 rounded-xl font-bold bg-paca-navy text-white whitespace-nowrap text-[11px]" data-inv-filter="all">
+                        Tất cả
+                    </button>
+                    <button onclick="setInventoryStatusFilter('low')" class="inv-filter-btn px-2.5 py-1.5 rounded-xl font-semibold bg-gray-50 text-gray-700 border border-gray-200 whitespace-nowrap text-[11px]" data-inv-filter="low">
+                        ⚠️ Sắp hết
+                    </button>
+                    <button onclick="setInventoryStatusFilter('out')" class="inv-filter-btn px-2.5 py-1.5 rounded-xl font-semibold bg-gray-50 text-gray-700 border border-gray-200 whitespace-nowrap text-[11px]" data-inv-filter="out">
+                        ❌ Hết hàng
+                    </button>
+                </div>
+            </div>
+
+            <!-- Inventory Items Table -->
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-50/80 border-b border-gray-200 text-gray-500 font-bold uppercase text-[10px]">
+                            <tr>
+                                <th class="p-3">Hàng Hóa / SKU</th>
+                                <th class="p-3">ĐVT</th>
+                                <th class="p-3">Giá Vốn / Bán</th>
+                                <th class="p-3 text-center">Tồn Kho Hiện Tại</th>
+                                <th class="p-3 text-center">Bù / Xuất Nhanh</th>
+                                <th class="p-3 text-center">Trạng Thái</th>
+                                <th class="p-3 text-right">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody" class="divide-y divide-gray-100">
+                            <!-- Rendered by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recent Stock Changes Log Card -->
+            <div class="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-2.5">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-xs text-paca-navy flex items-center gap-1.5">
+                        <span>📝</span>
+                        <span>Nhật Ký Xuất / Nhập Kho Gần Đây</span>
+                    </h3>
+                    <span class="text-[10px] text-gray-400">Tự động ghi nhận khi bán đơn hoặc chỉnh tay</span>
+                </div>
+                <div id="inventoryLogsContainer" class="space-y-1.5 max-h-48 overflow-y-auto pr-1 text-xs">
                     <!-- Rendered by JS -->
                 </div>
             </div>
@@ -749,31 +872,91 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ==================== USER MANAGEMENT & PIN RBAC CARD ==================== -->
+            <div id="staffManagementCard" class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-5 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+                    <div>
+                        <h3 class="font-bold text-sm text-paca-navy flex items-center gap-2">
+                            <span>👥</span>
+                            <span>Quản Lý Nhân Viên & Phân Quyền Mã PIN</span>
+                        </h3>
+                        <p class="text-xs text-gray-500">Admin có toàn quyền quản trị. Nhân viên (Staff) chỉ có quyền xem đơn hàng, nhận món, in bill và tạo mã QR.</p>
+                    </div>
+                    <button onclick="openPinAuthModal()" class="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition active:scale-95">
+                        <span>🔒</span>
+                        <span>Đổi Ca / Khóa Mã PIN</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                    <!-- Staff Accounts List (7 cols) -->
+                    <div class="lg:col-span-7 space-y-2">
+                        <div class="text-xs font-bold text-gray-700 flex items-center justify-between">
+                            <span>Danh Sách Tài Khoản Nhân Viên</span>
+                            <span class="text-[10px] text-gray-400">Chạm vào để sửa PIN hoặc xóa</span>
+                        </div>
+                        <div id="staffListContainer" class="space-y-2">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Add Staff Form (5 cols) -->
+                    <div class="lg:col-span-5 bg-gray-50 p-3.5 rounded-2xl border border-gray-200 space-y-3">
+                        <div class="font-bold text-xs text-paca-navy flex items-center gap-1.5">
+                            <span>➕</span>
+                            <span>Thêm Nhân Viên Mới</span>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-600 mb-1">Tên Nhân Viên / Vị Trí:</label>
+                            <input type="text" id="newStaffName" placeholder="VD: Thu Ngân Linh, Bar Nam..." class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-600 mb-1">Mã PIN Đăng Nhập (4 - 6 số):</label>
+                            <input type="password" id="newStaffPin" maxlength="6" placeholder="VD: 1234" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs bg-white font-mono tracking-widest text-center text-sm font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-600 mb-1">Phân Quyền Sử Dụng:</label>
+                            <select id="newStaffRole" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs font-bold bg-white text-gray-800">
+                                <option value="staff">👤 Nhân Viên (Chỉ xem Đơn hàng & Bàn QR)</option>
+                                <option value="admin">👑 Quản Lý (Admin toàn quyền hệ thống)</option>
+                            </select>
+                        </div>
+                        <button onclick="createNewStaffUser()" class="w-full bg-paca-navy hover:bg-paca-dark text-white text-xs font-bold py-2.5 rounded-xl shadow active:scale-95 transition">
+                            + Thêm Nhân Viên
+                        </button>
+                    </div>
+                </div>
+            </div>
         </section>
 
     </main>
 
     <!-- Bottom Mobile Navigation Bar -->
     <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg">
-        <div class="max-w-4xl mx-auto flex items-center justify-around py-2">
-            <button onclick="switchTab('tabOrders')" class="nav-tab-btn flex flex-col items-center py-1 text-paca-crimson font-bold text-xs relative" data-target="tabOrders">
+        <div class="max-w-4xl mx-auto flex items-center justify-around py-1.5 px-1">
+            <button onclick="switchTab('tabOrders')" class="nav-tab-btn flex flex-col items-center py-1 text-paca-crimson font-bold text-xs relative flex-1" data-target="tabOrders">
                 <span class="text-xl">🔔</span>
                 <span class="text-[11px] mt-0.5">Đơn Hàng</span>
-                <span id="navOrdersBadge" class="hidden absolute top-0.5 right-2 bg-paca-crimson text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
+                <span id="navOrdersBadge" class="hidden absolute top-0.5 right-3 bg-paca-crimson text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">0</span>
             </button>
-            <button onclick="switchTab('tabTables')" class="nav-tab-btn flex flex-col items-center py-1 text-gray-500 font-semibold text-xs" data-target="tabTables">
+            <button onclick="switchTab('tabTables')" class="nav-tab-btn flex flex-col items-center py-1 text-gray-500 font-semibold text-xs flex-1" data-target="tabTables">
                 <span class="text-xl">🪑</span>
                 <span class="text-[11px] mt-0.5">Bàn & QR</span>
             </button>
-            <button onclick="switchTab('tabMenu')" class="nav-tab-btn flex flex-col items-center py-1 text-gray-500 font-semibold text-xs" data-target="tabMenu">
+            <button onclick="switchTab('tabMenu')" class="nav-tab-btn flex flex-col items-center py-1 text-gray-500 font-semibold text-xs flex-1" data-target="tabMenu" data-admin-only="true">
                 <span class="text-xl">📋</span>
                 <span class="text-[11px] mt-0.5">Thực Đơn</span>
             </button>
-            <button onclick="switchTab('tabRevenue')" class="nav-tab-btn flex flex-col items-center py-1 text-gray-500 font-semibold text-xs" data-target="tabRevenue">
+            <button onclick="switchTab('tabInventory')" class="nav-tab-btn flex flex-col items-center py-1 text-gray-500 font-semibold text-xs flex-1" data-target="tabInventory" data-admin-only="true">
+                <span class="text-xl">📦</span>
+                <span class="text-[11px] mt-0.5">Kho Hàng</span>
+            </button>
+            <button onclick="switchTab('tabRevenue')" class="nav-tab-btn flex flex-col items-center py-1 text-gray-500 font-semibold text-xs flex-1" data-target="tabRevenue" data-admin-only="true">
                 <span class="text-xl">📊</span>
                 <span class="text-[11px] mt-0.5">Doanh Thu</span>
             </button>
-            <button onclick="switchTab('tabSettings')" class="nav-tab-btn flex flex-col items-center py-1 text-gray-500 font-semibold text-xs" data-target="tabSettings">
+            <button onclick="switchTab('tabSettings')" class="nav-tab-btn flex flex-col items-center py-1 text-gray-500 font-semibold text-xs flex-1" data-target="tabSettings" data-admin-only="true">
                 <span class="text-xl">⚙️</span>
                 <span class="text-[11px] mt-0.5">Cài Đặt</span>
             </button>
@@ -847,52 +1030,113 @@
         </div>
     </div>
 
-    <!-- MODAL: TẠO / SỬA MÓN BẰNG TAY (DISH EDITOR) -->
-    <div id="dishEditorModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-lg rounded-2xl retro-border p-4 max-h-[90vh] flex flex-col overflow-hidden">
-            <div class="flex items-center justify-between border-b pb-2">
-                <h3 class="font-serif font-bold text-base text-paca-navy" id="dishEditorTitle">Thêm Món Mới Bằng Tay</h3>
-                <button onclick="closeDishEditorModal()" class="text-gray-400 font-bold">✕</button>
+    <!-- MODAL: TẠO / SỬA MÓN BẰNG TAY (DISH / GOODS EDITOR - UPGRADED) -->
+    <div id="dishEditorModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white w-full max-w-xl rounded-2xl retro-border p-4 max-h-[92vh] flex flex-col overflow-hidden shadow-2xl">
+            <!-- Modal Header (matches photo) -->
+            <div class="flex items-center justify-between border-b pb-2.5 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <button onclick="closeDishEditorModal()" class="text-gray-500 hover:text-gray-800 text-lg font-bold p-1">←</button>
+                    <div>
+                        <h3 class="font-bold text-base text-paca-navy" id="dishEditorTitle">Sửa Hàng Hóa</h3>
+                        <p class="text-[10px] text-gray-400">Thông tin mặt hàng, giá vốn, tồn kho & vị tùy chọn</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="saveDishItem()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-1.5 rounded-xl flex items-center gap-1 shadow active:scale-95 transition">
+                        <span>💾</span> <span>Lưu</span>
+                    </button>
+                    <button onclick="closeDishEditorModal()" class="text-gray-400 hover:text-gray-600 font-bold p-1 text-sm">✕</button>
+                </div>
             </div>
 
-            <div class="p-1 overflow-y-auto space-y-3 flex-1 text-xs my-2">
+            <!-- Scrollable Body -->
+            <div class="p-1 overflow-y-auto space-y-3 flex-1 text-xs my-2 pr-1.5">
                 <input type="hidden" id="dishEditId">
+
+                <!-- Type Tabs: Hàng thường / Hàng combo / Là món thêm (matches photo) -->
+                <div class="flex items-center gap-1.5 p-1 bg-gray-100 rounded-xl">
+                    <button type="button" onclick="setDishEditType('standard')" id="btnTypeStandard" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-emerald-600 text-white shadow-sm">
+                        Hàng thường
+                    </button>
+                    <button type="button" onclick="setDishEditType('combo')" id="btnTypeCombo" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-600 hover:bg-white/60">
+                        Hàng combo
+                    </button>
+                    <button type="button" onclick="setDishEditType('extra')" id="btnTypeExtra" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-600 hover:bg-white/60">
+                        Là món thêm
+                    </button>
+                </div>
+                <input type="hidden" id="dishEditItemType" value="standard">
+
+                <!-- Code & SKU Row -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
-                        <label class="font-bold text-gray-700 block mb-1">Tên Món (Tiếng Anh/Gốc):</label>
-                        <input type="text" id="dishEditName" placeholder="SCARLET BLOOM" class="w-full border border-gray-300 rounded-xl px-3 py-2 uppercase font-bold">
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="font-bold text-gray-700 text-xs">Mã Code (Tùy chọn):</label>
+                            <button type="button" onclick="generateRandomDishCode()" class="text-[10px] text-paca-crimson font-bold hover:underline">Tự động tạo 🔀</button>
+                        </div>
+                        <input type="text" id="dishEditCode" placeholder="PACA-001" class="w-full border border-gray-300 rounded-xl px-3 py-2 font-mono uppercase text-xs bg-white">
                     </div>
                     <div>
-                        <label class="font-bold text-gray-700 block mb-1">Tên Tiếng Việt:</label>
-                        <input type="text" id="dishEditNameVi" placeholder="Scarlet Bloom" class="w-full border border-gray-300 rounded-xl px-3 py-2">
+                        <label class="font-bold text-gray-700 block mb-1 text-xs">Mã SKU (Tùy chọn):</label>
+                        <input type="text" id="dishEditSku" placeholder="SKU-BR01" class="w-full border border-gray-300 rounded-xl px-3 py-2 font-mono uppercase text-xs bg-white">
                     </div>
                 </div>
 
+                <!-- Names Row -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
-                        <label class="font-bold text-gray-700 block mb-1">Danh Mục:</label>
-                        <select id="dishEditCategory" class="w-full border border-gray-300 rounded-xl px-3 py-2 font-bold">
+                        <label class="font-bold text-gray-700 block mb-1 text-xs">Tên Hàng Hóa* (Tiếng Anh/Gốc):</label>
+                        <input type="text" id="dishEditName" placeholder="SCARLET BLOOM" class="w-full border border-gray-300 rounded-xl px-3 py-2 uppercase font-bold text-xs bg-white">
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-700 block mb-1 text-xs">Tên Tiếng Việt:</label>
+                        <input type="text" id="dishEditNameVi" placeholder="Scarlet Bloom" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs font-medium bg-white">
+                    </div>
+                </div>
+
+                <!-- Category & Station Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="font-bold text-gray-700 block mb-1 text-xs">Danh Mục Hàng:</label>
+                        <select id="dishEditCategory" class="w-full border border-gray-300 rounded-xl px-3 py-2 font-bold text-xs bg-white">
                             <!-- Populated by JS -->
                         </select>
                     </div>
                     <div>
-                        <label class="font-bold text-gray-700 block mb-1">Nơi Pha/Chế Biến:</label>
-                        <select id="dishEditStation" class="w-full border border-gray-300 rounded-xl px-3 py-2 font-bold">
+                        <label class="font-bold text-gray-700 block mb-1 text-xs">Nơi Pha / Chế Biến:</label>
+                        <select id="dishEditStation" class="w-full border border-gray-300 rounded-xl px-3 py-2 font-bold text-xs bg-white">
                             <option value="bar">🍸 Quầy Bar (Pha chế)</option>
                             <option value="kitchen">🍳 Bếp (Đồ ăn/Snacks)</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- FINANCIAL / COST PRICE BOX -->
+                <!-- Unit of Measurement (Đơn Vị Tính) with predefined and custom open input -->
+                <div class="bg-gray-50/80 p-2.5 rounded-xl border border-gray-200 space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="font-bold text-gray-700 block text-xs">Đơn Vị Tính (ĐVT):</label>
+                        <span class="text-[10px] text-gray-400">Chọn mẫu hoặc tự nhập mới</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select id="dishEditUnitSelect" onchange="onDishEditUnitSelectChange()" class="w-full border border-gray-300 rounded-xl px-3 py-2 font-bold text-xs bg-white">
+                            <!-- Populated by JS -->
+                        </select>
+                        <div id="dishEditCustomUnitBox" class="hidden">
+                            <input type="text" id="dishEditCustomUnit" placeholder="Gõ đơn vị mới (VD: Bình, Hộp...)" class="w-full border border-amber-300 rounded-xl px-3 py-2 text-xs font-bold bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial / Cost Price Box (matches photo) -->
                 <div class="bg-amber-50/70 p-3 rounded-xl border border-amber-200/80 space-y-2">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div>
-                            <label class="font-bold text-gray-700 block mb-1 text-xs">Giá Bán Khách (VNĐ):</label>
+                            <label class="font-bold text-gray-700 block mb-1 text-xs">Giá Bán Lẻ* (VNĐ):</label>
                             <input type="number" id="dishEditPrice" oninput="updateDishProfitPreview()" placeholder="180000" step="1000" class="w-full border border-gray-300 rounded-xl px-3 py-2 font-bold text-paca-crimson bg-white text-sm">
                         </div>
                         <div>
-                            <label class="font-bold text-gray-700 block mb-1 text-xs">Giá Vốn / Cost (VNĐ):</label>
+                            <label class="font-bold text-gray-700 block mb-1 text-xs">Giá Vốn* / Cost (VNĐ):</label>
                             <input type="number" id="dishEditCostPrice" oninput="updateDishProfitPreview()" placeholder="45000" step="1000" class="w-full border border-amber-300 rounded-xl px-3 py-2 font-bold text-amber-700 bg-white text-sm">
                         </div>
                     </div>
@@ -902,23 +1146,69 @@
                     </div>
                 </div>
 
+                <!-- Inventory & Stock Management Section -->
+                <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-200/80 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-xs text-paca-navy flex items-center gap-1.5">
+                            <span>📦</span> Quản Lý Số Lượng Tồn Kho
+                        </span>
+                        <label class="flex items-center gap-1 cursor-pointer">
+                            <input type="checkbox" id="dishEditTrackStock" onchange="toggleDishEditStockInputs()" checked class="w-4 h-4 rounded text-paca-navy">
+                            <span class="text-[11px] font-bold text-gray-700">Theo dõi tồn</span>
+                        </label>
+                    </div>
+                    <div id="dishEditStockFields" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                        <div>
+                            <label class="font-bold text-gray-700 block mb-1 text-xs">Tồn Kho Hiện Tại (Số lượng):</label>
+                            <div class="relative">
+                                <input type="number" id="dishEditStockQuantity" placeholder="30" min="0" class="w-full border border-gray-300 rounded-xl px-3 py-2 font-bold text-blue-900 bg-white text-sm">
+                                <span class="absolute right-3 top-2 text-xs font-semibold text-gray-400" id="dishEditStockUnitSuffix">Ly</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="font-bold text-gray-700 block mb-1 text-xs">Ngưỡng Báo Động (Sắp hết):</label>
+                            <input type="number" id="dishEditLowThreshold" placeholder="5" min="0" class="w-full border border-gray-300 rounded-xl px-3 py-2 font-bold text-amber-700 bg-white text-sm">
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-gray-500 italic">* Hệ thống tự động trừ kho khi hoàn tất đơn và tự chuyển sang "Hết món" khi tồn về 0.</p>
+                </div>
+
+                <!-- Variants & Flavor Options (Mix Beer, Flavors, Toppings) -->
+                <div class="bg-purple-50/70 p-3 rounded-xl border border-purple-200/80 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="font-bold text-xs text-purple-900 flex items-center gap-1.5">
+                                <span>✨</span> Biến Thể / Vị Tùy Chọn (Mix Beer, Hương Vị...)
+                            </span>
+                            <p class="text-[10px] text-gray-500">Khách/Nhân viên có thể tích chọn nhiều vị cùng lúc (VD: Xoài, Vải, Cherry...)</p>
+                        </div>
+                        <button type="button" onclick="addDishEditOptionRow()" class="bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 shadow active:scale-95 transition">
+                            <span>+</span> <span>Thêm Vị</span>
+                        </button>
+                    </div>
+                    <div id="dishEditOptionsContainer" class="space-y-1.5 pt-1">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
                 <div>
                     <label class="font-bold text-gray-700 block mb-1">Mô tả tiếng Việt (Hương vị, điểm nhấn):</label>
-                    <textarea id="dishEditDescVi" rows="2" placeholder="Sự kết hợp cuốn hút giữa Tequila và Campari đắng nhẹ..." class="w-full border border-gray-300 rounded-xl px-3 py-2"></textarea>
+                    <textarea id="dishEditDescVi" rows="2" placeholder="Sự kết hợp cuốn hút giữa Tequila và Campari đắng nhẹ..." class="w-full border border-gray-300 rounded-xl px-3 py-2 bg-white"></textarea>
                 </div>
 
                 <div>
                     <label class="font-bold text-gray-700 block mb-1">Thành phần chính (Phân tách bằng dấu phẩy):</label>
-                    <input type="text" id="dishEditIngredients" placeholder="Tequila, Lychee Cordial, Campari, Choco Bitter..." class="w-full border border-gray-300 rounded-xl px-3 py-2">
+                    <input type="text" id="dishEditIngredients" placeholder="Tequila, Lychee Cordial, Campari, Choco Bitter..." class="w-full border border-gray-300 rounded-xl px-3 py-2 bg-white">
                 </div>
 
                 <div>
                     <label class="font-bold text-gray-700 block mb-1">Huy hiệu nổi bật (Badge nếu có):</label>
-                    <input type="text" id="dishEditBadge" placeholder="Signature / Best Seller / On Tap..." class="w-full border border-gray-300 rounded-xl px-3 py-2">
+                    <input type="text" id="dishEditBadge" placeholder="Signature / Best Seller / On Tap..." class="w-full border border-gray-300 rounded-xl px-3 py-2 bg-white">
                 </div>
             </div>
 
-            <div class="pt-2 border-t flex justify-end gap-2">
+            <!-- Modal Footer -->
+            <div class="pt-2 border-t flex justify-end gap-2 flex-shrink-0">
                 <button onclick="closeDishEditorModal()" class="bg-gray-100 text-gray-700 text-xs font-bold px-4 py-2.5 rounded-xl">
                     Hủy
                 </button>
@@ -992,6 +1282,69 @@
                         <span>Lưu Tất Cả Giá Cost</span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ĐĂNG NHẬP / CHUYỂN CA / KHÓA BẰNG MÃ PIN (PIN KEYPAD AUTH) -->
+    <div id="pinAuthModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-xs sm:max-w-sm rounded-3xl retro-border p-5 text-center shadow-2xl space-y-4">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-2 border-b">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🔐</span>
+                    <h3 class="font-bold text-sm text-paca-navy uppercase tracking-wider">Khóa Ca & Đăng Nhập</h3>
+                </div>
+                <button onclick="closePinAuthModal()" id="btnPinModalClose" class="text-gray-400 hover:text-gray-600 font-bold p-1 text-sm">✕</button>
+            </div>
+
+            <!-- User Selector Buttons -->
+            <div>
+                <p class="text-[11px] font-bold text-gray-500 mb-1.5 text-left">Chọn tài khoản nhân viên trực ca:</p>
+                <div id="pinUserSelectorList" class="flex flex-wrap gap-1.5 justify-start">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- PIN Display Dots -->
+            <div class="py-2.5 bg-gray-50 rounded-2xl border border-gray-200">
+                <p class="text-[10px] text-gray-400 uppercase font-extrabold tracking-widest mb-2" id="pinTargetUserName">Đang nhập mã PIN</p>
+                <div class="flex justify-center items-center gap-3.5" id="pinDotsRow">
+                    <div class="w-4 h-4 rounded-full border-2 border-paca-navy bg-white transition-all pin-dot" id="dot0"></div>
+                    <div class="w-4 h-4 rounded-full border-2 border-paca-navy bg-white transition-all pin-dot" id="dot1"></div>
+                    <div class="w-4 h-4 rounded-full border-2 border-paca-navy bg-white transition-all pin-dot" id="dot2"></div>
+                    <div class="w-4 h-4 rounded-full border-2 border-paca-navy bg-white transition-all pin-dot" id="dot3"></div>
+                </div>
+                <input type="password" id="pinHiddenInput" maxlength="6" class="opacity-0 absolute pointer-events-none">
+            </div>
+
+            <!-- Keypad (0-9, Clear, Backspace) -->
+            <div class="grid grid-cols-3 gap-2 text-base font-bold">
+                <button type="button" onclick="pressPinDigit('1')" class="py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-paca-navy font-black shadow-sm transition">1</button>
+                <button type="button" onclick="pressPinDigit('2')" class="py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-paca-navy font-black shadow-sm transition">2</button>
+                <button type="button" onclick="pressPinDigit('3')" class="py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-paca-navy font-black shadow-sm transition">3</button>
+
+                <button type="button" onclick="pressPinDigit('4')" class="py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-paca-navy font-black shadow-sm transition">4</button>
+                <button type="button" onclick="pressPinDigit('5')" class="py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-paca-navy font-black shadow-sm transition">5</button>
+                <button type="button" onclick="pressPinDigit('6')" class="py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-paca-navy font-black shadow-sm transition">6</button>
+
+                <button type="button" onclick="pressPinDigit('7')" class="py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-paca-navy font-black shadow-sm transition">7</button>
+                <button type="button" onclick="pressPinDigit('8')" class="py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-paca-navy font-black shadow-sm transition">8</button>
+                <button type="button" onclick="pressPinDigit('9')" class="py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-paca-navy font-black shadow-sm transition">9</button>
+
+                <button type="button" onclick="clearPinInput()" class="py-3 rounded-2xl bg-red-50 hover:bg-red-100 text-red-600 active:scale-95 font-black shadow-sm transition text-xs">Xóa</button>
+                <button type="button" onclick="pressPinDigit('0')" class="py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-paca-navy font-black shadow-sm transition">0</button>
+                <button type="button" onclick="backspacePinDigit()" class="py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-95 text-gray-700 font-black shadow-sm transition">⌫</button>
+            </div>
+
+            <!-- Submit Button & PIN Hints -->
+            <div class="space-y-2 pt-1">
+                <button onclick="submitPinLogin()" class="w-full bg-paca-navy hover:bg-paca-dark text-white font-bold py-3 rounded-2xl shadow-md text-xs active:scale-95 transition">
+                    Xác Nhận Đăng Nhập
+                </button>
+                <p class="text-[10px] text-gray-400 bg-gray-50 p-2 rounded-xl border border-gray-100">
+                    💡 <b>PIN mẫu ban đầu:</b> Quản Lý: <code class="font-bold text-paca-crimson">8888</code> | Thu Ngân: <code class="font-bold text-paca-crimson">1111</code> | Bar: <code class="font-bold text-paca-crimson">2222</code>
+                </p>
             </div>
         </div>
     </div>
@@ -1330,6 +1683,63 @@
         </div>
     </div>
 
+    <!-- ==================== MODAL: CHỌN VỊ / BIẾN THỂ KHI TẠO ĐƠN THỦ CÔNG ==================== -->
+    <div id="manualDishOptionsModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl retro-border p-4 sm:p-5 space-y-4 shadow-2xl relative">
+            <div class="flex items-center justify-between border-b pb-2.5">
+                <div>
+                    <h3 class="font-serif font-black text-base text-paca-navy" id="manOptDishTitle">Tên Món</h3>
+                    <div class="text-xs text-gray-500" id="manOptDishSubtitle">Món ăn / Đồ uống</div>
+                </div>
+                <button onclick="closeManualDishOptionsModal()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold flex items-center justify-center">✕</button>
+            </div>
+
+            <!-- Variants Box (if any) -->
+            <div id="manOptVariantsBox" class="hidden space-y-1.5">
+                <label class="font-bold text-xs text-gray-700 block">Kích cỡ / Phân loại:</label>
+                <div id="manOptVariantsList" class="grid grid-cols-2 gap-2"></div>
+            </div>
+
+            <!-- Options / Flavors Box -->
+            <div id="manOptOptionsBox" class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <label class="font-bold text-xs text-paca-navy">✨ Vị tùy chọn / Topping kèm theo:</label>
+                    <span class="text-[10px] text-gray-500 italic">Chọn một hoặc nhiều vị</span>
+                </div>
+                <div id="manOptOptionsList" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
+            </div>
+
+            <!-- Item Note -->
+            <div>
+                <label class="font-bold text-xs text-gray-700 block mb-1">Ghi chú pha chế / bếp:</label>
+                <input type="text" id="manOptNote" placeholder="Ví dụ: Ít đá, không đường, làm riêng..." class="w-full border border-gray-300 rounded-xl px-3 py-1.5 text-xs">
+            </div>
+
+            <!-- Quantity & Total -->
+            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-2xl border border-gray-200">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-bold text-gray-700">Số lượng:</span>
+                    <div class="flex items-center border border-gray-300 rounded-lg bg-white overflow-hidden">
+                        <button onclick="changeManOptQty(-1)" class="w-7 h-7 flex items-center justify-center font-bold text-sm hover:bg-gray-100">-</button>
+                        <span id="manOptQtyVal" class="w-8 text-center font-bold text-xs">1</span>
+                        <button onclick="changeManOptQty(1)" class="w-7 h-7 flex items-center justify-center font-bold text-sm hover:bg-gray-100">+</button>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] text-gray-500">Tạm tính món:</div>
+                    <div class="font-extrabold text-sm text-paca-crimson" id="manOptTotalVal">0 đ</div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-1 border-t">
+                <button onclick="closeManualDishOptionsModal()" class="bg-gray-100 text-gray-700 font-bold px-3 py-2 rounded-xl text-xs">Hủy</button>
+                <button onclick="confirmManualDishWithOptions()" class="bg-paca-crimson hover:bg-paca-red text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md active:scale-95 transition">
+                    + Thêm Vào Đơn Hàng
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== MODAL: VIETQR TOÀN MÀN HÌNH (FULLSCREEN QR MODAL) ==================== -->
     <div id="vietQrFullscreenModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6">
         <div class="bg-white w-full max-w-sm rounded-3xl retro-border p-5 text-center space-y-3.5 shadow-2xl relative">
@@ -1489,10 +1899,13 @@
             populateMenuCategories();
 
             // Render views
+            applyUserPermissions();
             renderOrders();
             renderTablesAdmin();
             renderAdminMenu();
+            renderInventoryTable();
             renderRevenueStats();
+            renderStaffList();
 
             // URL Param routing for direct link and automated visual verification
             const urlParams = new URLSearchParams(window.location.search);
@@ -1621,6 +2034,12 @@
                         window.paca.loadOrders();
                         renderOrders();
                         renderRevenueStats();
+                    } else if (event.data?.type === 'INVENTORY_UPDATED' || event.data?.type === 'MENU_ITEM_SAVED' || event.data?.type === 'ITEM_AVAILABILITY_CHANGED') {
+                        renderAdminMenu();
+                        renderInventoryTable();
+                    } else if (event.data?.type === 'USERS_UPDATED' || event.data?.type === 'CURRENT_USER_CHANGED') {
+                        applyUserPermissions();
+                        renderStaffList();
                     }
                 };
             }
@@ -1645,8 +2064,15 @@
 
         // Tab Switching
         function switchTab(tabId) {
+            // Permission check: staff only allowed in tabOrders and tabTables
+            if (!window.paca.isAdmin() && tabId !== 'tabOrders' && tabId !== 'tabTables') {
+                alert("Tài khoản nhân viên chỉ được phép xem mục Đơn hàng và Bàn QR. Vui lòng liên hệ Quản Lý!");
+                tabId = 'tabOrders';
+            }
+
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(tabId).classList.remove('hidden');
+            const targetEl = document.getElementById(tabId);
+            if (targetEl) targetEl.classList.remove('hidden');
 
             document.querySelectorAll('.nav-tab-btn').forEach(btn => {
                 if (btn.getAttribute('data-target') === tabId) {
@@ -1661,8 +2087,12 @@
             if (tabId === 'tabOrders') renderOrders();
             if (tabId === 'tabTables') renderTablesAdmin();
             if (tabId === 'tabMenu') renderAdminMenu();
+            if (tabId === 'tabInventory') renderInventoryTable();
             if (tabId === 'tabRevenue') renderRevenueStats();
-            if (tabId === 'tabSettings') loadSettingsToInputs();
+            if (tabId === 'tabSettings') {
+                loadSettingsToInputs();
+                renderStaffList();
+            }
         }
 
         function toggleAudioMute() {
@@ -1754,17 +2184,22 @@
                 }
 
                 // Items summary
-                const itemsSummary = (ord.items || []).map(it => `
+                const itemsSummary = (ord.items || []).map(it => {
+                    const opts = it.options || it.selectedOptions || [];
+                    const optsText = Array.isArray(opts) && opts.length > 0 ? opts.map(o => (typeof o === 'string' ? o : (o.name || o.id))).join(', ') : '';
+                    return `
                     <div class="flex justify-between items-start text-xs py-1 border-b border-gray-100 last:border-none">
                         <div>
                             <span class="font-semibold text-paca-navy">${it.name}</span>
                             <span class="font-bold text-gray-700">x${it.quantity}</span>
                             ${it.isOverridden ? `<span class="bg-amber-100 text-amber-900 text-[9px] font-bold px-1.5 py-0.2 rounded ml-1">[Sửa giá: ${it.overrideReason || ''}]</span>` : ''}
+                            ${optsText && !it.name.includes(optsText) ? `<div class="text-[10px] text-purple-700 font-medium">└ ✨ Vị: ${optsText}</div>` : ''}
                             ${it.itemNote ? `<div class="text-[10px] text-paca-crimson font-medium">└ 📝 ${it.itemNote}</div>` : ''}
                         </div>
                         <span class="font-bold text-gray-700">${window.paca.formatMoney(it.subtotal || (it.price * it.quantity))}</span>
                     </div>
-                `).join('');
+                `;
+                }).join('');
 
                 html += `
                     <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm space-y-3">
@@ -2351,6 +2786,26 @@
                 const catName = catObj ? (catObj.name_vi || catObj.name) : it.category;
                 const isKitchen = it.station === 'kitchen';
 
+                // Tồn kho & Đơn vị tính
+                const unit = it.unit || 'Phần';
+                const stockQty = it.stock_quantity !== undefined ? it.stock_quantity : 0;
+                const threshold = it.low_stock_threshold !== undefined ? it.low_stock_threshold : 5;
+                const trackStock = it.track_stock !== false;
+                let stockBadge = '';
+                if (trackStock) {
+                    if (stockQty <= 0) {
+                        stockBadge = `<span class="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">❌ Hết tồn: 0 ${unit}</span>`;
+                    } else if (stockQty <= threshold) {
+                        stockBadge = `<span class="text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full">⚠️ Sắp hết: ${stockQty} ${unit}</span>`;
+                    } else {
+                        stockBadge = `<span class="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">📦 Tồn: ${stockQty} ${unit}</span>`;
+                    }
+                }
+
+                // Options / Vị tùy chọn badge
+                const optCount = (it.options && Array.isArray(it.options)) ? it.options.length : 0;
+                const optBadge = optCount > 0 ? `<span class="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full">✨ ${optCount} vị/tùy chọn</span>` : '';
+
                 return `
                     <div class="bg-white rounded-xl p-3 border border-gray-200 shadow-sm flex items-center justify-between gap-3 hover:border-gray-300 transition">
                         <div class="flex-1 min-w-0">
@@ -2361,6 +2816,8 @@
                                     ${isKitchen ? '🍳 Bếp' : '🍸 Quầy Bar'}
                                 </span>
                                 <span class="text-[10px] text-gray-500 font-semibold">📁 ${catName}</span>
+                                ${stockBadge}
+                                ${optBadge}
                             </div>
                             <div class="text-[11px] text-gray-500 truncate">${it.name_vi || ''}</div>
                             <div class="flex items-center gap-1.5 mt-1 flex-wrap">
@@ -2718,7 +3175,589 @@
             }
         }
 
-        // --- DISH EDITOR MODAL ---
+        // --- USER AUTHENTICATION & PIN KEYPAD RBAC ---
+        let enteredPin = '';
+        let selectedPinUserId = null;
+
+        function applyUserPermissions() {
+            const user = window.paca.getCurrentUser();
+            const isAdmin = window.paca.isAdmin();
+
+            // Update header display
+            const headerNameEl = document.getElementById('headerUserName');
+            const headerBadgeEl = document.getElementById('headerUserRoleBadge');
+            const headerIconEl = document.getElementById('headerUserIcon');
+            if (headerNameEl && user) headerNameEl.innerText = user.name;
+            if (headerBadgeEl && user) {
+                headerBadgeEl.innerText = isAdmin ? 'ADMIN' : 'STAFF';
+                headerBadgeEl.className = isAdmin 
+                    ? 'text-[9px] bg-paca-crimson text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider'
+                    : 'text-[9px] bg-blue-600 text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider';
+            }
+            if (headerIconEl && user) {
+                headerIconEl.innerText = isAdmin ? '👑' : '👤';
+            }
+
+            // Show or hide admin-only elements across page
+            document.querySelectorAll('[data-admin-only="true"]').forEach(el => {
+                if (isAdmin) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+
+            // If non-admin is currently viewing an admin-only tab, force to tabOrders
+            const activeTab = document.querySelector('.tab-content:not(.hidden)');
+            if (activeTab && activeTab.id !== 'tabOrders' && activeTab.id !== 'tabTables' && !isAdmin) {
+                switchTab('tabOrders');
+            }
+        }
+
+        function openPinAuthModal() {
+            enteredPin = '';
+            updatePinDotsDisplay();
+            const users = window.paca.users || [];
+            const curUser = window.paca.getCurrentUser();
+            selectedPinUserId = curUser ? curUser.id : (users[0]?.id || null);
+
+            const listEl = document.getElementById('pinUserSelectorList');
+            if (listEl) {
+                listEl.innerHTML = users.map(u => {
+                    const isSelected = u.id === selectedPinUserId;
+                    const roleBadge = u.role === 'admin' ? '👑 Admin' : '👤 Nhân Viên';
+                    return `
+                        <button type="button" onclick="selectPinUser('${u.id}')" id="btnPinUser_${u.id}" class="px-2.5 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 ${isSelected ? 'bg-paca-navy text-paca-cream border-paca-navy shadow-sm' : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'}">
+                            <span>${u.name}</span>
+                            <span class="text-[9px] opacity-75 font-normal">(${roleBadge})</span>
+                        </button>
+                    `;
+                }).join('');
+            }
+
+            const targetNameEl = document.getElementById('pinTargetUserName');
+            if (targetNameEl) {
+                const sel = users.find(x => x.id === selectedPinUserId);
+                targetNameEl.innerText = sel ? `Mã PIN cho: ${sel.name}` : 'Nhập mã PIN của bạn';
+            }
+
+            document.getElementById('pinAuthModal').classList.remove('hidden');
+        }
+
+        function closePinAuthModal() {
+            if (window.paca.getCurrentUser()) {
+                document.getElementById('pinAuthModal').classList.add('hidden');
+            } else {
+                alert("Vui lòng nhập mã PIN để bắt đầu làm việc!");
+            }
+        }
+
+        function selectPinUser(userId) {
+            selectedPinUserId = userId;
+            const users = window.paca.users || [];
+            users.forEach(u => {
+                const btn = document.getElementById(`btnPinUser_${u.id}`);
+                if (btn) {
+                    if (u.id === userId) {
+                        btn.className = 'px-2.5 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 bg-paca-navy text-paca-cream border-paca-navy shadow-sm';
+                    } else {
+                        btn.className = 'px-2.5 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100';
+                    }
+                }
+            });
+
+            const targetNameEl = document.getElementById('pinTargetUserName');
+            if (targetNameEl) {
+                const sel = users.find(x => x.id === userId);
+                targetNameEl.innerText = sel ? `Mã PIN cho: ${sel.name}` : 'Nhập mã PIN của bạn';
+            }
+            enteredPin = '';
+            updatePinDotsDisplay();
+        }
+
+        function pressPinDigit(digit) {
+            if (enteredPin.length < 6) {
+                enteredPin += digit;
+                updatePinDotsDisplay();
+                if (enteredPin.length >= 4) {
+                    const users = window.paca.users || [];
+                    const sel = users.find(x => x.id === selectedPinUserId);
+                    if (sel && sel.pin === enteredPin) {
+                        setTimeout(() => submitPinLogin(), 150);
+                    }
+                }
+            }
+        }
+
+        function backspacePinDigit() {
+            if (enteredPin.length > 0) {
+                enteredPin = enteredPin.slice(0, -1);
+                updatePinDotsDisplay();
+            }
+        }
+
+        function clearPinInput() {
+            enteredPin = '';
+            updatePinDotsDisplay();
+        }
+
+        function updatePinDotsDisplay() {
+            for (let i = 0; i < 4; i++) {
+                const dot = document.getElementById(`dot${i}`);
+                if (dot) {
+                    if (i < enteredPin.length) {
+                        dot.className = 'w-4 h-4 rounded-full border-2 border-paca-navy bg-paca-crimson scale-110 shadow-sm transition-all';
+                    } else {
+                        dot.className = 'w-4 h-4 rounded-full border-2 border-paca-navy bg-white transition-all';
+                    }
+                }
+            }
+        }
+
+        function submitPinLogin() {
+            if (!enteredPin) {
+                alert("Vui lòng bấm các số để nhập mã PIN!");
+                return;
+            }
+
+            const users = window.paca.users || [];
+            let matchedUser = null;
+            if (selectedPinUserId) {
+                const target = users.find(u => u.id === selectedPinUserId);
+                if (target && target.pin === enteredPin) {
+                    matchedUser = target;
+                }
+            }
+            if (!matchedUser) {
+                matchedUser = users.find(u => u.pin === enteredPin);
+            }
+
+            if (matchedUser) {
+                window.paca.saveCurrentUser(matchedUser);
+                applyUserPermissions();
+                document.getElementById('pinAuthModal').classList.add('hidden');
+                enteredPin = '';
+                updatePinDotsDisplay();
+                alert(`Đăng nhập thành công: ${matchedUser.name} (${matchedUser.role === 'admin' ? 'Quản Lý Admin' : 'Nhân Viên'})!`);
+            } else {
+                enteredPin = '';
+                updatePinDotsDisplay();
+                alert("Mã PIN không đúng, vui lòng thử lại!");
+            }
+        }
+
+        // --- STAFF MANAGEMENT IN SETTINGS TAB ---
+        function renderStaffList() {
+            const container = document.getElementById('staffListContainer');
+            if (!container) return;
+            const users = window.paca.users || [];
+            const curUser = window.paca.getCurrentUser();
+
+            container.innerHTML = users.map(u => {
+                const isAdmin = u.role === 'admin';
+                const isCurrent = curUser?.id === u.id;
+                return `
+                    <div class="p-3 rounded-xl border border-gray-200 bg-white flex items-center justify-between gap-3 shadow-sm hover:border-gray-300 transition">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-8 h-8 rounded-full ${isAdmin ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-blue-100 text-blue-900 border border-blue-300'} flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                ${isAdmin ? '👑' : '👤'}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-bold text-xs text-paca-navy truncate flex items-center gap-1.5">
+                                    <span>${u.name}</span>
+                                    ${isCurrent ? '<span class="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded border border-emerald-300">Đang trực ca</span>' : ''}
+                                </div>
+                                <div class="text-[11px] text-gray-500 flex items-center gap-2 mt-0.5">
+                                    <span>Vai trò: <b>${isAdmin ? 'Quản Lý (Admin)' : 'Nhân Viên Order'}</b></span>
+                                    <span>•</span>
+                                    <span>PIN: <code class="font-mono bg-gray-100 px-1 py-0.2 rounded font-bold">${u.pin}</code></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 flex-shrink-0">
+                            <button onclick="editStaffUserPin('${u.id}')" class="px-2 py-1 text-[11px] font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg border border-gray-300">
+                                Đổi PIN
+                            </button>
+                            ${!isAdmin || users.filter(x => x.role === 'admin').length > 1 ? `
+                                <button onclick="deleteStaffUser('${u.id}')" class="p-1 text-gray-400 hover:text-red-600 font-bold text-xs" title="Xóa tài khoản">
+                                    ✕
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createNewStaffUser() {
+            const name = document.getElementById('newStaffName')?.value.trim();
+            const pin = document.getElementById('newStaffPin')?.value.trim();
+            const role = document.getElementById('newStaffRole')?.value || 'staff';
+
+            if (!name) { alert("Vui lòng nhập tên nhân viên!"); return; }
+            if (!pin || pin.length < 4) { alert("Mã PIN phải từ 4 số trở lên!"); return; }
+
+            try {
+                window.paca.addUser({ name, pin, role });
+                document.getElementById('newStaffName').value = '';
+                document.getElementById('newStaffPin').value = '';
+                renderStaffList();
+                alert(`Đã thêm nhân viên "${name}" thành công!`);
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        function editStaffUserPin(userId) {
+            const u = window.paca.users.find(x => x.id === userId);
+            if (!u) return;
+            const newPin = prompt(`Nhập mã PIN mới cho "${u.name}" (4-6 số):`, u.pin);
+            if (newPin && newPin.trim()) {
+                try {
+                    window.paca.updateUser(userId, { pin: newPin.trim() });
+                    renderStaffList();
+                    alert(`Đã đổi mã PIN cho "${u.name}" thành công!`);
+                } catch (e) {
+                    alert(e.message);
+                }
+            }
+        }
+
+        function deleteStaffUser(userId) {
+            const u = window.paca.users.find(x => x.id === userId);
+            if (!u) return;
+            if (confirm(`Bạn có chắc muốn xóa tài khoản nhân viên "${u.name}" không?`)) {
+                try {
+                    window.paca.deleteUser(userId);
+                    renderStaffList();
+                    applyUserPermissions();
+                    alert("Đã xóa tài khoản nhân viên thành công!");
+                } catch (e) {
+                    alert(e.message);
+                }
+            }
+        }
+
+        // ==================== TAB 3: INVENTORY (KHO HÀNG) LOGIC ====================
+        let currentInventoryFilter = 'all';
+
+        function setInventoryStatusFilter(filter) {
+            currentInventoryFilter = filter;
+            document.querySelectorAll('.inv-filter-btn').forEach(btn => {
+                if (btn.getAttribute('data-inv-filter') === filter) {
+                    btn.classList.remove('bg-gray-50', 'text-gray-700', 'border');
+                    btn.classList.add('bg-paca-navy', 'text-white');
+                } else {
+                    btn.classList.remove('bg-paca-navy', 'text-white');
+                    btn.classList.add('bg-gray-50', 'text-gray-700', 'border', 'border-gray-200');
+                }
+            });
+            renderInventoryTable();
+        }
+
+        function filterInventoryTable() {
+            renderInventoryTable();
+        }
+
+        function renderInventoryTable() {
+            const stats = window.paca.getInventoryStats();
+            const totalEl = document.getElementById('invTotalItems');
+            const inStockEl = document.getElementById('invInStock');
+            const lowEl = document.getElementById('invLowStock');
+            const outEl = document.getElementById('invOutOfStock');
+            const valEl = document.getElementById('invTotalValue');
+
+            if (totalEl) totalEl.innerText = stats.totalItems;
+            if (inStockEl) inStockEl.innerText = stats.inStockCount;
+            if (lowEl) lowEl.innerText = stats.lowStockCount;
+            if (outEl) outEl.innerText = stats.outOfStockCount;
+            if (valEl) valEl.innerText = window.paca.formatMoney(stats.totalInventoryValue);
+
+            // Populate Category filter if needed
+            const catSelect = document.getElementById('invCategoryFilter');
+            if (catSelect && catSelect.children.length <= 1) {
+                const categories = window.paca.getCategories(true);
+                categories.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.innerText = `${c.icon || '📁'} ${c.name_vi || c.name}`;
+                    catSelect.appendChild(opt);
+                });
+            }
+
+            const query = (document.getElementById('invSearchInput')?.value || '').toLowerCase().trim();
+            const selectedCat = catSelect ? catSelect.value : 'all';
+
+            let items = window.paca.menu?.items || [];
+
+            let filtered = items.filter(it => {
+                if (selectedCat !== 'all' && it.category !== selectedCat) return false;
+                if (query) {
+                    const matchName = (it.name || '').toLowerCase().includes(query);
+                    const matchNameVi = (it.name_vi || '').toLowerCase().includes(query);
+                    const matchSku = (it.sku || '').toLowerCase().includes(query);
+                    if (!matchName && !matchNameVi && !matchSku) return false;
+                }
+                const qty = parseInt(it.stock_quantity) || 0;
+                const threshold = parseInt(it.low_stock_threshold) || 5;
+
+                if (currentInventoryFilter === 'low') {
+                    return qty > 0 && qty <= threshold;
+                } else if (currentInventoryFilter === 'out') {
+                    return qty <= 0;
+                }
+                return true;
+            });
+
+            const tbody = document.getElementById('inventoryTableBody');
+            if (!tbody) return;
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="p-8 text-center text-gray-400 font-bold">
+                            Không tìm thấy mặt hàng nào phù hợp với bộ lọc kho.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tbody.innerHTML = filtered.map(it => {
+                    const unit = it.unit || 'Ly';
+                    const qty = parseInt(it.stock_quantity) || 0;
+                    const threshold = parseInt(it.low_stock_threshold) || 5;
+                    const cost = parseInt(it.cost_price || it.costPrice) || 0;
+                    const price = parseInt(it.price) || 0;
+
+                    let statusBadge = '';
+                    let qtyColorClass = 'text-blue-900 bg-blue-50 border-blue-200';
+                    if (qty <= 0) {
+                        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-800 border border-red-300">HẾT HÀNG</span>';
+                        qtyColorClass = 'text-red-900 bg-red-50 border-red-300 font-black';
+                    } else if (qty <= threshold) {
+                        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">SẮP HẾT</span>';
+                        qtyColorClass = 'text-amber-900 bg-amber-50 border-amber-300 font-bold';
+                    } else {
+                        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">AN TOÀN</span>';
+                    }
+
+                    return `
+                        <tr class="hover:bg-gray-50/70 transition">
+                            <td class="p-3">
+                                <div class="font-bold text-paca-navy text-xs truncate max-w-[180px]">${it.name}</div>
+                                <div class="text-[10px] text-gray-400 font-mono flex items-center gap-1.5">
+                                    <span>${it.sku || ('PACA-' + it.id.toUpperCase())}</span>
+                                    ${it.badge ? `<span class="bg-amber-100 text-amber-800 px-1 py-0.1 rounded text-[9px]">${it.badge}</span>` : ''}
+                                </div>
+                            </td>
+                            <td class="p-3 font-bold text-gray-700">${unit}</td>
+                            <td class="p-3">
+                                <div class="font-bold text-paca-crimson text-xs">${window.paca.formatMoney(price)}</div>
+                                <div class="text-[10px] text-amber-700 font-medium">Vốn: ${cost ? window.paca.formatMoney(cost) : '0 đ'}</div>
+                            </td>
+                            <td class="p-3 text-center">
+                                <button type="button" onclick="promptSetItemStock('${it.id}')" title="Bấm vào để nhập số lượng chính xác" class="px-2.5 py-1 rounded-xl border text-xs font-mono font-bold cursor-pointer hover:scale-105 active:scale-95 transition ${qtyColorClass}">
+                                    ${qty} ${unit}
+                                </button>
+                            </td>
+                            <td class="p-3 text-center">
+                                <div class="inline-flex items-center gap-1 bg-gray-100 p-0.5 rounded-xl border border-gray-200">
+                                    <button onclick="quickAdjustItemStock('${it.id}', -1)" class="w-6 h-6 rounded-lg bg-white hover:bg-gray-200 text-gray-700 font-black text-xs shadow-sm flex items-center justify-center">-1</button>
+                                    <button onclick="quickAdjustItemStock('${it.id}', 1)" class="w-6 h-6 rounded-lg bg-white hover:bg-gray-200 text-gray-700 font-black text-xs shadow-sm flex items-center justify-center">+1</button>
+                                    <button onclick="quickAdjustItemStock('${it.id}', 5)" class="w-6 h-6 rounded-lg bg-white hover:bg-gray-200 text-paca-navy font-black text-xs shadow-sm flex items-center justify-center">+5</button>
+                                    <button onclick="quickAdjustItemStock('${it.id}', 10)" class="w-7 h-6 rounded-lg bg-white hover:bg-gray-200 text-emerald-700 font-black text-[11px] shadow-sm flex items-center justify-center">+10</button>
+                                </div>
+                            </td>
+                            <td class="p-3 text-center">
+                                <div class="flex flex-col items-center gap-1">
+                                    ${statusBadge}
+                                    <label class="flex items-center gap-1 cursor-pointer text-[10px]">
+                                        <input type="checkbox" onchange="toggleDishAvail('${it.id}', this.checked)" ${it.is_available !== false ? 'checked' : ''} class="w-3.5 h-3.5 rounded text-emerald-600">
+                                        <span class="${it.is_available !== false ? 'text-emerald-700 font-bold' : 'text-red-500 font-bold'}">${it.is_available !== false ? 'Còn' : 'Hết'}</span>
+                                    </label>
+                                </div>
+                            </td>
+                            <td class="p-3 text-right">
+                                <button onclick="openDishEditorModal('${it.id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-gray-300">
+                                    Sửa
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            renderInventoryLogs();
+        }
+
+        function quickAdjustItemStock(itemId, delta) {
+            const reason = delta > 0 ? `Nhập bù +${delta}` : `Xuất kho ${delta}`;
+            window.paca.quickAdjustStock(itemId, delta, false, reason);
+            renderInventoryTable();
+            renderAdminMenu();
+        }
+
+        function promptSetItemStock(itemId) {
+            const item = window.paca.menu?.items.find(i => i.id === itemId);
+            if (!item) return;
+            const current = item.stock_quantity !== undefined ? item.stock_quantity : 30;
+            const res = prompt(`Nhập số lượng tồn kho mới cho "${item.name}" (ĐVT: ${item.unit || 'Ly'}):`, current);
+            if (res !== null) {
+                const val = parseInt(res);
+                if (!isNaN(val) && val >= 0) {
+                    window.paca.quickAdjustStock(itemId, val, true, `Kiểm kê gán tồn: ${val}`);
+                    renderInventoryTable();
+                    renderAdminMenu();
+                }
+            }
+        }
+
+        function renderInventoryLogs() {
+            const container = document.getElementById('inventoryLogsContainer');
+            if (!container) return;
+            const logs = window.paca.inventoryLogs || [];
+            if (logs.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 italic text-center py-2">Chưa có biến động kho nào được ghi nhận.</p>';
+                return;
+            }
+
+            container.innerHTML = logs.slice(0, 15).map(l => {
+                const isPlus = l.change > 0;
+                const changeTag = isPlus 
+                    ? `<span class="font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">+${l.change}</span>` 
+                    : `<span class="font-black text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-200">${l.change}</span>`;
+
+                const timeStr = new Date(l.timestamp).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date(l.timestamp).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+
+                return `
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-gray-50 border border-gray-100 text-[11px]">
+                        <div class="flex items-center gap-2 min-w-0">
+                            ${changeTag}
+                            <span class="font-bold text-paca-navy truncate">${l.itemName}</span>
+                            <span class="text-gray-500 font-medium truncate">• ${l.reason || ''}</span>
+                        </div>
+                        <div class="text-[10px] text-gray-400 flex items-center gap-2 flex-shrink-0">
+                            <span>Tồn: <b>${l.newStock}</b></span>
+                            <span>${timeStr}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ==================== DISH / GOODS EDITOR MODAL LOGIC ====================
+        let dishEditOptionsList = [];
+
+        function setDishEditType(type) {
+            document.getElementById('dishEditItemType').value = type;
+            const btnStandard = document.getElementById('btnTypeStandard');
+            const btnCombo = document.getElementById('btnTypeCombo');
+            const btnExtra = document.getElementById('btnTypeExtra');
+
+            [btnStandard, btnCombo, btnExtra].forEach(b => {
+                if (b) b.className = 'flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-600 hover:bg-white/60';
+            });
+
+            if (type === 'standard' && btnStandard) btnStandard.className = 'flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-emerald-600 text-white shadow-sm';
+            if (type === 'combo' && btnCombo) btnCombo.className = 'flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-emerald-600 text-white shadow-sm';
+            if (type === 'extra' && btnExtra) btnExtra.className = 'flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-emerald-600 text-white shadow-sm';
+        }
+
+        function generateRandomDishCode() {
+            const rand = Math.floor(100 + Math.random() * 900);
+            const code = `PACA-${rand}`;
+            const codeInp = document.getElementById('dishEditCode');
+            const skuInp = document.getElementById('dishEditSku');
+            if (codeInp) codeInp.value = code;
+            if (skuInp && !skuInp.value) skuInp.value = code;
+        }
+
+        function populateUnitSelect(selectedUnit = 'Ly') {
+            const sel = document.getElementById('dishEditUnitSelect');
+            if (!sel) return;
+            const units = window.paca.getUnitsList();
+            let hasMatch = false;
+
+            sel.innerHTML = units.map(u => {
+                const match = u.toLowerCase() === (selectedUnit || '').toLowerCase();
+                if (match) hasMatch = true;
+                return `<option value="${u}" ${match ? 'selected' : ''}>${u}</option>`;
+            }).join('') + `<option value="__custom__" ${!hasMatch && selectedUnit ? 'selected' : ''}>+ Tự nhập đơn vị khác...</option>`;
+
+            const customBox = document.getElementById('dishEditCustomUnitBox');
+            const customInp = document.getElementById('dishEditCustomUnit');
+            if (!hasMatch && selectedUnit) {
+                if (customBox) customBox.classList.remove('hidden');
+                if (customInp) customInp.value = selectedUnit;
+            } else {
+                if (customBox) customBox.classList.add('hidden');
+                if (customInp) customInp.value = '';
+            }
+            onDishEditUnitSelectChange();
+        }
+
+        function onDishEditUnitSelectChange() {
+            const sel = document.getElementById('dishEditUnitSelect');
+            const customBox = document.getElementById('dishEditCustomUnitBox');
+            const suffix = document.getElementById('dishEditStockUnitSuffix');
+            if (!sel) return;
+            if (sel.value === '__custom__') {
+                if (customBox) customBox.classList.remove('hidden');
+                const customInp = document.getElementById('dishEditCustomUnit');
+                if (suffix && customInp) suffix.innerText = customInp.value || 'ĐVT';
+            } else {
+                if (customBox) customBox.classList.add('hidden');
+                if (suffix) suffix.innerText = sel.value || 'Ly';
+            }
+        }
+
+        function toggleDishEditStockInputs() {
+            const isChecked = document.getElementById('dishEditTrackStock')?.checked;
+            const fields = document.getElementById('dishEditStockFields');
+            if (fields) {
+                if (isChecked) fields.classList.remove('opacity-40', 'pointer-events-none');
+                else fields.classList.add('opacity-40', 'pointer-events-none');
+            }
+        }
+
+        function renderDishEditOptions() {
+            const container = document.getElementById('dishEditOptionsContainer');
+            if (!container) return;
+            if (dishEditOptionsList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-2 text-gray-400 italic text-[11px] bg-white/70 p-2 rounded-xl border border-dashed border-gray-300">
+                        Chưa có vị nào. Bấm <b>"+ Thêm Vị"</b> để thêm các vị tùy chọn (VD: Xoài, Vải, Cherry...)
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = dishEditOptionsList.map((opt, idx) => `
+                <div class="flex items-center gap-2 bg-white p-2 rounded-xl border border-purple-200 shadow-sm">
+                    <span class="text-purple-600 font-bold text-xs">#${idx + 1}</span>
+                    <input type="text" value="${opt.name || ''}" oninput="dishEditOptionsList[${idx}].name = this.value" placeholder="Tên vị (VD: Vị Xoài)" class="flex-1 border border-gray-300 rounded-lg px-2.5 py-1 text-xs font-bold text-gray-800 bg-white">
+                    <div class="flex items-center gap-1">
+                        <span class="text-[10px] text-gray-400 font-semibold">+</span>
+                        <input type="number" step="1000" min="0" value="${opt.price || 0}" oninput="dishEditOptionsList[${idx}].price = Math.max(0, parseInt(this.value) || 0)" placeholder="0" class="w-20 border border-gray-300 rounded-lg px-2 py-1 text-xs font-mono font-bold text-paca-crimson text-right bg-white">
+                        <span class="text-[10px] text-gray-400">đ</span>
+                    </div>
+                    <button type="button" onclick="removeDishEditOptionRow(${idx})" class="w-6 h-6 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-bold flex items-center justify-center text-xs">
+                        ✕
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function addDishEditOptionRow(name = '', price = 0) {
+            dishEditOptionsList.push({ id: 'opt_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 3), name, price });
+            renderDishEditOptions();
+        }
+
+        function removeDishEditOptionRow(index) {
+            dishEditOptionsList.splice(index, 1);
+            renderDishEditOptions();
+        }
+
         function updateDishProfitPreview() {
             const price = Math.max(0, parseInt(document.getElementById('dishEditPrice')?.value) || 0);
             const cost = Math.max(0, parseInt(document.getElementById('dishEditCostPrice')?.value) || 0);
@@ -2739,20 +3778,35 @@
             if (itemId) {
                 const item = window.paca.menu?.items.find(i => i.id === itemId);
                 if (!item) return;
-                title.innerText = "Chỉnh Sửa Món";
+                if (title) title.innerText = "Chỉnh Sửa Hàng Hóa";
                 document.getElementById('dishEditId').value = item.id;
                 document.getElementById('dishEditName').value = item.name;
                 document.getElementById('dishEditNameVi').value = item.name_vi || '';
                 document.getElementById('dishEditPrice').value = item.price;
                 document.getElementById('dishEditCostPrice').value = item.cost_price || item.costPrice || 0;
-                catSelect.value = item.category || 'week';
-                stationSelect.value = item.station || 'bar';
+                if (catSelect) catSelect.value = item.category || 'week';
+                if (stationSelect) stationSelect.value = item.station || 'bar';
                 document.getElementById('dishEditDescVi').value = item.description_vi || '';
-                document.getElementById('dishEditIngredients').value = (item.ingredients || []).join(', ');
+                document.getElementById('dishEditIngredients').value = Array.isArray(item.ingredients) ? item.ingredients.join(', ') : (item.ingredients || '');
                 document.getElementById('dishEditBadge').value = item.badge || '';
-                catSelect.onchange = null;
+
+                // Inventory fields
+                setDishEditType(item.item_type || 'standard');
+                document.getElementById('dishEditCode').value = item.sku || `PACA-${item.id.toUpperCase()}`;
+                document.getElementById('dishEditSku').value = item.sku || `PACA-${item.id.toUpperCase()}`;
+                populateUnitSelect(item.unit || 'Ly');
+                document.getElementById('dishEditStockQuantity').value = item.stock_quantity !== undefined ? item.stock_quantity : 30;
+                document.getElementById('dishEditLowThreshold').value = item.low_stock_threshold || 5;
+                document.getElementById('dishEditTrackStock').checked = item.track_stock !== false;
+                toggleDishEditStockInputs();
+
+                // Options
+                dishEditOptionsList = item.options ? JSON.parse(JSON.stringify(item.options)) : [];
+                renderDishEditOptions();
+
+                if (catSelect) catSelect.onchange = null;
             } else {
-                title.innerText = "Thêm Món Mới Bằng Tay";
+                if (title) title.innerText = "Thêm Hàng Hóa Mới";
                 document.getElementById('dishEditId').value = '';
                 document.getElementById('dishEditName').value = '';
                 document.getElementById('dishEditNameVi').value = '';
@@ -2761,22 +3815,35 @@
                 
                 const categories = window.paca.getCategories(true);
                 const defaultCat = (currentAdminMenuCategory && currentAdminMenuCategory !== 'all') ? currentAdminMenuCategory : (categories[0]?.id || 'week');
-                catSelect.value = defaultCat;
+                if (catSelect) catSelect.value = defaultCat;
 
                 const selectedCatObj = window.paca.getCategoryById(defaultCat);
-                stationSelect.value = selectedCatObj?.default_station || 'bar';
+                if (stationSelect) stationSelect.value = selectedCatObj?.default_station || 'bar';
 
-                // Automatically default station to category's default_station on change for new dish
-                catSelect.onchange = () => {
-                    const cObj = window.paca.getCategoryById(catSelect.value);
-                    if (cObj && cObj.default_station) {
-                        stationSelect.value = cObj.default_station;
-                    }
-                };
+                if (catSelect) {
+                    catSelect.onchange = () => {
+                        const cObj = window.paca.getCategoryById(catSelect.value);
+                        if (cObj && cObj.default_station && stationSelect) {
+                            stationSelect.value = cObj.default_station;
+                        }
+                    };
+                }
 
                 document.getElementById('dishEditDescVi').value = '';
                 document.getElementById('dishEditIngredients').value = '';
                 document.getElementById('dishEditBadge').value = '';
+
+                // Inventory defaults
+                setDishEditType('standard');
+                generateRandomDishCode();
+                populateUnitSelect('Ly');
+                document.getElementById('dishEditStockQuantity').value = '50';
+                document.getElementById('dishEditLowThreshold').value = '5';
+                document.getElementById('dishEditTrackStock').checked = true;
+                toggleDishEditStockInputs();
+
+                dishEditOptionsList = [];
+                renderDishEditOptions();
             }
 
             updateDishProfitPreview();
@@ -2804,6 +3871,27 @@
                 return;
             }
 
+            // Unit
+            let unit = document.getElementById('dishEditUnitSelect').value;
+            if (unit === '__custom__') {
+                unit = document.getElementById('dishEditCustomUnit').value.trim() || 'Ly';
+                window.paca.addCustomUnit(unit);
+            }
+
+            // Stock & Inventory
+            const track_stock = document.getElementById('dishEditTrackStock').checked;
+            const stock_quantity = Math.max(0, parseInt(document.getElementById('dishEditStockQuantity').value) || 0);
+            const low_stock_threshold = Math.max(1, parseInt(document.getElementById('dishEditLowThreshold').value) || 5);
+            const item_type = document.getElementById('dishEditItemType').value || 'standard';
+            const sku = document.getElementById('dishEditSku').value.trim() || document.getElementById('dishEditCode').value.trim() || `PACA-${Date.now().toString(36).toUpperCase()}`;
+
+            // Clean options
+            const options = dishEditOptionsList.filter(o => o.name && o.name.trim()).map(o => ({
+                id: o.id || ('opt_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 3)),
+                name: o.name.trim(),
+                price: Math.max(0, parseInt(o.price) || 0)
+            }));
+
             const ingredients = ingredientsRaw ? ingredientsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
 
             window.paca.saveMenuItem({
@@ -2815,18 +3903,26 @@
                 costPrice: cost_price,
                 category,
                 station,
+                unit,
+                stock_quantity,
+                low_stock_threshold,
+                track_stock,
+                item_type,
+                sku,
+                options,
                 description_vi,
                 badge,
                 ingredients,
-                is_available: true
+                is_available: stock_quantity > 0
             });
 
             closeDishEditorModal();
             populateMenuCategories();
             renderAdminMenu();
             renderAdminCategories();
+            renderInventoryTable();
             renderRevenueStats();
-            alert("Đã lưu thông tin món ăn và giá cost thành công!");
+            alert("Đã lưu thông tin hàng hóa, giá vốn và tồn kho thành công!");
         }
 
         // ==================== BATCH COST MODAL LOGIC ====================
@@ -3606,6 +4702,7 @@
             container.innerHTML = filtered.map(it => {
                 const isSoldOut = it.is_available === false;
                 const hasVariants = it.variants && it.variants.length > 0;
+                const hasOptions = it.options && it.options.length > 0;
 
                 return `
                     <div class="bg-gray-50 hover:bg-gray-100 p-2 rounded-xl border border-gray-200 flex items-center justify-between gap-2 transition ${isSoldOut ? 'opacity-60' : ''}">
@@ -3614,13 +4711,21 @@
                             <div class="min-w-0">
                                 <div class="font-serif font-bold text-xs text-paca-navy truncate uppercase">${it.name}</div>
                                 <div class="text-[10px] text-gray-500 truncate">${it.name_vi || ''}</div>
-                                <div class="text-[11px] font-bold text-paca-crimson">${window.paca.formatMoney(it.price)}</div>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-[11px] font-bold text-paca-crimson">${window.paca.formatMoney(it.price)}</span>
+                                    ${hasOptions ? `<span class="text-[9px] bg-purple-100 text-purple-800 font-bold px-1.5 py-0.2 rounded">✨ ${it.options.length} vị</span>` : ''}
+                                </div>
                             </div>
                         </div>
 
                         <div>
                             ${isSoldOut ? `
                                 <span class="text-[10px] text-red-600 font-bold bg-red-50 px-2 py-1 rounded-lg border border-red-200">Hết</span>
+                            ` : (hasOptions ? `
+                                <button onclick="openManualDishOptionsModal('${it.id}')" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-xl shadow-sm active:scale-95 flex items-center gap-1 whitespace-nowrap">
+                                    <span>✨ Chọn Vị</span>
+                                    <span class="bg-white/25 text-[9px] px-1 rounded-full">${it.options.length}</span>
+                                </button>
                             ` : (hasVariants ? `
                                 <div class="flex flex-col gap-1">
                                     ${it.variants.map(v => `
@@ -3633,11 +4738,155 @@
                                 <button onclick="addDishToManualCart('${it.id}')" class="bg-paca-navy hover:bg-paca-dark text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow-sm active:scale-95">
                                     + Thêm
                                 </button>
-                            `)}
+                            `))}
                         </div>
                     </div>
                 `;
             }).join('');
+        }
+
+        // --- MANUAL DISH OPTIONS & FLAVORS MODAL CONTROLLER ---
+        let activeManOptDish = null;
+        let selectedManOptVariant = null;
+        let selectedManOptFlavors = [];
+        let manOptQty = 1;
+
+        function openManualDishOptionsModal(dishId) {
+            const dish = window.paca.menu?.items.find(i => i.id === dishId);
+            if (!dish) return;
+
+            activeManOptDish = dish;
+            selectedManOptVariant = (dish.variants && dish.variants.length > 0) ? dish.variants[0] : null;
+            selectedManOptFlavors = [];
+            manOptQty = 1;
+
+            document.getElementById('manOptDishTitle').innerText = dish.name;
+            document.getElementById('manOptDishSubtitle').innerText = `${dish.name_vi || ''} • Giá gốc: ${window.paca.formatMoney(dish.price)}`;
+            document.getElementById('manOptNote').value = '';
+            document.getElementById('manOptQtyVal').innerText = manOptQty;
+
+            // Variants
+            const varBox = document.getElementById('manOptVariantsBox');
+            const varList = document.getElementById('manOptVariantsList');
+            if (dish.variants && dish.variants.length > 0) {
+                varBox.classList.remove('hidden');
+                varList.innerHTML = dish.variants.map((v, idx) => `
+                    <button type="button" onclick="selectManOptVariant('${v.id}')" id="btnManVar_${v.id}" class="p-2 rounded-xl border text-center font-bold text-xs transition ${idx === 0 ? 'bg-paca-navy text-white border-paca-navy' : 'bg-gray-50 border-gray-200 text-gray-700'}">
+                        <div>${v.name}</div>
+                        <div class="text-[10px] opacity-80">${window.paca.formatMoney(v.price)}</div>
+                    </button>
+                `).join('');
+            } else {
+                varBox.classList.add('hidden');
+            }
+
+            // Options / Flavors
+            const optBox = document.getElementById('manOptOptionsBox');
+            const optList = document.getElementById('manOptOptionsList');
+            if (dish.options && dish.options.length > 0) {
+                optBox.classList.remove('hidden');
+                optList.innerHTML = dish.options.map(opt => `
+                    <label class="flex items-center justify-between p-2 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 cursor-pointer text-xs transition">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-800">${opt.name}</span>
+                            ${opt.price > 0 ? `<span class="text-[10px] font-bold text-paca-crimson bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">+${window.paca.formatMoney(opt.price)}</span>` : '<span class="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-semibold">Kèm theo</span>'}
+                        </div>
+                        <input type="checkbox" onchange="toggleManOptFlavor('${opt.id}', this.checked)" class="w-4 h-4 rounded text-paca-crimson focus:ring-paca-crimson">
+                    </label>
+                `).join('');
+            } else {
+                optBox.classList.add('hidden');
+            }
+
+            updateManOptTotal();
+            document.getElementById('manualDishOptionsModal').classList.remove('hidden');
+        }
+
+        function closeManualDishOptionsModal() {
+            document.getElementById('manualDishOptionsModal').classList.add('hidden');
+            activeManOptDish = null;
+            selectedManOptVariant = null;
+            selectedManOptFlavors = [];
+        }
+
+        function selectManOptVariant(variantId) {
+            if (!activeManOptDish || !activeManOptDish.variants) return;
+            selectedManOptVariant = activeManOptDish.variants.find(v => v.id === variantId);
+            activeManOptDish.variants.forEach(v => {
+                const btn = document.getElementById(`btnManVar_${v.id}`);
+                if (btn) {
+                    btn.className = v.id === variantId ? 'p-2 rounded-xl border text-center font-bold text-xs transition bg-paca-navy text-white border-paca-navy' : 'p-2 rounded-xl border text-center font-bold text-xs transition bg-gray-50 border-gray-200 text-gray-700';
+                }
+            });
+            updateManOptTotal();
+        }
+
+        function toggleManOptFlavor(optionId, isChecked) {
+            if (!activeManOptDish || !activeManOptDish.options) return;
+            const opt = activeManOptDish.options.find(o => o.id === optionId);
+            if (!opt) return;
+            if (isChecked) {
+                if (!selectedManOptFlavors.some(o => o.id === optionId)) selectedManOptFlavors.push(opt);
+            } else {
+                selectedManOptFlavors = selectedManOptFlavors.filter(o => o.id !== optionId);
+            }
+            updateManOptTotal();
+        }
+
+        function changeManOptQty(delta) {
+            manOptQty = Math.max(1, manOptQty + delta);
+            document.getElementById('manOptQtyVal').innerText = manOptQty;
+            updateManOptTotal();
+        }
+
+        function updateManOptTotal() {
+            if (!activeManOptDish) return;
+            let unitPrice = selectedManOptVariant ? selectedManOptVariant.price : activeManOptDish.price;
+            selectedManOptFlavors.forEach(opt => {
+                unitPrice += (opt.price || 0);
+            });
+            const total = unitPrice * manOptQty;
+            document.getElementById('manOptTotalVal').innerText = window.paca.formatMoney(total);
+        }
+
+        function confirmManualDishWithOptions() {
+            if (!activeManOptDish) return;
+
+            let unitPrice = selectedManOptVariant ? selectedManOptVariant.price : activeManOptDish.price;
+            let fullName = activeManOptDish.name;
+            if (selectedManOptVariant) fullName += ` (${selectedManOptVariant.name})`;
+            if (selectedManOptFlavors.length > 0) {
+                const flavorsText = selectedManOptFlavors.map(f => f.name).join(', ');
+                fullName += ` [${flavorsText}]`;
+                selectedManOptFlavors.forEach(f => {
+                    unitPrice += (f.price || 0);
+                });
+            }
+
+            const itemNote = document.getElementById('manOptNote').value.trim();
+
+            manualCart.push({
+                productId: activeManOptDish.id,
+                variantId: selectedManOptVariant ? selectedManOptVariant.id : null,
+                name: fullName,
+                name_vi: activeManOptDish.name_vi,
+                unitPrice: unitPrice,
+                price: unitPrice,
+                originalPrice: unitPrice,
+                quantity: manOptQty,
+                subtotal: unitPrice * manOptQty,
+                station: activeManOptDish.station || 'bar',
+                options: [...selectedManOptFlavors],
+                selectedOptions: [...selectedManOptFlavors],
+                isOverridden: false,
+                overrideReason: '',
+                authorizedBy: '',
+                itemNote: itemNote
+            });
+
+            closeManualDishOptionsModal();
+            renderManualCart();
+            calculateManualTotals();
         }
 
         function addDishToManualCart(dishId, variantId = null) {

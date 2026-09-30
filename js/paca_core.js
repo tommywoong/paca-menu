@@ -8,8 +8,19 @@ const PACA_STORAGE_KEYS = {
     TABLES: 'paca_tables_data_v1',
     CONFIG: 'paca_config_data_v1',
     ORDERS: 'paca_orders_data_v1',
-    BILL_TEMPLATES: 'paca_bill_templates_v1'
+    BILL_TEMPLATES: 'paca_bill_templates_v1',
+    USERS: 'paca_users_data_v1',
+    CURRENT_USER: 'paca_current_user_v1',
+    INVENTORY_LOGS: 'paca_inventory_logs_v1'
 };
+
+const DEFAULT_UNITS = ['Ly', 'Chai', 'Lon', 'Phần', 'Đĩa', 'Gói', 'Set', 'Shot', 'Thùng', 'Két', 'Bình', 'Tháp'];
+
+const DEFAULT_USERS = [
+    { id: 'usr_admin', name: 'Quản Lý (Admin)', pin: '8888', role: 'admin', createdAt: '2026-01-01T00:00:00.000Z' },
+    { id: 'usr_staff_1', name: 'Thu Ngân 1', pin: '1111', role: 'staff', createdAt: '2026-01-01T00:00:00.000Z' },
+    { id: 'usr_staff_2', name: 'Bar 1', pin: '2222', role: 'staff', createdAt: '2026-01-01T00:00:00.000Z' }
+];
 
 const VIETQR_BANKS = [
     { code: "MB", name: "MBBank (Ngân hàng Quân Đội)", bin: "970422" },
@@ -170,6 +181,9 @@ class PacaService {
         this.config = null;
         this.orders = [];
         this.billTemplates = null;
+        this.users = [];
+        this.currentUser = null;
+        this.inventoryLogs = [];
         this.broadcastChannel = null;
         this.cloudSyncTopic = 'paca_orders_live_da_lat_2025';
         this.cloudEventSource = null;
@@ -186,10 +200,12 @@ class PacaService {
     // --- INITIALIZATION ---
     async init() {
         await this.loadConfig();
+        this.loadUsers();
         await this.loadMenu();
         await this.loadTables();
         this.loadBillTemplates();
         this.loadOrders();
+        this.loadInventoryLogs();
     }
 
     // --- CONFIG ---
@@ -247,6 +263,154 @@ class PacaService {
         return this.config;
     }
 
+    // --- USER MANAGEMENT & PIN RBAC ---
+    loadUsers() {
+        const local = localStorage.getItem(PACA_STORAGE_KEYS.USERS);
+        if (local) {
+            try {
+                this.users = JSON.parse(local);
+                if (Array.isArray(this.users) && this.users.length > 0) {
+                    if (!this.users.some(u => u.role === 'admin')) {
+                        this.users.unshift(DEFAULT_USERS[0]);
+                        this.saveUsers(this.users);
+                    }
+                } else {
+                    this.users = JSON.parse(JSON.stringify(DEFAULT_USERS));
+                    this.saveUsers(this.users);
+                }
+            } catch (e) {
+                this.users = JSON.parse(JSON.stringify(DEFAULT_USERS));
+                this.saveUsers(this.users);
+            }
+        } else {
+            this.users = JSON.parse(JSON.stringify(DEFAULT_USERS));
+            this.saveUsers(this.users);
+        }
+
+        // Active user session
+        const activeLocal = localStorage.getItem(PACA_STORAGE_KEYS.CURRENT_USER);
+        if (activeLocal) {
+            try {
+                const u = JSON.parse(activeLocal);
+                const found = this.users.find(x => x.id === u.id);
+                this.currentUser = found || this.users[0];
+            } catch (e) {
+                this.currentUser = this.users[0];
+            }
+        } else {
+            this.currentUser = this.users[0];
+            this.saveCurrentUser(this.currentUser);
+        }
+        return this.users;
+    }
+
+    saveUsers(users) {
+        this.users = users;
+        localStorage.setItem(PACA_STORAGE_KEYS.USERS, JSON.stringify(this.users));
+        if (this.broadcastChannel) {
+            this.broadcastChannel.postMessage({ type: 'USERS_UPDATED', users: this.users });
+        }
+    }
+
+    getCurrentUser() {
+        if (!this.currentUser && this.users.length > 0) {
+            this.currentUser = this.users[0];
+        }
+        return this.currentUser;
+    }
+
+    saveCurrentUser(user) {
+        this.currentUser = user;
+        if (user) {
+            localStorage.setItem(PACA_STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+        } else {
+            localStorage.removeItem(PACA_STORAGE_KEYS.CURRENT_USER);
+        }
+        if (this.broadcastChannel) {
+            this.broadcastChannel.postMessage({ type: 'CURRENT_USER_CHANGED', user });
+        }
+    }
+
+    loginWithPin(pin) {
+        const cleanPin = String(pin || '').trim();
+        const found = this.users.find(u => String(u.pin).trim() === cleanPin);
+        if (found) {
+            this.saveCurrentUser(found);
+            return { success: true, user: found };
+        }
+        return { success: false, message: 'Mã PIN không đúng, vui lòng kiểm tra lại!' };
+    }
+
+    logoutUser() {
+        this.saveCurrentUser(null);
+    }
+
+    isAdmin() {
+        const u = this.getCurrentUser();
+        return u && u.role === 'admin';
+    }
+
+    addUser({ name, pin, role = 'staff' }) {
+        const cleanName = String(name || '').trim();
+        const cleanPin = String(pin || '').trim();
+        if (!cleanName) throw new Error('Tên nhân viên không được để trống.');
+        if (!cleanPin || cleanPin.length < 4) throw new Error('Mã PIN phải từ 4 số trở lên.');
+        if (this.users.some(u => String(u.pin).trim() === cleanPin)) {
+            throw new Error(`Mã PIN ${cleanPin} đã được sử dụng bởi nhân viên khác.`);
+        }
+        const newUser = {
+            id: 'usr_' + Date.now().toString(36),
+            name: cleanName,
+            pin: cleanPin,
+            role: role === 'admin' ? 'admin' : 'staff',
+            createdAt: new Date().toISOString()
+        };
+        this.users.push(newUser);
+        this.saveUsers(this.users);
+        return newUser;
+    }
+
+    updateUser(userId, { name, pin, role }) {
+        const user = this.users.find(u => u.id === userId);
+        if (!user) throw new Error('Không tìm thấy nhân viên.');
+        if (name) user.name = String(name).trim();
+        if (pin) {
+            const cleanPin = String(pin).trim();
+            if (cleanPin.length < 4) throw new Error('Mã PIN phải từ 4 số trở lên.');
+            const dup = this.users.find(u => u.id !== userId && String(u.pin).trim() === cleanPin);
+            if (dup) throw new Error(`Mã PIN ${cleanPin} đã bị trùng.`);
+            user.pin = cleanPin;
+        }
+        if (role) {
+            if (user.role === 'admin' && role !== 'admin') {
+                const adminCount = this.users.filter(u => u.role === 'admin').length;
+                if (adminCount <= 1) throw new Error('Không thể chuyển vai trò của Quản Lý cuối cùng.');
+            }
+            user.role = role === 'admin' ? 'admin' : 'staff';
+        }
+        this.saveUsers(this.users);
+        if (this.currentUser?.id === userId) {
+            this.saveCurrentUser(user);
+        }
+        return user;
+    }
+
+    deleteUser(userId) {
+        const user = this.users.find(u => u.id === userId);
+        if (!user) throw new Error('Không tìm thấy nhân viên.');
+        if (user.role === 'admin') {
+            const adminCount = this.users.filter(u => u.role === 'admin').length;
+            if (adminCount <= 1) throw new Error('Không thể xóa tài khoản Quản Lý (Admin) cuối cùng.');
+        }
+        this.users = this.users.filter(u => u.id !== userId);
+        this.saveUsers(this.users);
+        if (this.currentUser?.id === userId) {
+            const admin = this.users.find(u => u.role === 'admin') || this.users[0];
+            this.saveCurrentUser(admin);
+        }
+        return user;
+    }
+
     // --- BILL TEMPLATES ---
     loadBillTemplates() {
         const local = localStorage.getItem(PACA_STORAGE_KEYS.BILL_TEMPLATES);
@@ -280,18 +444,31 @@ class PacaService {
                 this.menu = JSON.parse(local);
                 if (this.menu && this.menu.categories && this.menu.categories.length > 0) {
                     if (serverMenu && serverMenu.items) {
-                        let hasUpdatedCost = false;
-                        this.menu.items.forEach(it => {
-                            if (it.cost_price === undefined || it.cost_price === null) {
-                                const sIt = serverMenu.items.find(si => si.id === it.id || si.name === it.name);
-                                if (sIt && sIt.cost_price !== undefined) {
-                                    it.cost_price = sIt.cost_price;
-                                    it.costPrice = sIt.cost_price;
-                                    hasUpdatedCost = true;
+                        let hasChanges = false;
+                        serverMenu.items.forEach(sIt => {
+                            let localIt = this.menu.items.find(i => i.id === sIt.id || i.name === sIt.name);
+                            if (!localIt) {
+                                this.menu.items.push(JSON.parse(JSON.stringify(sIt)));
+                                hasChanges = true;
+                            } else {
+                                if (localIt.cost_price === undefined || localIt.cost_price === null) {
+                                    localIt.cost_price = sIt.cost_price;
+                                    localIt.costPrice = sIt.cost_price;
+                                    hasChanges = true;
+                                }
+                                if (localIt.unit === undefined) { localIt.unit = sIt.unit || 'Ly'; hasChanges = true; }
+                                if (localIt.stock_quantity === undefined) { localIt.stock_quantity = sIt.stock_quantity !== undefined ? sIt.stock_quantity : 30; hasChanges = true; }
+                                if (localIt.low_stock_threshold === undefined) { localIt.low_stock_threshold = sIt.low_stock_threshold || 5; hasChanges = true; }
+                                if (localIt.track_stock === undefined) { localIt.track_stock = sIt.track_stock !== false; hasChanges = true; }
+                                if (localIt.item_type === undefined) { localIt.item_type = sIt.item_type || 'standard'; hasChanges = true; }
+                                if (localIt.sku === undefined) { localIt.sku = sIt.sku || `PACA-${localIt.id.toUpperCase()}`; hasChanges = true; }
+                                if ((!localIt.options || localIt.options.length === 0) && sIt.options && sIt.options.length > 0) {
+                                    localIt.options = sIt.options;
+                                    hasChanges = true;
                                 }
                             }
                         });
-                        if (hasUpdatedCost) {
+                        if (hasChanges) {
                             this.saveMenu(this.menu);
                         }
                     }
@@ -414,6 +591,187 @@ class PacaService {
                 this.broadcastChannel.postMessage({ type: 'MENU_ITEM_DELETED', itemId });
             }
             return removed;
+        }
+    }
+
+    // --- INVENTORY MANAGEMENT & UNITS ---
+    getUnitsList() {
+        const custom = this.config?.custom_units || [];
+        const combined = [...DEFAULT_UNITS, ...custom];
+        return Array.from(new Set(combined));
+    }
+
+    addCustomUnit(unitName) {
+        const clean = String(unitName || '').trim();
+        if (!clean) return this.getUnitsList();
+        if (!this.config.custom_units) this.config.custom_units = [];
+        if (!this.config.custom_units.includes(clean)) {
+            this.config.custom_units.push(clean);
+            this.saveConfig(this.config);
+        }
+        return this.getUnitsList();
+    }
+
+    loadInventoryLogs() {
+        const local = localStorage.getItem(PACA_STORAGE_KEYS.INVENTORY_LOGS);
+        if (local) {
+            try { this.inventoryLogs = JSON.parse(local); } catch (e) { this.inventoryLogs = []; }
+        } else {
+            this.inventoryLogs = [];
+        }
+        return this.inventoryLogs;
+    }
+
+    saveInventoryLogs() {
+        if (this.inventoryLogs.length > 200) this.inventoryLogs = this.inventoryLogs.slice(0, 200);
+        localStorage.setItem(PACA_STORAGE_KEYS.INVENTORY_LOGS, JSON.stringify(this.inventoryLogs));
+    }
+
+    logInventoryAction(itemId, change, oldStock, newStock, reason = '', staff = '') {
+        const item = this.menu?.items.find(i => i.id === itemId);
+        const logEntry = {
+            id: 'inv_' + Date.now().toString(36),
+            itemId,
+            itemName: item ? (item.name_vi || item.name) : itemId,
+            change,
+            oldStock,
+            newStock,
+            reason,
+            staff: staff || this.getCurrentUser()?.name || 'Hệ thống',
+            timestamp: new Date().toISOString()
+        };
+        if (!this.inventoryLogs) this.inventoryLogs = [];
+        this.inventoryLogs.unshift(logEntry);
+        this.saveInventoryLogs();
+    }
+
+    getInventoryStats() {
+        if (!this.menu || !this.menu.items) {
+            return { totalItems: 0, trackedCount: 0, inStockCount: 0, lowStockCount: 0, outOfStockCount: 0, totalInventoryValue: 0 };
+        }
+        let totalItems = this.menu.items.length;
+        let trackedCount = 0;
+        let inStockCount = 0;
+        let lowStockCount = 0;
+        let outOfStockCount = 0;
+        let totalInventoryValue = 0;
+
+        this.menu.items.forEach(it => {
+            if (it.track_stock !== false) {
+                trackedCount++;
+                const qty = parseInt(it.stock_quantity) || 0;
+                const threshold = parseInt(it.low_stock_threshold) || 5;
+                const cost = parseInt(it.cost_price || it.costPrice) || 0;
+                totalInventoryValue += (qty * cost);
+
+                if (qty <= 0) {
+                    outOfStockCount++;
+                } else if (qty <= threshold) {
+                    lowStockCount++;
+                } else {
+                    inStockCount++;
+                }
+            }
+        });
+
+        return {
+            totalItems,
+            trackedCount,
+            inStockCount,
+            lowStockCount,
+            outOfStockCount,
+            totalInventoryValue
+        };
+    }
+
+    quickAdjustStock(itemId, deltaOrVal, isAbsolute = false, reason = 'Cập nhật kho', staffName = '') {
+        if (!this.menu || !this.menu.items) return null;
+        const item = this.menu.items.find(i => i.id === itemId);
+        if (!item) return null;
+
+        const oldStock = parseInt(item.stock_quantity) || 0;
+        let newStock = isAbsolute ? Math.max(0, parseInt(deltaOrVal) || 0) : Math.max(0, oldStock + (parseInt(deltaOrVal) || 0));
+        item.stock_quantity = newStock;
+        item.track_stock = true;
+
+        if (newStock <= 0) {
+            item.is_available = false;
+        } else if (newStock > 0 && item.is_available === false && reason.includes('Nhập')) {
+            item.is_available = true;
+        }
+
+        this.saveMenu(this.menu);
+        this.logInventoryAction(itemId, newStock - oldStock, oldStock, newStock, reason, staffName);
+
+        if (this.broadcastChannel) {
+            this.broadcastChannel.postMessage({ type: 'INVENTORY_UPDATED', itemId, stock: newStock });
+            this.broadcastChannel.postMessage({ type: 'ITEM_AVAILABILITY_CHANGED', itemId, isAvailable: item.is_available });
+        }
+        return item;
+    }
+
+    deductOrderStock(order) {
+        if (!order || order.inventoryDeducted) return;
+        if (!this.menu || !this.menu.items || !order.items) return;
+
+        let hasChanged = false;
+        order.items.forEach(it => {
+            const itemId = it.productId || it.id;
+            const dish = this.menu.items.find(d => d.id === itemId || d.name === it.name);
+            if (dish && dish.track_stock !== false) {
+                const oldStock = parseInt(dish.stock_quantity) || 0;
+                const qtyToDeduct = parseInt(it.quantity) || 1;
+                const newStock = Math.max(0, oldStock - qtyToDeduct);
+                dish.stock_quantity = newStock;
+
+                if (newStock <= 0) {
+                    dish.is_available = false;
+                }
+                hasChanged = true;
+                this.logInventoryAction(dish.id, -qtyToDeduct, oldStock, newStock, `Bán đơn ${order.id} (${order.tableName})`, order.confirmedBy);
+            }
+        });
+
+        order.inventoryDeducted = true;
+        this.saveOrders();
+
+        if (hasChanged) {
+            this.saveMenu(this.menu);
+            if (this.broadcastChannel) {
+                this.broadcastChannel.postMessage({ type: 'INVENTORY_UPDATED', orderId: order.id });
+            }
+        }
+    }
+
+    restoreOrderStock(order) {
+        if (!order || !order.inventoryDeducted) return;
+        if (!this.menu || !this.menu.items || !order.items) return;
+
+        let hasChanged = false;
+        order.items.forEach(it => {
+            const itemId = it.productId || it.id;
+            const dish = this.menu.items.find(d => d.id === itemId || d.name === it.name);
+            if (dish && dish.track_stock !== false) {
+                const oldStock = parseInt(dish.stock_quantity) || 0;
+                const qtyToRestore = parseInt(it.quantity) || 1;
+                const newStock = oldStock + qtyToRestore;
+                dish.stock_quantity = newStock;
+                if (newStock > 0 && dish.is_available === false) {
+                    dish.is_available = true;
+                }
+                hasChanged = true;
+                this.logInventoryAction(dish.id, qtyToRestore, oldStock, newStock, `Hoàn kho huỷ đơn ${order.id}`, this.getCurrentUser()?.name);
+            }
+        });
+
+        order.inventoryDeducted = false;
+        this.saveOrders();
+
+        if (hasChanged) {
+            this.saveMenu(this.menu);
+            if (this.broadcastChannel) {
+                this.broadcastChannel.postMessage({ type: 'INVENTORY_UPDATED', orderId: order.id });
+            }
         }
     }
 
@@ -623,26 +981,33 @@ class PacaService {
         let rawSubtotal = 0;
         let totalCost = 0;
         const processedItems = items.map(item => {
-            const subtotal = item.price * item.quantity;
+            const itemPrice = item.price !== undefined ? Number(item.price) : (item.unitPrice !== undefined ? Number(item.unitPrice) : 0);
+            const itemQty = Number(item.quantity) || 1;
+            const subtotal = item.subtotal !== undefined ? Number(item.subtotal) : (itemPrice * itemQty);
             rawSubtotal += subtotal;
             const costPrice = this.getDishCostPrice(item);
-            const itemTotalCost = costPrice * item.quantity;
+            const itemTotalCost = costPrice * itemQty;
             totalCost += itemTotalCost;
             return {
-                id: item.id,
+                id: item.id || `item_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
                 productId: item.productId || item.id,
                 name: item.name,
                 name_vi: item.name_vi || item.name,
-                price: item.price,
+                price: itemPrice,
+                unitPrice: itemPrice,
                 costPrice: costPrice,
                 cost_price: costPrice,
                 totalCost: itemTotalCost,
-                originalPrice: item.originalPrice || item.price,
-                quantity: item.quantity,
+                originalPrice: item.originalPrice !== undefined ? item.originalPrice : itemPrice,
+                quantity: itemQty,
                 subtotal: subtotal,
                 station: item.station || 'bar',
                 variant: item.variant || null,
-                options: item.options || [],
+                options: item.options || item.selectedOptions || [],
+                selectedOptions: item.selectedOptions || item.options || [],
+                isOverridden: !!item.isOverridden,
+                overrideReason: item.overrideReason || '',
+                authorizedBy: item.authorizedBy || '',
                 itemNote: item.itemNote || ''
             };
         });
@@ -713,10 +1078,20 @@ class PacaService {
         return newOrder;
     }
 
+    createManualOrder(params) {
+        return this.createOrder({
+            ...params,
+            source: params.source || "manual_admin"
+        });
+    }
+
     deleteOrder(orderId) {
         const idx = this.orders.findIndex(o => o.id === orderId);
         if (idx !== -1) {
             const removed = this.orders.splice(idx, 1)[0];
+            if (removed && removed.inventoryDeducted) {
+                this.restoreOrderStock(removed);
+            }
             this.saveOrders();
             if (this.broadcastChannel) {
                 this.broadcastChannel.postMessage({ type: 'ORDER_DELETED', orderId });
@@ -868,6 +1243,9 @@ class PacaService {
         order.paymentMethod = paymentMethod;
         if (order.status === 'pending') order.status = 'preparing';
 
+        // Auto deduct inventory on payment confirmation
+        this.deductOrderStock(order);
+
         this.saveOrders();
 
         if (this.broadcastChannel) {
@@ -896,6 +1274,13 @@ class PacaService {
         if (order) {
             order.status = newStatus;
             order.updatedAt = new Date().toISOString();
+
+            if (newStatus === 'completed') {
+                this.deductOrderStock(order);
+            } else if (newStatus === 'cancelled') {
+                this.restoreOrderStock(order);
+            }
+
             this.saveOrders();
             if (this.broadcastChannel) {
                 this.broadcastChannel.postMessage({ type: 'ORDER_STATUS_CHANGED', orderId, status: newStatus });
@@ -970,6 +1355,10 @@ class PacaService {
         const itemsList = order.items.map(it => {
             const stationTag = it.station === 'kitchen' ? '🍳' : '🍸';
             let line = `${stationTag} *${it.name}* (x${it.quantity}) - ${this.formatMoney(it.subtotal)}`;
+            if (it.options && it.options.length > 0) {
+                const optNames = it.options.map(o => typeof o === 'string' ? o : (o.name + (o.price ? ` (+${this.formatMoney(o.price)})` : ''))).join(', ');
+                line += `\n   └ ✨ _Vị: ${optNames}_`;
+            }
             if (it.itemNote) line += `\n   └ 📝 _${it.itemNote}_`;
             return line;
         }).join('\n');
