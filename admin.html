@@ -1931,7 +1931,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20260930_tg_pay_v5"></script>
+    <script src="js/paca_core.js?v=20260930_staff_tg_v6"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -2453,6 +2453,10 @@
                                     </button>
                                 `}
 
+                                <button onclick="resendOrderTelegram('${ord.id}')" title="Báo lại thông tin đơn hàng này lên Telegram" class="bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold px-2.5 py-1.5 rounded-xl border border-blue-200 flex items-center gap-1 active:scale-95 transition">
+                                    <span>🔔 Báo đơn</span>
+                                </button>
+
                                 ${ord.status === 'pending' ? `
                                     <button onclick="changeOrderStatus('${ord.id}', 'preparing')" class="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-xl">
                                         Làm 🍹
@@ -2499,11 +2503,30 @@
 
         async function confirmOrderPayment(orderId) {
             if (!confirm("Bạn xác nhận đã nhận đủ tiền thanh toán cho đơn hàng này?")) return;
+            const curUser = window.paca.getCurrentUser();
+            const staffName = curUser ? `${curUser.name} (${curUser.role === 'admin' ? 'Quản lý' : 'Nhân viên'})` : 'Thu ngân';
+
             showAdminToast("⏳ Đang xác nhận & gửi Telegram...", true);
-            await window.paca.confirmPayment(orderId, "Admin", "vietqr");
+            await window.paca.confirmPayment(orderId, staffName, "vietqr");
             renderOrders();
             renderRevenueStats();
             showAdminToast("✅ Đã nhận tiền & gửi thông báo Telegram!");
+        }
+
+        async function resendOrderTelegram(orderId) {
+            const order = (window.paca.orders || []).find(o => o.id === orderId);
+            if (!order) return;
+            showAdminToast("⏳ Đang gửi thông báo đơn lên Telegram...", true);
+            try {
+                const ok = await window.paca.sendTelegramOrder(order);
+                if (ok) {
+                    showAdminToast("✅ Đã bắn thông báo đơn hàng lên Telegram!");
+                } else {
+                    showAdminToast("⚠️ Không gửi được Telegram, hãy kiểm tra bot!", false);
+                }
+            } catch (e) {
+                showAdminToast("⚠️ Lỗi gửi Telegram: " + e.message, false);
+            }
         }
 
         async function resendPaymentTelegram(orderId) {
@@ -5387,20 +5410,27 @@
                     authorizedBy: i.authorizedBy || "Admin"
                 }));
 
+            const curUser = window.paca.getCurrentUser();
+            const creatorName = curUser ? `${curUser.name} (${curUser.role === 'admin' ? 'Quản lý' : 'Nhân viên'})` : 'Nhân viên ca trực';
+
+            showAdminToast("⏳ Đang tạo đơn & gửi Telegram...", true);
+
             const newOrder = window.paca.createManualOrder({
                 tableId: tableId,
                 tableName: tableName,
                 items: manualCart,
                 note: orderNote,
-                discount: { amount: discountAmount, reason: discountReason, authorizedBy: "Admin" },
+                discount: { amount: discountAmount, reason: discountReason, authorizedBy: curUser?.name || "Admin" },
                 surcharge: { amount: surchargeAmount, reason: surchargeReason },
                 priceOverrides: priceOverrides,
-                source: 'manual_admin'
+                source: 'manual_admin',
+                createdBy: creatorName
             });
 
             closeManualOrderModal();
             renderOrders();
             renderRevenueStats();
+            showAdminToast(`✅ Đã tạo đơn #${newOrder.id} & gửi Telegram!`);
 
             if (shouldPrintImmediately) {
                 reprintStation(newOrder.id, 'cashier');
@@ -5410,7 +5440,7 @@
             if (shouldShowQr) {
                 openVietQrFullscreen(newOrder.id);
             } else if (!shouldPrintImmediately) {
-                alert(`✓ Đã tạo thành công đơn hàng #${newOrder.id} cho ${tableName}!`);
+                alert(`✓ Đã tạo thành công đơn hàng #${newOrder.id} (${creatorName}) cho ${tableName}!`);
             }
         }
 

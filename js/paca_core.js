@@ -973,7 +973,8 @@ class PacaService {
         source = "qr_customer", // "qr_customer" or "manual_admin"
         discount = { amount: 0, reason: "", authorizedBy: "" },
         surcharge = { amount: 0, reason: "" },
-        priceOverrides = []
+        priceOverrides = [],
+        createdBy = null
     }) {
         const now = new Date();
         const randomNum = Math.floor(1000 + Math.random() * 9000);
@@ -1026,6 +1027,7 @@ class PacaService {
             tableName: tableName || (tableId ? `Bàn ${tableId}` : "Đơn Mang Về"),
             customerPhone,
             source,
+            createdBy: createdBy || (this.getCurrentUser() ? `${this.getCurrentUser().name} (${this.getCurrentUser().role === 'admin' ? 'Quản lý' : 'Nhân viên'})` : (source === 'manual_admin' ? 'Nhân viên ca trực' : 'Khách quét QR')),
             items: processedItems,
             rawSubtotal,
             totalCost,
@@ -1082,7 +1084,8 @@ class PacaService {
     createManualOrder(params) {
         return this.createOrder({
             ...params,
-            source: params.source || "manual_admin"
+            source: params.source || "manual_admin",
+            createdBy: params.createdBy || (this.getCurrentUser() ? `${this.getCurrentUser().name} (${this.getCurrentUser().role === 'admin' ? 'Quản lý' : 'Nhân viên'})` : 'Nhân viên ca trực')
         });
     }
 
@@ -1413,11 +1416,13 @@ class PacaService {
             discountLine = `\n🎁 *Giảm giá:* -${this.formatMoney(order.discount.amount)} _(${order.discount.reason || 'Ưu đãi'})_`;
         }
 
+        const creatorInfo = order.createdBy ? `\n👤 *Người tạo đơn:* *${order.createdBy}*` : (order.source === 'manual_admin' ? '\n👤 *Người tạo đơn:* *Nhân viên ca trực*' : '');
+
         const message = 
 `🔔 *ĐƠN HÀNG MỚI - PACA BAR* 🔔
 ━━━━━━━━━━━━━━━━━━━━
 🏷️ *Mã đơn:* \`${order.id}\`
-🪑 *Vị trí:* *${order.tableName}* (${order.source === 'manual_admin' ? 'Tạo thủ công' : 'Khách quét QR'})
+🪑 *Vị trí:* *${order.tableName}* (${order.source === 'manual_admin' ? 'Tạo thủ công' : 'Khách quét QR'})${creatorInfo}
 ⏰ *Thời gian:* ${order.createdAtFormatted}
 ━━━━━━━━━━━━━━━━━━━━
 ${itemsList}
@@ -1427,7 +1432,7 @@ ${discountLine}
 ${order.note ? `📝 *Ghi chú:* _${order.note}_\n` : ''}
 ⚡ *Trạng thái:* ${order.paymentStatus === 'paid' ? 'ĐÃ THANH TOÁN ✓' : 'Chưa thanh toán'}`;
 
-        await this.sendTelegramRaw(message);
+        return await this.sendTelegramRaw(message);
     }
 
     async sendTelegramPaymentConfirmation(order) {
