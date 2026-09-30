@@ -298,6 +298,15 @@
                     <div>Số tài khoản: <b id="lblAccountNo" class="font-mono text-xs text-paca-crimson">---</b></div>
                     <div>Chủ tài khoản: <b id="lblAccountName">PACA BAR</b></div>
                 </div>
+
+                <!-- Customer notifies transfer -->
+                <button type="button" id="btnCustomerConfirmTransfer" onclick="customerNotifyTransferred()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-2.5 rounded-xl shadow-sm text-xs transition flex items-center justify-center gap-1.5 mt-2">
+                    <span>✓</span>
+                    <span>Tôi đã chuyển khoản xong</span>
+                </button>
+                <div id="msgTransferNotified" class="hidden text-[11px] text-emerald-800 bg-emerald-100 p-2.5 rounded-xl border border-emerald-300 font-bold mt-2">
+                    ✓ Đã gửi báo cho quầy thu ngân kiểm tra chuyển khoản. Cảm ơn bạn!
+                </div>
             </div>
 
             <div class="pt-2">
@@ -966,12 +975,20 @@
             }
         }
 
+        let activeSuccessOrder = null;
+
         function showSuccessModal(order) {
+            activeSuccessOrder = order;
             document.getElementById('successOrderId').innerText = order.id;
 
             const cfg = window.paca.config;
             const bank = cfg?.bank_config;
             const qrSection = document.getElementById('vietQrSection');
+            const btnTransfer = document.getElementById('btnCustomerConfirmTransfer');
+            const msgTransfer = document.getElementById('msgTransferNotified');
+
+            if (btnTransfer) btnTransfer.classList.remove('hidden');
+            if (msgTransfer) msgTransfer.classList.add('hidden');
 
             if (bank && bank.account_no && bank.bank_id) {
                 qrSection.classList.remove('hidden');
@@ -988,8 +1005,21 @@
             document.getElementById('successModal').classList.remove('hidden');
         }
 
+        function customerNotifyTransferred() {
+            if (!activeSuccessOrder) return;
+            const btnTransfer = document.getElementById('btnCustomerConfirmTransfer');
+            const msgTransfer = document.getElementById('msgTransferNotified');
+            if (btnTransfer) btnTransfer.classList.add('hidden');
+            if (msgTransfer) msgTransfer.classList.remove('hidden');
+
+            if (window.paca?.setAwaitingPaymentCheck) {
+                window.paca.setAwaitingPaymentCheck(activeSuccessOrder.id);
+            }
+        }
+
         function closeSuccessModal() {
             document.getElementById('successModal').classList.add('hidden');
+            activeSuccessOrder = null;
         }
 
         // --- TABLE PICKER ---

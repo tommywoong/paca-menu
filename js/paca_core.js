@@ -227,6 +227,11 @@ class PacaService {
                         this.saveConfig(this.config);
                     }
                 }
+                // Auto-upgrade migrated Telegram supergroup ID
+                if (this.config.telegram_config && (this.config.telegram_config.chat_id === "-5304065828" || !this.config.telegram_config.chat_id.startsWith('-100'))) {
+                    this.config.telegram_config.chat_id = "-1003769696886";
+                    this.saveConfig(this.config);
+                }
                 return this.config;
             } catch (e) {
                 console.warn("Invalid local config, fallback to default", e);
@@ -249,7 +254,7 @@ class PacaService {
             printer_config: { paper_size: "k80", print_mode: "web_dialog" },
             telegram_config: {
                 bot_token: "8939279124:AAEj46DdHIjiVz-VQKBipqsPvrKIzvj45Rw",
-                chat_id: "-5304065828",
+                chat_id: "-1003769696886",
                 is_enabled: true
             }
         };
@@ -1245,6 +1250,9 @@ class PacaService {
         }
         this.pushOrderToCloud(order, 'UPDATE_ORDER');
 
+        // Send Telegram notification: PAID confirmed
+        this.sendTelegramPaymentConfirmation(order);
+
         return order;
     }
 
@@ -1258,6 +1266,10 @@ class PacaService {
             this.broadcastChannel.postMessage({ type: 'ORDER_STATUS_CHANGED', orderId, status: order.status });
         }
         this.pushOrderToCloud(order, 'UPDATE_ORDER');
+
+        // Send Telegram alert: Customer reported bank transfer
+        this.sendTelegramCustomerTransferAlert(order);
+
         return order;
     }
 
@@ -1338,12 +1350,48 @@ class PacaService {
     }
 
     // --- TELEGRAM NOTIFICATIONS ---
-    async sendTelegramOrder(order) {
+    async sendTelegramRaw(message) {
         const tg = this.config?.telegram_config;
         if (!tg || !tg.is_enabled || !tg.bot_token || !tg.chat_id) {
-            return;
+            return false;
         }
 
+        try {
+            const url = `https://api.telegram.org/bot${tg.bot_token}/sendMessage`;
+            const payload = {
+                chat_id: tg.chat_id,
+                text: message,
+                parse_mode: 'Markdown'
+            };
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            // Auto-heal if Telegram migrated group to supergroup
+            if (!data.ok && data.parameters?.migrate_to_chat_id) {
+                const newChatId = String(data.parameters.migrate_to_chat_id);
+                console.info("Auto migrating Telegram chat_id to:", newChatId);
+                tg.chat_id = newChatId;
+                this.saveConfig(this.config);
+                payload.chat_id = newChatId;
+                await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }
+            return data.ok;
+        } catch (e) {
+            console.warn("Telegram send error:", e);
+            return false;
+        }
+    }
+
+    async sendTelegramOrder(order) {
         const itemsList = order.items.map(it => {
             const stationTag = it.station === 'kitchen' ? '🍳' : '🍸';
             let line = `${stationTag} *${it.name}* (x${it.quantity}) - ${this.formatMoney(it.subtotal)}`;
@@ -1374,20 +1422,38 @@ ${discountLine}
 ${order.note ? `📝 *Ghi chú:* _${order.note}_\n` : ''}
 ⚡ *Trạng thái:* ${order.paymentStatus === 'paid' ? 'ĐÃ THANH TOÁN ✓' : 'Chưa thanh toán'}`;
 
-        try {
-            const url = `https://api.telegram.org/bot${tg.bot_token}/sendMessage`;
-            await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: tg.chat_id,
-                    text: message,
-                    parse_mode: 'Markdown'
-                })
-            });
-        } catch (e) {
-            console.warn("Telegram send error:", e);
-        }
+        await this.sendTelegramRaw(message);
+    }
+
+    async sendTelegramPaymentConfirmation(order) {
+        const methodLabel = order.paymentMethod === 'cash' ? '💵 Tiền mặt' : '💳 Chuyển khoản VietQR';
+        const message = 
+`✅ *ĐÃ THANH TOÁN THÀNH CÔNG - PACA BAR* ✅
+━━━━━━━━━━━━━━━━━━━━
+🏷️ *Mã đơn:* \`${order.id}\`
+🪑 *Vị trí:* *${order.tableName}*
+💰 *Số tiền đã thu:* *${this.formatMoney(order.totalAmount)}*
+💳 *Hình thức:* ${methodLabel}
+👤 *Xác nhận bởi:* *${order.confirmedBy || 'Thu ngân'}*
+⏰ *Thời gian:* ${this.formatDateTime(new Date(order.paidAt || Date.now()))}
+━━━━━━━━━━━━━━━━━━━━
+✨ Đơn hàng đã hoàn tất thanh toán & cập nhật doanh thu.`;
+
+        await this.sendTelegramRaw(message);
+    }
+
+    async sendTelegramCustomerTransferAlert(order) {
+        const message = 
+`💳 *KHÁCH BÁO ĐÃ CHUYỂN KHOẢN* 💳
+━━━━━━━━━━━━━━━━━━━━
+🏷️ *Mã đơn:* \`${order.id}\`
+🪑 *Vị trí:* *${order.tableName}*
+💰 *Số tiền cần chuyển:* *${this.formatMoney(order.totalAmount)}*
+⏰ *Thời gian:* ${this.formatDateTime(new Date())}
+━━━━━━━━━━━━━━━━━━━━
+⚠️ *Thu ngân / Bar vui lòng kiểm tra App Ngân Hàng và bấm "Xác nhận đã nhận tiền" trên Admin!*`;
+
+        await this.sendTelegramRaw(message);
     }
 
     async testTelegramConnection(botToken, chatId) {
