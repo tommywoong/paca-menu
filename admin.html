@@ -69,16 +69,21 @@
                 </div>
             </div>
 
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-1.5 sm:space-x-2">
                 <!-- User Profile & PIN Switch -->
-                <button onclick="openPinAuthModal()" id="btnHeaderUser" class="bg-white/10 hover:bg-white/20 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 border border-white/25 transition active:scale-95" title="Đổi người dùng / Khóa màn hình PIN">
+                <button onclick="openPinAuthModal()" id="btnHeaderUser" class="bg-white/10 hover:bg-white/20 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 border border-white/25 transition active:scale-95" title="Đổi người dùng / ca làm việc">
                     <span id="headerUserIcon">👤</span>
-                    <span class="font-bold text-paca-cream max-w-[85px] sm:max-w-none truncate" id="headerUserName">Quản Lý</span>
-                    <span class="text-[9px] bg-paca-crimson text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider" id="headerUserRoleBadge">ADMIN</span>
-                    <span class="text-xs text-amber-300">🔒</span>
+                    <span class="font-bold text-paca-cream max-w-[85px] sm:max-w-none truncate" id="headerUserName">Chưa đăng nhập</span>
+                    <span class="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider" id="headerUserRoleBadge">ĐÃ KHÓA 🔒</span>
                 </button>
 
-                <button onclick="toggleAudioMute()" id="btnMuteAudio" class="bg-white/10 hover:bg-white/20 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 border border-white/20">
+                <!-- Dedicated Lock Button -->
+                <button onclick="lockScreen()" id="btnHeaderLock" class="bg-red-500/20 hover:bg-red-600/30 text-amber-300 text-xs px-2 py-1.5 rounded-lg border border-amber-300/40 font-bold flex items-center gap-1 active:scale-95 transition" title="Khóa màn hình tức thì">
+                    <span>🔒</span>
+                    <span class="hidden sm:inline">Khóa</span>
+                </button>
+
+                <button onclick="toggleAudioMute()" id="btnMuteAudio" class="bg-white/10 hover:bg-white/20 text-white text-xs px-2 py-1.5 rounded-lg flex items-center gap-1 border border-white/20">
                     <span id="muteIcon">🔔</span>
                     <span id="muteText" class="hidden sm:inline">Chuông</span>
                 </button>
@@ -1287,15 +1292,15 @@
     </div>
 
     <!-- MODAL: ĐĂNG NHẬP / CHUYỂN CA / KHÓA BẰNG MÃ PIN (PIN KEYPAD AUTH) -->
-    <div id="pinAuthModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-xs sm:max-w-sm rounded-3xl retro-border p-5 text-center shadow-2xl space-y-4">
+    <div id="pinAuthModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-xs sm:max-w-sm rounded-3xl retro-border p-5 text-center shadow-2xl space-y-4 relative">
             <!-- Modal Header -->
             <div class="flex items-center justify-between pb-2 border-b">
                 <div class="flex items-center gap-2">
                     <span class="text-xl">🔐</span>
-                    <h3 class="font-bold text-sm text-paca-navy uppercase tracking-wider">Khóa Ca & Đăng Nhập</h3>
+                    <h3 class="font-bold text-sm text-paca-navy uppercase tracking-wider" id="pinModalHeaderTitle">Khóa Ca & Đăng Nhập</h3>
                 </div>
-                <button onclick="closePinAuthModal()" id="btnPinModalClose" class="text-gray-400 hover:text-gray-600 font-bold p-1 text-sm">✕</button>
+                <button onclick="closePinAuthModal()" id="btnPinModalClose" class="text-gray-400 hover:text-gray-600 font-bold p-1 text-sm hidden" title="Đóng">✕</button>
             </div>
 
             <!-- User Selector Buttons -->
@@ -1898,14 +1903,20 @@
             // Populate category selects
             populateMenuCategories();
 
-            // Render views
-            applyUserPermissions();
+            // Render views & check security lock
             renderOrders();
             renderTablesAdmin();
             renderAdminMenu();
             renderInventoryTable();
             renderRevenueStats();
             renderStaffList();
+
+            const curUser = window.paca.getCurrentUser();
+            if (!curUser) {
+                lockScreen();
+            } else {
+                applyUserPermissions();
+            }
 
             // URL Param routing for direct link and automated visual verification
             const urlParams = new URLSearchParams(window.location.search);
@@ -3182,19 +3193,44 @@
         function applyUserPermissions() {
             const user = window.paca.getCurrentUser();
             const isAdmin = window.paca.isAdmin();
+            const isLocked = !user;
 
             // Update header display
             const headerNameEl = document.getElementById('headerUserName');
             const headerBadgeEl = document.getElementById('headerUserRoleBadge');
             const headerIconEl = document.getElementById('headerUserIcon');
-            if (headerNameEl && user) headerNameEl.innerText = user.name;
-            if (headerBadgeEl && user) {
+            const appMain = document.querySelector('main');
+            const appNav = document.querySelector('nav');
+
+            if (isLocked) {
+                if (headerNameEl) headerNameEl.innerText = "CHƯA ĐĂNG NHẬP";
+                if (headerBadgeEl) {
+                    headerBadgeEl.innerText = "ĐÃ KHÓA 🔒";
+                    headerBadgeEl.className = 'text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider animate-pulse';
+                }
+                if (headerIconEl) headerIconEl.innerText = "🔒";
+
+                // Hide all admin-only tabs
+                document.querySelectorAll('[data-admin-only="true"]').forEach(el => el.classList.add('hidden'));
+
+                // Blur background content so unauthorized users cannot see or interact
+                if (appMain) appMain.classList.add('filter', 'blur-sm', 'pointer-events-none', 'select-none');
+                if (appNav) appNav.classList.add('filter', 'blur-sm', 'pointer-events-none', 'select-none');
+                return;
+            }
+
+            // Unblurred when logged in
+            if (appMain) appMain.classList.remove('filter', 'blur-sm', 'pointer-events-none', 'select-none');
+            if (appNav) appNav.classList.remove('filter', 'blur-sm', 'pointer-events-none', 'select-none');
+
+            if (headerNameEl) headerNameEl.innerText = user.name;
+            if (headerBadgeEl) {
                 headerBadgeEl.innerText = isAdmin ? 'ADMIN' : 'STAFF';
                 headerBadgeEl.className = isAdmin 
                     ? 'text-[9px] bg-paca-crimson text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider'
                     : 'text-[9px] bg-blue-600 text-white px-1.5 py-0.5 rounded font-black uppercase tracking-wider';
             }
-            if (headerIconEl && user) {
+            if (headerIconEl) {
                 headerIconEl.innerText = isAdmin ? '👑' : '👤';
             }
 
@@ -3214,12 +3250,36 @@
             }
         }
 
-        function openPinAuthModal() {
+        function lockScreen() {
+            window.paca.lockSession();
+            applyUserPermissions();
+            openPinAuthModal(true);
+        }
+
+        function openPinAuthModal(isForced = false) {
             enteredPin = '';
             updatePinDotsDisplay();
             const users = window.paca.users || [];
             const curUser = window.paca.getCurrentUser();
+            const isLocked = !curUser || isForced;
+
             selectedPinUserId = curUser ? curUser.id : (users[0]?.id || null);
+
+            // Close button visibility: hide if locked
+            const closeBtn = document.getElementById('btnPinModalClose');
+            if (closeBtn) {
+                if (isLocked) {
+                    closeBtn.classList.add('hidden');
+                } else {
+                    closeBtn.classList.remove('hidden');
+                }
+            }
+
+            // Title
+            const titleEl = document.getElementById('pinModalHeaderTitle');
+            if (titleEl) {
+                titleEl.innerText = isLocked ? "🔒 KHÓA BẢO MẬT PACA" : "Đổi Ca / Người Dùng";
+            }
 
             const listEl = document.getElementById('pinUserSelectorList');
             if (listEl) {
@@ -3248,7 +3308,8 @@
             if (window.paca.getCurrentUser()) {
                 document.getElementById('pinAuthModal').classList.add('hidden');
             } else {
-                alert("Vui lòng nhập mã PIN để bắt đầu làm việc!");
+                // If not logged in, modal CANNOT be closed
+                return;
             }
         }
 
@@ -3284,6 +3345,12 @@
                     const sel = users.find(x => x.id === selectedPinUserId);
                     if (sel && sel.pin === enteredPin) {
                         setTimeout(() => submitPinLogin(), 150);
+                    } else {
+                        const anyMatch = users.find(u => u.pin === enteredPin);
+                        if (anyMatch) {
+                            selectedPinUserId = anyMatch.id;
+                            setTimeout(() => submitPinLogin(), 150);
+                        }
                     }
                 }
             }
@@ -3314,9 +3381,17 @@
             }
         }
 
+        function showAdminToast(msg, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-14 left-1/2 transform -translate-x-1/2 ${type === 'error' ? 'bg-red-600' : 'bg-emerald-600'} text-white px-4 py-2 rounded-2xl shadow-2xl z-50 text-xs font-bold flex items-center gap-2 border border-white/20 transition-all`;
+            toast.innerHTML = `<span>${type === 'error' ? '⚠️' : '✓'}</span> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 2500);
+        }
+
         function submitPinLogin() {
             if (!enteredPin) {
-                alert("Vui lòng bấm các số để nhập mã PIN!");
+                showAdminToast("Vui lòng bấm các số để nhập mã PIN!", "error");
                 return;
             }
 
@@ -3338,11 +3413,11 @@
                 document.getElementById('pinAuthModal').classList.add('hidden');
                 enteredPin = '';
                 updatePinDotsDisplay();
-                alert(`Đăng nhập thành công: ${matchedUser.name} (${matchedUser.role === 'admin' ? 'Quản Lý Admin' : 'Nhân Viên'})!`);
+                showAdminToast(`Mở khóa: ${matchedUser.name} (${matchedUser.role === 'admin' ? 'Quản Lý Admin' : 'Nhân Viên'})!`, "success");
             } else {
                 enteredPin = '';
                 updatePinDotsDisplay();
-                alert("Mã PIN không đúng, vui lòng thử lại!");
+                showAdminToast("Mã PIN không đúng, vui lòng thử lại!", "error");
             }
         }
 

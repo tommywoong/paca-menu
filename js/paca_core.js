@@ -287,19 +287,18 @@ class PacaService {
             this.saveUsers(this.users);
         }
 
-        // Active user session
-        const activeLocal = localStorage.getItem(PACA_STORAGE_KEYS.CURRENT_USER);
-        if (activeLocal) {
+        // Active user session (null when locked)
+        const activeSession = sessionStorage.getItem('paca_unlocked_user') || localStorage.getItem(PACA_STORAGE_KEYS.CURRENT_USER);
+        if (activeSession) {
             try {
-                const u = JSON.parse(activeLocal);
+                const u = JSON.parse(activeSession);
                 const found = this.users.find(x => x.id === u.id);
-                this.currentUser = found || this.users[0];
+                this.currentUser = found || null;
             } catch (e) {
-                this.currentUser = this.users[0];
+                this.currentUser = null;
             }
         } else {
-            this.currentUser = this.users[0];
-            this.saveCurrentUser(this.currentUser);
+            this.currentUser = null;
         }
         return this.users;
     }
@@ -313,21 +312,30 @@ class PacaService {
     }
 
     getCurrentUser() {
-        if (!this.currentUser && this.users.length > 0) {
-            this.currentUser = this.users[0];
-        }
-        return this.currentUser;
+        return this.currentUser || null;
     }
 
     saveCurrentUser(user) {
         this.currentUser = user;
         if (user) {
+            sessionStorage.setItem('paca_unlocked_user', JSON.stringify(user));
             localStorage.setItem(PACA_STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
         } else {
+            sessionStorage.removeItem('paca_unlocked_user');
             localStorage.removeItem(PACA_STORAGE_KEYS.CURRENT_USER);
         }
         if (this.broadcastChannel) {
             this.broadcastChannel.postMessage({ type: 'CURRENT_USER_CHANGED', user });
+        }
+        return this.currentUser;
+    }
+
+    lockSession() {
+        this.currentUser = null;
+        sessionStorage.removeItem('paca_unlocked_user');
+        localStorage.removeItem(PACA_STORAGE_KEYS.CURRENT_USER);
+        if (this.broadcastChannel) {
+            this.broadcastChannel.postMessage({ type: 'CURRENT_USER_CHANGED', user: null, locked: true });
         }
     }
 
