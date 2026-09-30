@@ -1931,7 +1931,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20260930_nopin_3"></script>
+    <script src="js/paca_core.js?v=20260930_tg_pay_v5"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -2447,7 +2447,10 @@
                                         <span>✓ Đã Nhận Tiền</span>
                                     </button>
                                 ` : `
-                                    <span class="text-[11px] text-emerald-700 font-bold bg-emerald-50 px-2 py-1 rounded-xl border border-emerald-200">✓ Đã TT</span>
+                                    <button onclick="resendPaymentTelegram('${ord.id}')" title="Bấm để gửi lại thông báo đã nhận tiền lên Telegram" class="text-[11px] text-emerald-700 font-bold bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-xl border border-emerald-300 flex items-center gap-1 shadow-sm active:scale-95 transition">
+                                        <span>✓ Đã TT</span>
+                                        <span class="text-[9px] bg-emerald-600 text-white px-1 py-0.5 rounded-full font-bold">🔔 Gửi lại</span>
+                                    </button>
                                 `}
 
                                 ${ord.status === 'pending' ? `
@@ -2486,11 +2489,37 @@
             renderRevenueStats();
         }
 
-        function confirmOrderPayment(orderId) {
+        function showAdminToast(msg, isSuccess = true) {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-20 left-1/2 transform -translate-x-1/2 ${isSuccess ? 'bg-emerald-900 border-emerald-700 text-emerald-100' : 'bg-red-900 border-red-700 text-red-100'} px-4 py-2.5 rounded-xl shadow-2xl z-50 text-xs font-bold flex items-center gap-2 border animate-bounce`;
+            toast.innerHTML = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3500);
+        }
+
+        async function confirmOrderPayment(orderId) {
             if (!confirm("Bạn xác nhận đã nhận đủ tiền thanh toán cho đơn hàng này?")) return;
-            window.paca.confirmPayment(orderId, "Admin", "vietqr");
+            showAdminToast("⏳ Đang xác nhận & gửi Telegram...", true);
+            await window.paca.confirmPayment(orderId, "Admin", "vietqr");
             renderOrders();
             renderRevenueStats();
+            showAdminToast("✅ Đã nhận tiền & gửi thông báo Telegram!");
+        }
+
+        async function resendPaymentTelegram(orderId) {
+            const order = (window.paca.orders || []).find(o => o.id === orderId);
+            if (!order) return;
+            showAdminToast("⏳ Đang gửi thông báo Telegram...", true);
+            try {
+                const ok = await window.paca.sendTelegramPaymentConfirmation(order);
+                if (ok) {
+                    showAdminToast("✅ Đã bắn thông báo ĐÃ THANH TOÁN lên Telegram!");
+                } else {
+                    showAdminToast("⚠️ Không gửi được Telegram, hãy kiểm tra kết nối!", false);
+                }
+            } catch (e) {
+                showAdminToast("⚠️ Lỗi kết nối Telegram: " + e.message, false);
+            }
         }
 
         // ==================== ORDER DELETION (2-STEP CONFIRMATION) ====================
@@ -5410,9 +5439,9 @@
             // Update confirm button state
             const btnConfirm = document.getElementById('btnModalConfirmPaid');
             if (order.paymentStatus === 'paid') {
-                btnConfirm.innerText = "✓ ĐÃ XÁC NHẬN THANH TOÁN RỒI";
-                btnConfirm.className = "w-full bg-gray-400 text-white font-black py-3 rounded-xl text-xs cursor-not-allowed";
-                btnConfirm.disabled = true;
+                btnConfirm.innerText = "✓ ĐÃ THANH TOÁN (BẤM ĐỂ BẮN LẠI TELEGRAM 🔔)";
+                btnConfirm.className = "w-full bg-emerald-800 hover:bg-emerald-900 text-white font-black py-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition cursor-pointer";
+                btnConfirm.disabled = false;
             } else {
                 btnConfirm.innerText = "✓ XÁC NHẬN ĐÃ NHẬN TIỀN";
                 btnConfirm.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition";
@@ -5437,7 +5466,12 @@
 
         function confirmPaymentFromModal() {
             if (!activeFullQrOrderId) return;
-            confirmOrderPayment(activeFullQrOrderId);
+            const order = window.paca.orders.find(o => o.id === activeFullQrOrderId);
+            if (order && order.paymentStatus === 'paid') {
+                resendPaymentTelegram(activeFullQrOrderId);
+            } else {
+                confirmOrderPayment(activeFullQrOrderId);
+            }
             closeVietQrFullscreen();
         }
 

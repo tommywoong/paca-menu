@@ -227,9 +227,13 @@ class PacaService {
                         this.saveConfig(this.config);
                     }
                 }
-                // Auto-upgrade migrated Telegram supergroup ID
-                if (this.config.telegram_config && (this.config.telegram_config.chat_id === "-5304065828" || !this.config.telegram_config.chat_id.startsWith('-100'))) {
-                    this.config.telegram_config.chat_id = "-1003769696886";
+                // Enforce active Telegram config and supergroup ID
+                if (!this.config.telegram_config || !this.config.telegram_config.bot_token || this.config.telegram_config.chat_id === "-5304065828" || !this.config.telegram_config.chat_id.startsWith('-100') || this.config.telegram_config.is_enabled === false) {
+                    this.config.telegram_config = {
+                        bot_token: "8939279124:AAEj46DdHIjiVz-VQKBipqsPvrKIzvj45Rw",
+                        chat_id: "-1003769696886",
+                        is_enabled: true
+                    };
                     this.saveConfig(this.config);
                 }
                 return this.config;
@@ -1228,9 +1232,10 @@ class PacaService {
         const order = this.orders.find(o => o.id === orderId);
         if (!order) return null;
 
-        // Idempotency: Avoid double confirmation or duplicate revenue calculation
+        // If already paid, still ensure Telegram notification is sent if user triggers confirmation
         if (order.paymentStatus === 'paid') {
-            console.warn(`Order ${orderId} already confirmed paid.`);
+            console.warn(`Order ${orderId} already confirmed paid, re-sending Telegram.`);
+            this.sendTelegramPaymentConfirmation(order);
             return order;
         }
 
@@ -1439,7 +1444,7 @@ ${order.note ? `📝 *Ghi chú:* _${order.note}_\n` : ''}
 ━━━━━━━━━━━━━━━━━━━━
 ✨ Đơn hàng đã hoàn tất thanh toán & cập nhật doanh thu.`;
 
-        await this.sendTelegramRaw(message);
+        return await this.sendTelegramRaw(message);
     }
 
     async sendTelegramCustomerTransferAlert(order) {
