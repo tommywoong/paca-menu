@@ -945,6 +945,43 @@ class PacaService {
         this.saveTables(this.tables);
     }
 
+    // --- TABLE SESSION & RUNNING BILL STATUS ---
+    getActiveOrderByTableId(tableId) {
+        if (!tableId || !this.orders) return null;
+        const normId = String(tableId).trim().toLowerCase();
+        return this.orders.find(o => {
+            const oTableId = String(o.tableId || '').trim().toLowerCase();
+            return (oTableId === normId) && o.paymentStatus !== 'paid' && o.status !== 'cancelled';
+        }) || null;
+    }
+
+    getTableLiveStatus(tableId) {
+        const activeOrder = this.getActiveOrderByTableId(tableId);
+        if (!activeOrder) {
+            return {
+                status: 'free', // 'free' | 'occupied'
+                order: null,
+                totalAmount: 0,
+                itemsCount: 0,
+                rounds: 0,
+                durationMinutes: 0
+            };
+        }
+
+        const startTime = new Date(activeOrder.createdAt).getTime();
+        const now = Date.now();
+        const durationMinutes = isNaN(startTime) ? 0 : Math.max(0, Math.floor((now - startTime) / 60000));
+        const itemsCount = (activeOrder.items || []).reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
+        return {
+            status: 'occupied',
+            order: activeOrder,
+            totalAmount: activeOrder.totalAmount || 0,
+            itemsCount,
+            rounds: activeOrder.rounds || 1,
+            durationMinutes
+        };
+    }
+
     // --- ORDERS ---
     loadOrders() {
         const local = localStorage.getItem(PACA_STORAGE_KEYS.ORDERS);
@@ -1087,6 +1124,126 @@ class PacaService {
             source: params.source || "manual_admin",
             createdBy: params.createdBy || (this.getCurrentUser() ? `${this.getCurrentUser().name} (${this.getCurrentUser().role === 'admin' ? 'Quản lý' : 'Nhân viên'})` : 'Nhân viên ca trực')
         });
+    }
+
+    // --- ADD ITEMS TO RUNNING BILL (GỌI THÊM MÓN VÀO BÀN) ---
+    async addItemsToOrder(orderId, newItems = [], note = "", addedBy = null) {
+        const order = this.orders.find(o => o.id === orderId);
+        if (!order) throw new Error("Không tìm thấy đơn hàng cần gọi thêm.");
+
+        if (!Array.isArray(newItems) || newItems.length === 0) {
+            throw new Error("Chưa có món nào được chọn để gọi thêm.");
+        }
+
+        const previousTotal = order.totalAmount || 0;
+        order.rounds = (order.rounds || 1) + 1;
+        const currentRound = order.rounds;
+
+        const processedNewItems = newItems.map(item => {
+            const itemPrice = item.price !== undefined ? Number(item.price) : (item.unitPrice !== undefined ? Number(item.unitPrice) : 0);
+            const itemQty = Number(item.quantity) || 1;
+            const subtotal = item.subtotal !== undefined ? Number(item.subtotal) : (itemPrice * itemQty);
+            const costPrice = this.getDishCostPrice(item);
+            const itemTotalCost = costPrice * itemQty;
+
+            return {
+                id: item.id || `item_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                productId: item.productId || item.id,
+                name: item.name,
+                name_vi: item.name_vi || item.name,
+                price: itemPrice,
+                unitPrice: itemPrice,
+                costPrice: costPrice,
+                cost_price: costPrice,
+                totalCost: itemTotalCost,
+                originalPrice: item.originalPrice !== undefined ? item.originalPrice : itemPrice,
+                quantity: itemQty,
+                subtotal: subtotal,
+                station: item.station || 'bar',
+                variant: item.variant || null,
+                options: item.options || item.selectedOptions || [],
+                selectedOptions: item.selectedOptions || item.options || [],
+                isOverridden: !!item.isOverridden,
+                overrideReason: item.overrideReason || '',
+                authorizedBy: item.authorizedBy || '',
+                itemNote: item.itemNote || '',
+                round: currentRound
+            };
+        });
+
+        // Deduct inventory for new items
+        this.deductNewItemsStock(processedNewItems, order, addedBy);
+
+        // Append to order items
+        order.items = [...(order.items || []), ...processedNewItems];
+
+        // Recalculate totals
+        let rawSubtotal = 0;
+        let totalCost = 0;
+        order.items.forEach(it => {
+            rawSubtotal += (it.subtotal !== undefined ? Number(it.subtotal) : (Number(it.price || it.unitPrice || 0) * (Number(it.quantity) || 1)));
+            totalCost += (it.totalCost !== undefined ? Number(it.totalCost) : (this.getDishCostPrice(it) * (Number(it.quantity) || 1)));
+        });
+
+        order.rawSubtotal = rawSubtotal;
+        order.totalCost = totalCost;
+
+        const discountAmount = Math.min(rawSubtotal, Math.max(0, order.discount?.amount || 0));
+        const surchargeAmount = Math.max(0, order.surcharge?.amount || 0);
+        order.totalAmount = Math.max(0, rawSubtotal - discountAmount + surchargeAmount);
+        order.grossProfit = Math.max(0, order.totalAmount - totalCost);
+        order.profitMargin = order.totalAmount > 0 ? Math.round((order.grossProfit / order.totalAmount) * 100) : 0;
+        order.updatedAt = new Date().toISOString();
+
+        if (note) {
+            order.note = order.note ? `${order.note} | Đợt ${currentRound}: ${note}` : `Đợt ${currentRound}: ${note}`;
+        }
+
+        // Keep order in active status for preparation
+        if (order.status === 'completed' || order.status === 'paid') {
+            order.status = 'preparing';
+        }
+
+        this.saveOrders();
+
+        // Broadcast to all devices locally and across internet via Cloud Sync
+        if (this.broadcastChannel) {
+            this.broadcastChannel.postMessage({ type: 'ORDER_ITEMS_ADDED', orderId, order, round: currentRound });
+        }
+        this.pushOrderToCloud(order, 'UPDATE_ORDER');
+
+        // Send Telegram notification for this addition
+        const actualAddedBy = addedBy || (this.getCurrentUser() ? `${this.getCurrentUser().name} (${this.getCurrentUser().role === 'admin' ? 'Quản lý' : 'Nhân viên'})` : 'Nhân viên ca trực');
+        await this.sendTelegramAddItems(order, processedNewItems, actualAddedBy, previousTotal, note);
+
+        order.newAddedItems = processedNewItems;
+        return order;
+    }
+
+    deductNewItemsStock(items, order, staff = '') {
+        if (!this.menu || !this.menu.items || !items) return;
+        let hasChanged = false;
+        items.forEach(it => {
+            const itemId = it.productId || it.id;
+            const dish = this.menu.items.find(d => d.id === itemId || d.name === it.name);
+            if (dish && dish.track_stock !== false) {
+                const oldStock = parseInt(dish.stock_quantity) || 0;
+                const qtyToDeduct = parseInt(it.quantity) || 1;
+                const newStock = Math.max(0, oldStock - qtyToDeduct);
+                dish.stock_quantity = newStock;
+                if (newStock === 0) {
+                    dish.is_available = false;
+                }
+                hasChanged = true;
+                this.logInventoryAction(dish.id, -qtyToDeduct, oldStock, newStock, `Bán thêm đơn ${order.id} (${order.tableName})`, staff || 'Nhân viên');
+            }
+        });
+        if (hasChanged) {
+            this.saveMenu(this.menu);
+            if (this.broadcastChannel) {
+                this.broadcastChannel.postMessage({ type: 'INVENTORY_UPDATED', orderId: order.id });
+            }
+        }
     }
 
     deleteOrder(orderId) {
@@ -1435,19 +1592,62 @@ ${order.note ? `📝 *Ghi chú:* _${order.note}_\n` : ''}
         return await this.sendTelegramRaw(message);
     }
 
+    async sendTelegramAddItems(order, newItems, addedBy, previousTotal, roundNote = "") {
+        const newItemsList = newItems.map(it => {
+            const stationTag = it.station === 'kitchen' ? '🍳' : '🍸';
+            let line = `${stationTag} *${it.name}* (x${it.quantity}) - ${this.formatMoney(it.subtotal)}`;
+            if (it.options && it.options.length > 0) {
+                const optNames = it.options.map(o => typeof o === 'string' ? o : (o.name + (o.price ? ` (+${this.formatMoney(o.price)})` : ''))).join(', ');
+                line += `\n   └ ✨ _Vị: ${optNames}_`;
+            }
+            if (it.itemNote) line += `\n   └ 📝 _${it.itemNote}_`;
+            return line;
+        }).join('\n');
+
+        const newItemsSubtotal = newItems.reduce((sum, i) => sum + (i.subtotal || (i.price * i.quantity)), 0);
+        const totalItemsCount = (order.items || []).reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
+
+        const message = 
+`➕ *GỌI THÊM MÓN - PACA BAR* ➕
+━━━━━━━━━━━━━━━━━━━━
+🏷️ *Mã đơn:* \`${order.id}\` (Đợt gọi ${order.rounds || 2})
+🪑 *Vị trí:* *${order.tableName}*
+👤 *Người gọi thêm:* *${addedBy || 'Nhân viên ca trực'}*
+⏰ *Thời gian:* ${this.formatDateTime(new Date())}
+━━━━━━━━━━━━━━━━━━━━
+⚡ *MÓN MỚI CẦN LÀM NGAY:*
+${newItemsList}
+━━━━━━━━━━━━━━━━━━━━
+${roundNote ? `📝 *Ghi chú đợt này:* _${roundNote}_\n━━━━━━━━━━━━━━━━━━━━\n` : ''}📊 *TỔNG TÍCH LŨY (${totalItemsCount} món):*
+💰 ${this.formatMoney(previousTotal)} + ${this.formatMoney(newItemsSubtotal)} = *${this.formatMoney(order.totalAmount)}*
+⚡ *Trạng thái:* Đang phục vụ (Chưa TT)`;
+
+        return await this.sendTelegramRaw(message);
+    }
+
     async sendTelegramPaymentConfirmation(order) {
         const methodLabel = order.paymentMethod === 'cash' ? '💵 Tiền mặt' : '💳 Chuyển khoản VietQR';
+        const roundsTag = (order.rounds && order.rounds > 1) ? ` (${order.rounds} đợt gọi món)` : '';
+        const totalItemsQty = (order.items || []).reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
+
+        const itemsSummary = (order.items || []).map((it, idx) => {
+            return `${idx + 1}. ${it.name} (x${it.quantity}) - ${this.formatMoney(it.subtotal)}`;
+        }).join('\n');
+
         const message = 
-`✅ *ĐÃ THANH TOÁN THÀNH CÔNG - PACA BAR* ✅
+`✅ *ĐÃ THANH TOÁN TỔNG HỢP - PACA BAR* ✅
 ━━━━━━━━━━━━━━━━━━━━
-🏷️ *Mã đơn:* \`${order.id}\`
-🪑 *Vị trí:* *${order.tableName}*
-💰 *Số tiền đã thu:* *${this.formatMoney(order.totalAmount)}*
+🏷️ *Mã đơn:* \`${order.id}\`${roundsTag}
+🪑 *Vị trí:* *${order.tableName}* (Đã đóng bàn & giải phóng)
+💰 *TỔNG TIỀN ĐÃ THU:* *${this.formatMoney(order.totalAmount)}*
 💳 *Hình thức:* ${methodLabel}
 👤 *Xác nhận bởi:* *${order.confirmedBy || 'Thu ngân'}*
 ⏰ *Thời gian:* ${this.formatDateTime(new Date(order.paidAt || Date.now()))}
 ━━━━━━━━━━━━━━━━━━━━
-✨ Đơn hàng đã hoàn tất thanh toán & cập nhật doanh thu.`;
+📋 *TỔNG HỢP MÓN ĐÃ DÙNG (${totalItemsQty} món):*
+${itemsSummary}
+━━━━━━━━━━━━━━━━━━━━
+✨ Bàn ${order.tableName} đã hoàn tất thanh toán & sẵn sàng đón lượt khách mới!`;
 
         return await this.sendTelegramRaw(message);
     }

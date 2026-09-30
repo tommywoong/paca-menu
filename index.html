@@ -358,7 +358,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js"></script>
+    <script src="js/paca_core.js?v=20260930_table_tab_v7"></script>
     <script src="js/paca_canvas.js"></script>
     <script>
         let isPosterMode = true;
@@ -817,7 +817,13 @@
 
         function renderCartModalItems() {
             const container = document.getElementById('cartItemsList');
-            document.getElementById('cartModalTableLabel').innerText = currentTable ? `Vị trí: ${currentTable.name}` : "Vị trí: Chưa chọn";
+            const activeOrder = currentTable && window.paca.getActiveOrderByTableId ? window.paca.getActiveOrderByTableId(currentTable.id) : null;
+            if (activeOrder) {
+                const nextRound = (activeOrder.rounds || 1) + 1;
+                document.getElementById('cartModalTableLabel').innerText = `Vị trí: ${currentTable.name} • Đang mở Tab (Gọi thêm Đợt ${nextRound})`;
+            } else {
+                document.getElementById('cartModalTableLabel').innerText = currentTable ? `Vị trí: ${currentTable.name}` : "Vị trí: Chưa chọn";
+            }
 
             const submitBtn = document.getElementById('btnSubmitOrder');
 
@@ -844,6 +850,11 @@
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                if (activeOrder) {
+                    submitBtn.innerHTML = `<span>➕</span><span>GỌI THÊM VÀO BÀN (${currentTable.name})</span>`;
+                } else {
+                    submitBtn.innerHTML = `<span>🛎️</span><span>XÁC NHẬN GỬI ĐƠN ĐẶT MÓN</span>`;
+                }
             }
 
             let totalAmount = 0;
@@ -954,12 +965,18 @@
             const note = document.getElementById('orderGeneralNote').value.trim();
 
             try {
-                const order = window.paca.createOrder({
-                    tableId: currentTable.id,
-                    tableName: currentTable.name,
-                    items: cart,
-                    note: note
-                });
+                let order;
+                const activeOrder = window.paca.getActiveOrderByTableId ? window.paca.getActiveOrderByTableId(currentTable.id) : null;
+                if (activeOrder) {
+                    order = await window.paca.addItemsToOrder(activeOrder.id, cart, note, 'Khách quét QR gọi thêm');
+                } else {
+                    order = window.paca.createOrder({
+                        tableId: currentTable.id,
+                        tableName: currentTable.name,
+                        items: cart,
+                        note: note
+                    });
+                }
 
                 cart = [];
                 updateCartUI();
@@ -1027,11 +1044,18 @@
             const grid = document.getElementById('tablesGrid');
             const tables = window.paca.tables || [];
 
-            grid.innerHTML = tables.map(t => `
-                <button onclick="selectTableById('${t.id}')" class="p-2.5 rounded-xl border text-center font-bold text-xs transition ${currentTable?.id === t.id ? 'bg-paca-navy text-paca-cream border-paca-navy retro-shadow-sm' : 'bg-gray-50 text-gray-700 border-gray-200'}">
-                    ${t.name}
+            grid.innerHTML = tables.map(t => {
+                const live = window.paca.getTableLiveStatus ? window.paca.getTableLiveStatus(t.id) : { status: 'free' };
+                const isSelected = currentTable?.id === t.id;
+                const isOccupied = live.status === 'occupied';
+
+                return `
+                <button onclick="selectTableById('${t.id}')" class="p-2.5 rounded-xl border text-center font-bold text-xs transition relative ${isSelected ? 'bg-paca-navy text-paca-cream border-paca-navy retro-shadow-sm' : (isOccupied ? 'bg-amber-50/70 border-amber-300 text-amber-900' : 'bg-gray-50 text-gray-700 border-gray-200')}">
+                    <div>${t.name}</div>
+                    ${isOccupied ? `<div class="text-[9px] text-amber-700 font-semibold mt-0.5">🟡 Đang mở Tab</div>` : `<div class="text-[9px] text-emerald-600 font-medium mt-0.5">🟢 Bàn trống</div>`}
                 </button>
-            `).join('');
+                `;
+            }).join('');
 
             document.getElementById('tablePickerModal').classList.remove('hidden');
         }
@@ -1054,7 +1078,12 @@
         function updateTableLabel() {
             const lbl = document.getElementById('lblCurrentTable');
             if (currentTable) {
-                lbl.innerText = currentTable.name;
+                const live = window.paca.getTableLiveStatus ? window.paca.getTableLiveStatus(currentTable.id) : null;
+                if (live && live.status === 'occupied') {
+                    lbl.innerText = `${currentTable.name} (Tab Đợt ${live.rounds || 1})`;
+                } else {
+                    lbl.innerText = currentTable.name;
+                }
             } else {
                 lbl.innerText = "Chọn bàn";
             }
