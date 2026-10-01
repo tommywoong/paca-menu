@@ -159,6 +159,10 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                    <button onclick="openDailyShiftModal()" class="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black px-3.5 py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition" title="Kết ca doanh thu hôm nay & gửi báo cáo Telegram">
+                        <span>🏁</span>
+                        <span>KẾT CA</span>
+                    </button>
                     <button onclick="openManualOrderModal()" class="w-full sm:w-auto bg-paca-crimson hover:bg-paca-red text-white text-xs font-black px-4 py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition">
                         <span class="text-base leading-none">+</span>
                         <span>TẠO ĐƠN THỦ CÔNG</span>
@@ -468,10 +472,16 @@
                         <span>🔍</span>
                         <span>BỘ LỌC DOANH THU & THỜI GIAN</span>
                     </div>
-                    <button onclick="resetRevenueFilters()" class="text-xs font-bold text-paca-crimson hover:underline flex items-center gap-1">
-                        <span>🔄</span>
-                        <span>Đặt lại mặc định (Tháng này)</span>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openDailyShiftModal()" class="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs flex items-center gap-1 shadow-sm active:scale-95 transition">
+                            <span>🏁</span>
+                            <span>KẾT CA HÔM NAY</span>
+                        </button>
+                        <button onclick="resetRevenueFilters()" class="text-xs font-bold text-paca-crimson hover:underline flex items-center gap-1">
+                            <span>🔄</span>
+                            <span>Mặc định</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Date Range & Quick Presets -->
@@ -1975,6 +1985,91 @@
         </div>
     </div>
 
+    <!-- ==================== MODAL: KẾT CA DOANH THU HẰNG NGÀY ==================== -->
+    <div id="dailyShiftModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white w-full max-w-sm sm:max-w-md rounded-3xl retro-border p-5 text-gray-800 shadow-2xl relative space-y-3.5 max-h-[92vh] overflow-y-auto">
+            <!-- Close button -->
+            <button onclick="closeDailyShiftModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold flex items-center justify-center transition">✕</button>
+
+            <!-- Header -->
+            <div class="border-b pb-2.5">
+                <div class="flex items-center gap-2">
+                    <span class="inline-block bg-emerald-100 text-emerald-900 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-emerald-300">CHỐT DOANH THU CA</span>
+                    <span class="text-xs text-gray-500 font-medium" id="shiftModalDateBadge">Hôm nay</span>
+                </div>
+                <h3 class="font-serif font-black text-xl text-paca-navy mt-1">KẾT CA DOANH THU HÔM NAY</h3>
+                <p class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1">
+                    <span>👤 Người kết ca:</span>
+                    <b class="text-paca-navy" id="shiftModalUser">Thu Ngân</b>
+                </p>
+            </div>
+
+            <!-- Revenue Highlight Card -->
+            <div class="bg-gradient-to-br from-emerald-50 to-teal-50/50 p-4 rounded-2xl border-2 border-emerald-200 text-center space-y-1">
+                <div class="text-[11px] font-bold text-emerald-800 uppercase tracking-wide">TỔNG DOANH THU THỰC THU HÔM NAY</div>
+                <div class="font-serif font-black text-3xl text-emerald-600 tracking-tight" id="shiftModalPaidRevenue">0 đ</div>
+                <div class="text-xs text-gray-600 font-medium" id="shiftModalPaidOrdersCount">0 đơn hoàn tất</div>
+            </div>
+
+            <!-- Cash vs VietQR Breakdown Grid -->
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <div class="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200 text-center">
+                    <div class="text-[10px] font-bold text-emerald-800 uppercase flex items-center justify-center gap-1">
+                        <span>💵</span> TIỀN MẶT (TM)
+                    </div>
+                    <div class="font-serif font-black text-lg text-emerald-700 mt-1" id="shiftModalCashRevenue">0 đ</div>
+                    <div class="text-[10px] text-gray-500 mt-0.5" id="shiftModalCashCount">0 đơn</div>
+                </div>
+
+                <div class="bg-blue-50/70 p-3 rounded-2xl border border-blue-200 text-center">
+                    <div class="text-[10px] font-bold text-paca-navy uppercase flex items-center justify-center gap-1">
+                        <span>💳</span> CHUYỂN KHOẢN (VIETQR)
+                    </div>
+                    <div class="font-serif font-black text-lg text-paca-navy mt-1" id="shiftModalVietqrRevenue">0 đ</div>
+                    <div class="text-[10px] text-gray-500 mt-0.5" id="shiftModalVietqrCount">0 đơn</div>
+                </div>
+            </div>
+
+            <!-- Live Table Status Alert -->
+            <div id="shiftModalUnpaidBox" class="p-3 rounded-2xl border text-xs">
+                <!-- Dynamic: e.g. All tables clear vs X tables pending -->
+            </div>
+
+            <!-- Top Selling Items Accordion / Summary -->
+            <div class="bg-gray-50 p-3 rounded-2xl border border-gray-200 space-y-2">
+                <div class="flex items-center justify-between text-[11px] font-bold text-paca-navy">
+                    <span>📊 TOP MÓN BÁN CHẠY NHẤT HÔM NAY</span>
+                    <span class="text-gray-400 font-normal">Xếp theo số lượng</span>
+                </div>
+                <div id="shiftModalTopItems" class="space-y-1.5 text-xs">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Optional Note -->
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-gray-700 block">Ghi chú ca trực hôm nay (tùy chọn):</label>
+                <input type="text" id="shiftModalNote" placeholder="Ghi chú thêm về ca trực hôm nay (nếu có)..." class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-emerald-600">
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-2 pt-1">
+                <button type="button" onclick="executeDailyShiftClose()" id="btnSubmitDailyShift" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black py-3 rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition">
+                    <span>🚀</span>
+                    <span>XÁC NHẬN KẾT CA & GỬI BÁO CÁO TELEGRAM</span>
+                </button>
+                <div class="flex gap-2">
+                    <button type="button" onclick="printDailyShiftSlip()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-1 border border-gray-300">
+                        <span>🖨️ In Phiếu Kết Ca</span>
+                    </button>
+                    <button type="button" onclick="closeDailyShiftModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-2 rounded-xl text-xs flex items-center justify-center">
+                        <span>Đóng</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ==================== MODAL: XEM TRƯỚC BẢN IN (PRINT PREVIEW MODAL) ==================== -->
     <div id="printPreviewModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-sm rounded-2xl retro-border max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
@@ -2059,7 +2154,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261001_cash_pay_v1"></script>
+    <script src="js/paca_core.js?v=20261001_daily_shift_v1"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -2847,6 +2942,166 @@
             const orderId = activeFullQrOrderId;
             closeVietQrFullscreen();
             openPaymentConfirmModal(orderId, 'cash');
+        }
+
+        // ==================== DAILY SHIFT SETTLEMENT CONTROLLER ====================
+        let currentDailyShiftReport = null;
+
+        function openDailyShiftModal() {
+            const report = window.paca.getTodayShiftReport();
+            currentDailyShiftReport = report;
+
+            const curUser = window.paca.getCurrentUser();
+            const staffName = curUser ? `${curUser.name} (${curUser.role === 'admin' ? 'Quản lý' : 'Nhân viên'})` : 'Thu ngân';
+
+            const userEl = document.getElementById('shiftModalUser');
+            if (userEl) userEl.innerText = staffName;
+
+            const dateBadge = document.getElementById('shiftModalDateBadge');
+            if (dateBadge) dateBadge.innerText = `${report.dateFormatted} • ${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+
+            const paidRevEl = document.getElementById('shiftModalPaidRevenue');
+            if (paidRevEl) paidRevEl.innerText = window.paca.formatMoney(report.paidRevenue || 0);
+
+            const paidCountEl = document.getElementById('shiftModalPaidOrdersCount');
+            if (paidCountEl) paidCountEl.innerText = `${report.paidOrdersCount || 0} đơn hoàn tất • TB: ${window.paca.formatMoney(report.averageOrderValue || 0)}/đơn`;
+
+            const cashRevEl = document.getElementById('shiftModalCashRevenue');
+            if (cashRevEl) cashRevEl.innerText = window.paca.formatMoney(report.paidCashRevenue || 0);
+            const cashCountEl = document.getElementById('shiftModalCashCount');
+            if (cashCountEl) cashCountEl.innerText = `${report.paidCashCount || 0} đơn`;
+
+            const qrRevEl = document.getElementById('shiftModalVietqrRevenue');
+            if (qrRevEl) qrRevEl.innerText = window.paca.formatMoney(report.paidVietqrRevenue || 0);
+            const qrCountEl = document.getElementById('shiftModalVietqrCount');
+            if (qrCountEl) qrCountEl.innerText = `${report.paidVietqrCount || 0} đơn`;
+
+            // Unpaid Tables Box
+            const unpaidBox = document.getElementById('shiftModalUnpaidBox');
+            if (unpaidBox) {
+                if ((report.unpaidOrdersCount || 0) === 0) {
+                    unpaidBox.className = "p-3 rounded-2xl border text-xs bg-emerald-50 border-emerald-300 text-emerald-800 flex items-center justify-between font-bold";
+                    unpaidBox.innerHTML = `<span>✅ Tình trạng bàn:</span><span>Tất cả bàn đã thanh toán (Sạch bill)</span>`;
+                } else {
+                    unpaidBox.className = "p-3 rounded-2xl border text-xs bg-amber-50 border-amber-300 text-amber-900 flex items-center justify-between font-bold";
+                    unpaidBox.innerHTML = `<span>⚠️ Còn bàn đang phục vụ:</span><span>${report.unpaidOrdersCount} bàn (${window.paca.formatMoney(report.unpaidAmount)})</span>`;
+                }
+            }
+
+            // Top items list
+            const topListEl = document.getElementById('shiftModalTopItems');
+            if (topListEl) {
+                const top5 = (report.topItems || []).slice(0, 5);
+                if (top5.length === 0) {
+                    topListEl.innerHTML = `<div class="text-gray-400 italic text-center py-2 text-xs">Chưa có món bán hôm nay</div>`;
+                } else {
+                    topListEl.innerHTML = top5.map((it, idx) => `
+                        <div class="flex items-center justify-between py-1 border-b border-gray-100 last:border-0">
+                            <div class="flex items-center gap-1.5 font-bold text-gray-800 truncate">
+                                <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] flex items-center justify-center">${idx + 1}</span>
+                                <span class="truncate">${it.name}</span>
+                            </div>
+                            <div class="text-right whitespace-nowrap">
+                                <span class="text-xs font-black text-paca-navy">${window.paca.formatMoney(it.revenue)}</span>
+                                <span class="text-[10px] text-gray-500 font-bold ml-1">(x${it.quantity})</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            const noteInput = document.getElementById('shiftModalNote');
+            if (noteInput) noteInput.value = '';
+
+            const modal = document.getElementById('dailyShiftModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeDailyShiftModal() {
+            const modal = document.getElementById('dailyShiftModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        async function executeDailyShiftClose() {
+            if (!confirm("Bạn xác nhận chốt kết ca doanh thu hôm nay và gửi báo cáo về Telegram?")) return;
+
+            const noteInput = document.getElementById('shiftModalNote');
+            const note = noteInput ? noteInput.value.trim() : '';
+
+            showAdminToast("⏳ Đang kết ca & gửi báo cáo Telegram...", true);
+            closeDailyShiftModal();
+
+            try {
+                const shift = await window.paca.closeDailyShift({ note });
+                if (shift) {
+                    showAdminToast(`✅ Đã kết ca #${shift.id} & gửi Telegram!`);
+                    if (window.paca.playNotificationSound) window.paca.playNotificationSound();
+                } else {
+                    showAdminToast("⚠️ Có lỗi khi kết ca!", false);
+                }
+            } catch (e) {
+                showAdminToast("⚠️ Lỗi kết ca: " + e.message, false);
+            }
+        }
+
+        function printDailyShiftSlip() {
+            if (!currentDailyShiftReport) currentDailyShiftReport = window.paca.getTodayShiftReport();
+            const r = currentDailyShiftReport;
+            const curUser = window.paca.getCurrentUser();
+            const staffName = curUser ? `${curUser.name} (${curUser.role === 'admin' ? 'Quản lý' : 'Nhân viên'})` : 'Thu ngân';
+
+            const top5 = (r.topItems || []).slice(0, 5);
+            const topRows = top5.map((it, idx) => `
+                <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+                    <span>${idx + 1}. ${it.name} (x${it.quantity})</span>
+                    <span>${window.paca.formatMoney(it.revenue)}</span>
+                </div>
+            `).join('');
+
+            const slipHtml = `
+                <div style="text-align:center;border-bottom:1px dashed #000;padding-bottom:8px;margin-bottom:8px;">
+                    <div style="font-weight:900;font-size:14px;">PACA BAR</div>
+                    <div style="font-size:11px;">PHIẾU KẾT CA DOANH THU</div>
+                    <div style="font-size:10px;color:#555;">Ngày: ${r.dateFormatted} - ${new Date().toLocaleTimeString('vi-VN')}</div>
+                    <div style="font-size:10px;">Thu ngân: <b>${staffName}</b></div>
+                </div>
+                <div style="margin-bottom:8px;border-bottom:1px dashed #000;padding-bottom:8px;font-size:11px;">
+                    <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:12px;margin-bottom:4px;">
+                        <span>TỔNG THỰC THU:</span>
+                        <span>${window.paca.formatMoney(r.paidRevenue)}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+                        <span>Tiền mặt (TM):</span>
+                        <span>${window.paca.formatMoney(r.paidCashRevenue)} (${r.paidCashCount} đơn)</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+                        <span>Chuyển khoản (VietQR):</span>
+                        <span>${window.paca.formatMoney(r.paidVietqrRevenue)} (${r.paidVietqrCount} đơn)</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <span>Tổng đơn hoàn tất:</span>
+                        <span>${r.paidOrdersCount} đơn</span>
+                    </div>
+                </div>
+                ${top5.length > 0 ? `
+                    <div style="margin-bottom:8px;border-bottom:1px dashed #000;padding-bottom:8px;font-size:10px;">
+                        <div style="font-weight:bold;margin-bottom:4px;">TOP MÓN BÁN CHẠY:</div>
+                        ${topRows}
+                    </div>
+                ` : ''}
+                <div style="text-align:center;font-size:10px;margin-top:6px;">
+                    <div>Ca làm việc đã được chốt</div>
+                    <div>Chữ ký thu ngân: ........................</div>
+                </div>
+            `;
+
+            const frame = document.getElementById('printPreviewFrame');
+            if (frame) {
+                frame.innerHTML = slipHtml;
+                const title = document.getElementById('printPreviewModalTitle');
+                if (title) title.innerText = "Phiếu Kết Ca Doanh Thu Hôm Nay";
+                document.getElementById('printPreviewModal').classList.remove('hidden');
+            }
         }
 
         async function resendOrderTelegram(orderId) {

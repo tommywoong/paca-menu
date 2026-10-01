@@ -11,7 +11,8 @@ const PACA_STORAGE_KEYS = {
     BILL_TEMPLATES: 'paca_bill_templates_v1',
     USERS: 'paca_users_data_v1',
     CURRENT_USER: 'paca_current_user_v1',
-    INVENTORY_LOGS: 'paca_inventory_logs_v1'
+    INVENTORY_LOGS: 'paca_inventory_logs_v1',
+    DAILY_CLOSES: 'paca_daily_closes_v1'
 };
 
 const DEFAULT_UNITS = ['Ly', 'Chai', 'Lon', 'Phần', 'Đĩa', 'Gói', 'Set', 'Shot', 'Thùng', 'Két', 'Bình', 'Tháp'];
@@ -184,6 +185,7 @@ class PacaService {
         this.users = [];
         this.currentUser = null;
         this.inventoryLogs = [];
+        this.dailyCloses = [];
         this.broadcastChannel = null;
         this.cloudSyncTopic = 'paca_orders_live_da_lat_2025';
         this.cloudEventSource = null;
@@ -206,6 +208,7 @@ class PacaService {
         this.loadBillTemplates();
         this.loadOrders();
         this.loadInventoryLogs();
+        this.loadDailyCloses();
     }
 
     // --- CONFIG ---
@@ -626,6 +629,21 @@ class PacaService {
     saveInventoryLogs() {
         if (this.inventoryLogs.length > 200) this.inventoryLogs = this.inventoryLogs.slice(0, 200);
         localStorage.setItem(PACA_STORAGE_KEYS.INVENTORY_LOGS, JSON.stringify(this.inventoryLogs));
+    }
+
+    loadDailyCloses() {
+        const local = localStorage.getItem(PACA_STORAGE_KEYS.DAILY_CLOSES);
+        if (local) {
+            try { this.dailyCloses = JSON.parse(local); } catch (e) { this.dailyCloses = []; }
+        } else {
+            this.dailyCloses = [];
+        }
+        return this.dailyCloses;
+    }
+
+    saveDailyCloses() {
+        if (this.dailyCloses.length > 365) this.dailyCloses = this.dailyCloses.slice(0, 365);
+        localStorage.setItem(PACA_STORAGE_KEYS.DAILY_CLOSES, JSON.stringify(this.dailyCloses));
     }
 
     logInventoryAction(itemId, change, oldStock, newStock, reason = '', staff = '') {
@@ -1673,6 +1691,48 @@ ${itemsSummary}
         await this.sendTelegramRaw(message);
     }
 
+    async sendTelegramDailyClose(shift) {
+        const m = shift.metrics || {};
+        const top5 = (shift.topItems || []).slice(0, 5);
+        const topItemsText = top5.length > 0
+            ? top5.map((it, idx) => `${idx + 1}. *${it.name}* (x${it.quantity}) - ${this.formatMoney(it.revenue)}`).join('\n')
+            : '_Chưa có dữ liệu món bán_';
+
+        let unpaidText = '✅ *Bàn phục vụ:* Đã thanh toán sạch bill (0 bàn)';
+        if (m.unpaidOrdersCount > 0) {
+            unpaidText = `⚠️ *Còn chưa thanh toán:* ${m.unpaidOrdersCount} bàn (${this.formatMoney(m.unpaidAmount)})`;
+        }
+
+        let cancelledText = '';
+        if (m.cancelledOrdersCount > 0) {
+            cancelledText = `\n🗑️ *Đơn đã hủy:* ${m.cancelledOrdersCount} đơn (Hao hụt: ${this.formatMoney(m.cancelledAmount)})`;
+        }
+
+        const noteText = shift.note ? `\n📝 *Ghi chú ca:* _${shift.note}_` : '';
+
+        const message = 
+`🏁 *BÁO CÁO KẾT CA DOANH THU HÀNG NGÀY* 🏁
+━━━━━━━━━━━━━━━━━━━━
+🏷️ *Mã ca:* \`${shift.id}\`
+📅 *Ngày chốt:* ${shift.dateFormatted || shift.date}
+⏰ *Thời gian:* ${shift.closedAtFormatted}
+👤 *Người kết ca:* *${shift.closedBy}*${noteText}
+━━━━━━━━━━━━━━━━━━━━
+💰 *TỔNG DOANH THU THỰC THU:* *${this.formatMoney(m.paidRevenue || 0)}*
+💵 *Tiền mặt (TM):* *${this.formatMoney(m.paidCashRevenue || 0)}* (${m.paidCashCount || 0} đơn)
+💳 *Chuyển khoản (VietQR):* *${this.formatMoney(m.paidVietqrRevenue || 0)}* (${m.paidVietqrCount || 0} đơn)
+🍹 *Tổng đơn hoàn tất:* *${m.paidOrdersCount || 0} đơn* (TB: ${this.formatMoney(m.averageOrderValue || 0)}/đơn)
+━━━━━━━━━━━━━━━━━━━━
+${unpaidText}${cancelledText}
+━━━━━━━━━━━━━━━━━━━━
+📊 *TOP MÓN BÁN CHẠY NHẤT HÔM NAY:*
+${topItemsText}
+━━━━━━━━━━━━━━━━━━━━
+✨ Ca làm việc đã được chốt và đồng bộ thành công!`;
+
+        return await this.sendTelegramRaw(message);
+    }
+
     async testTelegramConnection(botToken, chatId) {
         if (!botToken || !chatId) throw new Error("Chưa nhập Bot Token hoặc Chat ID");
         const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
@@ -2315,6 +2375,80 @@ ${itemsSummary}
             dailyBreakdown: Object.values(dailyBreakdown).sort((a, b) => b.date.localeCompare(a.date)),
             filteredOrders
         };
+    }
+
+    // --- DAILY SHIFT CLOSE & SETTLEMENT ---
+    getTodayShiftReport(dateOverride = null) {
+        const now = new Date();
+        const curYear = now.getFullYear();
+        const curMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const curDay = String(now.getDate()).padStart(2, '0');
+        const dateStr = dateOverride || `${curYear}-${curMonth}-${curDay}`;
+
+        const report = this.getFilteredRevenueReport({
+            fromDate: dateStr,
+            toDate: dateStr,
+            paymentMethod: 'all',
+            tableId: 'all',
+            status: 'all'
+        });
+
+        return {
+            date: dateStr,
+            dateFormatted: `${curDay}/${curMonth}/${curYear}`,
+            ...report
+        };
+    }
+
+    async closeDailyShift(params = {}) {
+        const now = new Date();
+        const curYear = now.getFullYear();
+        const curMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const curDay = String(now.getDate()).padStart(2, '0');
+        const dateStr = params.date || `${curYear}-${curMonth}-${curDay}`;
+
+        const report = this.getTodayShiftReport(dateStr);
+        const curUser = this.getCurrentUser();
+        const closedBy = params.closedBy || (curUser ? `${curUser.name} (${curUser.role === 'admin' ? 'Quản lý' : 'Nhân viên'})` : 'Thu ngân');
+        const note = params.note || '';
+
+        const shiftRecord = {
+            id: `SHIFT-${dateStr.replace(/-/g, '')}-${Date.now().toString().slice(-4)}`,
+            date: dateStr,
+            dateFormatted: `${curDay}/${curMonth}/${curYear}`,
+            closedAt: now.toISOString(),
+            closedAtFormatted: this.formatDateTime(now),
+            closedBy: closedBy,
+            note: note,
+            metrics: {
+                paidRevenue: report.paidRevenue || 0,
+                paidCashRevenue: report.paidCashRevenue || 0,
+                paidCashCount: report.paidCashCount || 0,
+                paidVietqrRevenue: report.paidVietqrRevenue || 0,
+                paidVietqrCount: report.paidVietqrCount || 0,
+                paidOrdersCount: report.paidOrdersCount || 0,
+                unpaidAmount: report.unpaidAmount || 0,
+                unpaidOrdersCount: report.unpaidOrdersCount || 0,
+                cancelledAmount: report.cancelledAmount || 0,
+                cancelledOrdersCount: report.cancelledOrdersCount || 0,
+                averageOrderValue: report.averageOrderValue || 0,
+                grossProfit: report.grossProfit || 0
+            },
+            topItems: (report.topItems || []).slice(0, 5)
+        };
+
+        this.dailyCloses = this.dailyCloses || [];
+        this.dailyCloses.unshift(shiftRecord);
+        this.saveDailyCloses();
+
+        if (this.broadcastChannel) {
+            this.broadcastChannel.postMessage({ type: 'DAILY_SHIFT_CLOSED', shift: shiftRecord });
+        }
+
+        const tgSent = await this.sendTelegramDailyClose(shiftRecord);
+        shiftRecord.telegramSent = tgSent;
+
+        return shiftRecord;
     }
 
     // --- SOUND NOTIFICATION ---
