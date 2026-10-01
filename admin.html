@@ -559,7 +559,7 @@
                         <span>🟢</span> Doanh Thu Thực Thu
                     </div>
                     <div class="font-extrabold text-base sm:text-lg text-emerald-600 mt-1" id="repPaidRev">0 đ</div>
-                    <div class="text-[10px] text-gray-500 mt-0.5">Tiền mặt & Chuyển khoản đã nhận</div>
+                    <div class="text-[10px] text-gray-500 mt-0.5" id="repPaymentBreakdown">Tiền mặt & Chuyển khoản đã nhận</div>
                 </div>
 
                 <!-- Paid Orders & AOV -->
@@ -1869,8 +1869,109 @@
             <!-- Confirm Received Button -->
             <button onclick="confirmPaymentFromModal()" id="btnModalConfirmPaid" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg active:scale-95 transition">
                 <span>✓</span>
-                <span>XÁC NHẬN ĐÃ NHẬN TIỀN</span>
+                <span>XÁC NHẬN ĐÃ NHẬN CHUYỂN KHOẢN</span>
             </button>
+            <button onclick="switchFromVietQrToCashModal()" type="button" class="w-full text-center text-xs text-gray-500 hover:text-emerald-700 font-bold py-1 transition">
+                💵 Khách muốn thanh toán Tiền Mặt?
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL: XÁC NHẬN THANH TOÁN (TIỀN MẶT & VIETQR) ==================== -->
+    <div id="paymentConfirmModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4">
+        <div class="bg-white w-full max-w-sm sm:max-w-md rounded-3xl retro-border p-5 text-gray-800 shadow-2xl relative space-y-3.5">
+            <!-- Close button -->
+            <button onclick="closePaymentConfirmModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold flex items-center justify-center transition">✕</button>
+
+            <!-- Header -->
+            <div class="border-b pb-2.5">
+                <div class="flex items-center gap-2">
+                    <span class="inline-block bg-paca-cream text-paca-navy text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border border-paca-navy" id="payModalTableBadge">BÀN 01</span>
+                    <span class="text-xs font-mono text-gray-400 font-bold" id="payModalOrderId">#PACA-000</span>
+                </div>
+                <h3 class="font-serif font-black text-lg text-paca-navy mt-1">XÁC NHẬN THANH TOÁN</h3>
+            </div>
+
+            <!-- Total Amount Display -->
+            <div class="bg-amber-50/70 p-3 rounded-2xl border border-amber-200 text-center">
+                <div class="text-[11px] font-bold text-amber-800 uppercase tracking-wide">Số tiền cần thanh toán</div>
+                <div class="font-serif font-black text-2xl sm:text-3xl text-paca-crimson mt-0.5" id="payModalAmount">0 đ</div>
+                <div class="text-[11px] text-gray-500 mt-0.5" id="payModalItemsSummary">0 món</div>
+            </div>
+
+            <!-- Segmented Tab: TIỀN MẶT vs CHUYỂN KHOẢN -->
+            <div class="flex bg-gray-100 p-1 rounded-2xl gap-1 border border-gray-200">
+                <button type="button" id="tabPayCashBtn" onclick="selectPayMethodTab('cash')" class="flex-1 py-2 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition bg-white text-emerald-800 shadow-sm border border-emerald-300">
+                    <span>💵</span>
+                    <span>TIỀN MẶT</span>
+                </button>
+                <button type="button" id="tabPayQrBtn" onclick="selectPayMethodTab('vietqr')" class="flex-1 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition text-gray-500 hover:text-gray-900">
+                    <span>💳</span>
+                    <span>CHUYỂN KHOẢN (VIETQR)</span>
+                </button>
+            </div>
+
+            <!-- TAB CONTENT: TIỀN MẶT -->
+            <div id="payContentCash" class="space-y-3">
+                <div>
+                    <label class="text-[11px] font-bold text-gray-700 block mb-1">Gợi ý tiền khách đưa nhanh:</label>
+                    <div class="grid grid-cols-4 gap-1.5" id="payCashSuggestions">
+                        <!-- Dynamic buttons -->
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[11px] font-bold text-gray-700 block mb-1">Số tiền khách đưa (VNĐ):</label>
+                    <div class="relative">
+                        <input type="number" id="payCashTenderedInput" oninput="calculateCashChange()" placeholder="Nhập số tiền khách đưa..." class="w-full border-2 border-gray-300 focus:border-emerald-600 rounded-xl px-3 py-2 text-base font-black text-emerald-700 font-mono tracking-wide outline-none">
+                        <span class="absolute right-3 top-2.5 text-xs font-bold text-gray-400">đ</span>
+                    </div>
+                </div>
+
+                <!-- Change Box -->
+                <div id="payChangeBox" class="p-2.5 rounded-xl border transition text-center bg-gray-50 border-gray-200">
+                    <div class="text-[10px] font-bold text-gray-500 uppercase" id="payChangeLabel">Tiền thối lại cho khách</div>
+                    <div class="text-xl font-black font-serif mt-0.5 text-gray-700" id="payChangeAmount">0 đ</div>
+                </div>
+
+                <!-- Confirm Cash Button -->
+                <button type="button" onclick="executeConfirmPayment('cash')" id="btnConfirmCashPay" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg transition">
+                    <span>✓</span>
+                    <span>XÁC NHẬN THU TIỀN MẶT</span>
+                </button>
+            </div>
+
+            <!-- TAB CONTENT: CHUYỂN KHOẢN VIETQR -->
+            <div id="payContentQr" class="space-y-3 hidden">
+                <div class="bg-blue-50/70 p-3 rounded-2xl border border-blue-200 text-xs space-y-1 text-gray-700">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Ngân hàng:</span>
+                        <span class="font-bold text-paca-navy" id="payQrBankName">MB Bank</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Số tài khoản:</span>
+                        <span class="font-mono font-bold text-paca-crimson" id="payQrAccNo">0988888888</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Chủ tài khoản:</span>
+                        <span class="font-bold uppercase" id="payQrAccName">PACA BAR</span>
+                    </div>
+                    <div class="flex justify-between pt-1 border-t border-blue-200">
+                        <span class="text-gray-500">Nội dung CK:</span>
+                        <span class="font-mono font-bold text-paca-navy" id="payQrMemo">PACA B01</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="button" onclick="openQrFromPayModal()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1 border border-gray-300">
+                        <span>📱 Mở QR To</span>
+                    </button>
+                    <button type="button" onclick="executeConfirmPayment('vietqr')" class="flex-[2] bg-paca-navy hover:bg-blue-900 active:scale-95 text-white font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg transition">
+                        <span>✓</span>
+                        <span>ĐÃ NHẬN CHUYỂN KHOẢN</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1958,7 +2059,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20260930_table_tab_v7"></script>
+    <script src="js/paca_core.js?v=20261001_cash_pay_v1"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -2542,17 +2643,210 @@
             setTimeout(() => { toast.remove(); }, 3500);
         }
 
-        async function confirmOrderPayment(orderId) {
-            if (!confirm("Bạn xác nhận đã nhận đủ tiền thanh toán cho đơn hàng này?")) return;
+        // ==================== PAYMENT CONFIRMATION MODAL LOGIC ====================
+        let activePaymentOrderId = null;
+        let currentPayMethod = 'cash';
+
+        function confirmOrderPayment(orderId) {
+            openPaymentConfirmModal(orderId, 'cash');
+        }
+
+        function openPaymentConfirmModal(orderId, defaultMethod = 'cash') {
+            const order = (window.paca.orders || []).find(o => o.id === orderId);
+            if (!order) return;
+            activePaymentOrderId = orderId;
+
+            const tableEl = document.getElementById('payModalTableBadge');
+            if (tableEl) tableEl.innerText = order.tableName || 'Bàn';
+            const orderIdEl = document.getElementById('payModalOrderId');
+            if (orderIdEl) orderIdEl.innerText = `#${order.id}`;
+            const amountEl = document.getElementById('payModalAmount');
+            if (amountEl) amountEl.innerText = window.paca.formatMoney(order.totalAmount || 0);
+
+            const totalItems = (order.items || []).reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
+            const roundsTxt = (order.rounds && order.rounds > 1) ? ` • ${order.rounds} đợt gọi` : '';
+            const summaryEl = document.getElementById('payModalItemsSummary');
+            if (summaryEl) summaryEl.innerText = `${totalItems} món đã dùng${roundsTxt}`;
+
+            // Populate Bank Details in VietQR tab
+            const cfg = window.paca.config || {};
+            const bank = cfg.bank_config || {};
+            const bankEl = document.getElementById('payQrBankName');
+            if (bankEl) bankEl.innerText = bank.bank_id || 'MB Bank';
+            const accEl = document.getElementById('payQrAccNo');
+            if (accEl) accEl.innerText = bank.account_no || '0988888888';
+            const nameEl = document.getElementById('payQrAccName');
+            if (nameEl) nameEl.innerText = bank.account_name || 'PACA BAR';
+
+            const memoPrefix = cfg.vietqr_memo_prefix || 'PACA';
+            const cleanTable = (order.tableId || order.tableName || 'B00').replace(/[^a-zA-Z0-9]/g, '');
+            const memoEl = document.getElementById('payQrMemo');
+            if (memoEl) memoEl.innerText = `${memoPrefix} ${cleanTable}`;
+
+            // Setup cash quick buttons
+            setupCashSuggestions(order.totalAmount || 0);
+
+            // Default cash input to exact amount
+            const input = document.getElementById('payCashTenderedInput');
+            if (input) {
+                input.value = order.totalAmount || 0;
+            }
+            calculateCashChange();
+
+            selectPayMethodTab(defaultMethod);
+
+            const modal = document.getElementById('paymentConfirmModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closePaymentConfirmModal() {
+            activePaymentOrderId = null;
+            const modal = document.getElementById('paymentConfirmModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function selectPayMethodTab(method) {
+            currentPayMethod = method;
+            const btnCash = document.getElementById('tabPayCashBtn');
+            const btnQr = document.getElementById('tabPayQrBtn');
+            const contentCash = document.getElementById('payContentCash');
+            const contentQr = document.getElementById('payContentQr');
+
+            if (method === 'cash') {
+                if (btnCash) btnCash.className = "flex-1 py-2 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition bg-white text-emerald-800 shadow-sm border border-emerald-300";
+                if (btnQr) btnQr.className = "flex-1 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition text-gray-500 hover:text-gray-900";
+                if (contentCash) contentCash.classList.remove('hidden');
+                if (contentQr) contentQr.classList.add('hidden');
+                setTimeout(() => {
+                    const inp = document.getElementById('payCashTenderedInput');
+                    if (inp) inp.select();
+                }, 100);
+            } else {
+                if (btnQr) btnQr.className = "flex-1 py-2 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 transition bg-white text-paca-navy shadow-sm border border-blue-300";
+                if (btnCash) btnCash.className = "flex-1 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition text-gray-500 hover:text-gray-900";
+                if (contentCash) contentCash.classList.add('hidden');
+                if (contentQr) contentQr.classList.remove('hidden');
+            }
+        }
+
+        function setupCashSuggestions(total) {
+            const container = document.getElementById('payCashSuggestions');
+            if (!container) return;
+
+            const suggestions = [total];
+            [10000, 20000, 50000, 100000, 200000, 500000].forEach(denom => {
+                const nextRound = Math.ceil(total / denom) * denom;
+                if (nextRound > total && !suggestions.includes(nextRound)) {
+                    suggestions.push(nextRound);
+                }
+            });
+
+            [100000, 200000, 500000].forEach(denom => {
+                if (denom > total && !suggestions.includes(denom)) {
+                    suggestions.push(denom);
+                }
+            });
+
+            const sorted = [...new Set(suggestions)].sort((a, b) => a - b).slice(0, 4);
+
+            container.innerHTML = sorted.map(amt => {
+                const isExact = amt === total;
+                const label = isExact ? `Đủ tiền` : window.paca.formatMoney(amt);
+                return `<button type="button" onclick="setQuickCashAmount(${amt})" class="px-1.5 py-1.5 rounded-xl border text-[11px] font-bold transition active:scale-95 truncate ${isExact ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'}">${label}</button>`;
+            }).join('');
+        }
+
+        function setQuickCashAmount(amt) {
+            const input = document.getElementById('payCashTenderedInput');
+            if (input) {
+                input.value = amt;
+                calculateCashChange();
+            }
+        }
+
+        function calculateCashChange() {
+            const order = (window.paca.orders || []).find(o => o.id === activePaymentOrderId);
+            if (!order) return;
+            const total = order.totalAmount || 0;
+            const input = document.getElementById('payCashTenderedInput');
+            const tendered = input ? (Number(input.value) || 0) : total;
+            const diff = tendered - total;
+
+            const changeBox = document.getElementById('payChangeBox');
+            const changeLabel = document.getElementById('payChangeLabel');
+            const changeAmount = document.getElementById('payChangeAmount');
+            const confirmBtn = document.getElementById('btnConfirmCashPay');
+
+            if (!changeBox || !changeLabel || !changeAmount || !confirmBtn) return;
+
+            if (tendered === 0) {
+                changeBox.className = "p-2.5 rounded-xl border transition text-center bg-gray-50 border-gray-200";
+                changeLabel.innerText = "Tiền thối lại cho khách";
+                changeLabel.className = "text-[10px] font-bold text-gray-500 uppercase";
+                changeAmount.innerText = "0 đ";
+                changeAmount.className = "text-xl font-black font-serif mt-0.5 text-gray-700";
+                confirmBtn.disabled = false;
+                confirmBtn.className = "w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg transition";
+            } else if (diff >= 0) {
+                changeBox.className = "p-2.5 rounded-xl border transition text-center bg-emerald-50 border-emerald-300";
+                changeLabel.innerText = diff === 0 ? "Khách đưa vừa đủ tiền" : "Tiền thối lại cho khách";
+                changeLabel.className = "text-[10px] font-bold text-emerald-700 uppercase";
+                changeAmount.innerText = window.paca.formatMoney(diff);
+                changeAmount.className = "text-2xl font-black font-serif mt-0.5 text-emerald-700";
+                confirmBtn.disabled = false;
+                confirmBtn.className = "w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg transition";
+            } else {
+                changeBox.className = "p-2.5 rounded-xl border transition text-center bg-red-50 border-red-300";
+                changeLabel.innerText = "Chưa đủ tiền thanh toán";
+                changeLabel.className = "text-[10px] font-bold text-red-700 uppercase";
+                changeAmount.innerText = `Thiếu ${window.paca.formatMoney(Math.abs(diff))}`;
+                changeAmount.className = "text-xl font-black font-serif mt-0.5 text-red-600";
+                confirmBtn.disabled = true;
+                confirmBtn.className = "w-full bg-gray-300 text-gray-500 cursor-not-allowed font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 transition";
+            }
+        }
+
+        async function executeConfirmPayment(method) {
+            if (!activePaymentOrderId) return;
+            const order = (window.paca.orders || []).find(o => o.id === activePaymentOrderId);
+            if (!order) return;
+
             const curUser = window.paca.getCurrentUser();
             const staffName = curUser ? `${curUser.name} (${curUser.role === 'admin' ? 'Quản lý' : 'Nhân viên'})` : 'Thu ngân';
 
-            showAdminToast("⏳ Đang xác nhận & gửi Telegram...", true);
-            await window.paca.confirmPayment(orderId, staffName, "vietqr");
+            let cashDetails = null;
+            if (method === 'cash') {
+                const input = document.getElementById('payCashTenderedInput');
+                const tendered = input ? (Number(input.value) || (order.totalAmount || 0)) : (order.totalAmount || 0);
+                const change = Math.max(0, tendered - (order.totalAmount || 0));
+                cashDetails = { tendered, change };
+            }
+
+            const methodLabel = method === 'cash' ? 'tiền mặt' : 'chuyển khoản VietQR';
+            showAdminToast(`⏳ Đang xác nhận thanh toán ${methodLabel}...`, true);
+
+            const orderIdToConfirm = activePaymentOrderId;
+            closePaymentConfirmModal();
+
+            await window.paca.confirmPayment(orderIdToConfirm, staffName, method, cashDetails);
             renderOrders();
             renderTablesAdmin();
             renderRevenueStats();
-            showAdminToast("✅ Đã nhận tiền & gửi thông báo Telegram!");
+            showAdminToast(`✅ Đã thu ${methodLabel} & gửi thông báo Telegram!`);
+        }
+
+        function openQrFromPayModal() {
+            if (!activePaymentOrderId) return;
+            const orderId = activePaymentOrderId;
+            closePaymentConfirmModal();
+            openVietQrFullscreen(orderId);
+        }
+
+        function switchFromVietQrToCashModal() {
+            if (!activeFullQrOrderId) return;
+            const orderId = activeFullQrOrderId;
+            closeVietQrFullscreen();
+            openPaymentConfirmModal(orderId, 'cash');
         }
 
         async function resendOrderTelegram(orderId) {
@@ -4690,6 +4984,10 @@
 
             // 2. Update KPI cards
             document.getElementById('repPaidRev').innerText = window.paca.formatMoney(report.paidRevenue);
+            const repBreakdownEl = document.getElementById('repPaymentBreakdown');
+            if (repBreakdownEl) {
+                repBreakdownEl.innerHTML = `💵 TM: <b>${window.paca.formatMoney(report.paidCashRevenue || 0)}</b> • 💳 QR: <b>${window.paca.formatMoney(report.paidVietqrRevenue || 0)}</b>`;
+            }
             document.getElementById('repPaidCount').innerText = `${report.paidOrdersCount} đơn`;
             document.getElementById('repAov').innerText = `${window.paca.formatMoney(report.averageOrderValue)}/đơn`;
 
@@ -5801,15 +6099,24 @@
             }
         }
 
-        function confirmPaymentFromModal() {
+        async function confirmPaymentFromModal() {
             if (!activeFullQrOrderId) return;
             const order = window.paca.orders.find(o => o.id === activeFullQrOrderId);
             if (order && order.paymentStatus === 'paid') {
                 resendPaymentTelegram(activeFullQrOrderId);
+                closeVietQrFullscreen();
             } else {
-                confirmOrderPayment(activeFullQrOrderId);
+                const curUser = window.paca.getCurrentUser();
+                const staffName = curUser ? `${curUser.name} (${curUser.role === 'admin' ? 'Quản lý' : 'Nhân viên'})` : 'Thu ngân';
+                const orderId = activeFullQrOrderId;
+                closeVietQrFullscreen();
+                showAdminToast("⏳ Đang xác nhận chuyển khoản & gửi Telegram...", true);
+                await window.paca.confirmPayment(orderId, staffName, "vietqr");
+                renderOrders();
+                renderTablesAdmin();
+                renderRevenueStats();
+                showAdminToast("✅ Đã nhận chuyển khoản VietQR & gửi thông báo Telegram!");
             }
-            closeVietQrFullscreen();
         }
 
         // ==================== BILL TEMPLATE DESIGNER ====================

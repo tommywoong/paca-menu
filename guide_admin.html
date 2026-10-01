@@ -304,46 +304,52 @@
                 <div class="flex items-center gap-3">
                     <span class="w-8 h-8 rounded-full bg-amber-500 text-white font-black text-sm flex items-center justify-center shadow">4</span>
                     <div>
-                        <h3 class="font-serif font-extrabold text-lg text-paca-navy">THANH TOÁN VIETQR TOÀN MÀN HÌNH & GIẢI PHÓNG BÀN</h3>
-                        <p class="text-xs text-gray-500">Mã QR động chuẩn Napas247 • Khách quét là chuyển đúng số tiền và nội dung</p>
+                        <h3 class="font-serif font-extrabold text-lg text-paca-navy">THANH TOÁN TIỀN MẶT, VIETQR & GIẢI PHÓNG BÀN</h3>
+                        <p class="text-xs text-gray-500">Hỗ trợ đầy đủ Tiền Mặt (tự động tính tiền thối) và Chuyển Khoản VietQR chuẩn MB Bank</p>
                     </div>
                 </div>
-                <span class="bg-amber-100 text-amber-900 text-[10px] font-black px-2.5 py-1 rounded-full uppercase">VietQR Chuẩn MB Bank</span>
+                <span class="bg-amber-100 text-amber-900 text-[10px] font-black px-2.5 py-1 rounded-full uppercase">Tiền Mặt & VietQR</span>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                <!-- Screenshot VietQR -->
-                <div class="md:col-span-5 space-y-2">
+                <!-- Screenshot Cash & QR Modals -->
+                <div class="md:col-span-5 space-y-3">
                     <div class="rounded-2xl border-2 border-gray-200 overflow-hidden shadow-md bg-gray-100 flex justify-center">
-                        <img src="assets/guide/guide_vietqr_modal.png" alt="Màn hình VietQR toàn màn hình" class="w-full max-w-[340px] h-auto object-cover">
+                        <img src="assets/guide/guide_payment_modal_cash.png" alt="Hộp thoại chọn thanh toán tiền mặt và tính tiền thối" class="w-full max-w-[340px] h-auto object-cover">
                     </div>
-                    <p class="text-[11px] text-gray-500 italic text-center">Giao diện VietQR phóng to cho khách quét trực tiếp từ xa</p>
+                    <p class="text-[11px] text-gray-500 italic text-center">Hộp thoại thu tiền mặt: gợi ý mệnh giá & tự động tính tiền thối chuẩn xác</p>
                 </div>
 
                 <!-- Explanation Steps -->
                 <div class="md:col-span-7 space-y-3.5 text-xs">
-                    <div class="bg-amber-50/80 p-3.5 rounded-2xl border border-amber-200 space-y-1.5">
-                        <div class="font-bold text-sm text-amber-900 flex items-center gap-1.5">
-                            <span>💳</span> 1. Mở Mã QR Thanh Toán
+                    <div class="bg-emerald-50/80 p-3.5 rounded-2xl border border-emerald-200 space-y-1.5">
+                        <div class="font-bold text-sm text-emerald-900 flex items-center gap-1.5">
+                            <span>💵</span> Hình thức 1: Thu Tiền Mặt (Tự Động Tính Tiền Thối)
                         </div>
                         <p class="text-gray-700 leading-relaxed text-[11px]">
-                            Thu ngân hoặc nhân viên phục vụ bấm nút <b><code>💳 VietQR</code></b> trên thẻ bàn hoặc đơn hàng. Màn hình tự động sinh mã QR với chính xác số tiền tích lũy và nội dung chuyển khoản gồm Mã Đơn + Tên Bàn (Ví dụ: <code>PACA-2045-8899 Bàn 01</code>).
+                            Khi khách trả tiền mặt, thu ngân bấm <b><code>[✓ Đã Nhận Tiền]</code></b>:
+                            <br>• Màn hình gợi ý sẵn các nút tiền chẵn: <b>[Đủ tiền]</b>, <b>[100k]</b>, <b>[200k]</b>, <b>[500k]</b>... hoặc nhập tay số tiền khách đưa.
+                            <br>• Hệ thống <b>tự động tính tiền thối</b> hiển thị chữ số to màu xanh lá (ví dụ: bill 145k, đưa 200k ➔ thối lại 55k).
+                            <br>• Bấm <b><code>[✓ XÁC NHẬN THU TIỀN MẶT]</code></b> để chốt.
                         </p>
                     </div>
 
-                    <div class="bg-emerald-50/80 p-3.5 rounded-2xl border border-emerald-200 space-y-1.5">
-                        <div class="font-bold text-sm text-emerald-900 flex items-center gap-1.5">
-                            <span>✓</span> 2. Bấm "Xác Nhận Đã Nhận Tiền"
+                    <div class="bg-blue-50/80 p-3.5 rounded-2xl border border-blue-200 space-y-1.5">
+                        <div class="font-bold text-sm text-paca-navy flex items-center gap-1.5">
+                            <span>💳</span> Hình thức 2: Quét Mã VietQR (MB Bank)
                         </div>
                         <p class="text-gray-700 leading-relaxed text-[11px]">
-                            Khi khách chuyển khoản xong hoặc trả tiền mặt, nhân viên ấn nút xanh lớn: <b><code>✓ XÁC NHẬN ĐÃ NHẬN TIỀN</code></b>.
+                            Nếu khách muốn chuyển khoản, bấm nút <b><code>💳 VietQR</code></b> hoặc chọn tab <b>[CHUYỂN KHOẢN (VIETQR)]</b> trong hộp thoại thanh toán:
+                            <br>• Hiện mã QR động đã gán sẵn chính xác số tiền và nội dung chuyển khoản theo bàn.
+                            <br>• Khách quét xong, thu ngân bấm <b><code>[✓ ĐÃ NHẬN CHUYỂN KHOẢN]</code></b>.
                         </p>
-                        <div class="bg-white p-2.5 rounded-xl border border-emerald-300 text-[11px] text-emerald-900 font-medium">
-                            ➔ <b>Hệ thống tự động thực hiện 3 việc cùng lúc:</b>
-                            <br>1. Ghi nhận doanh thu và lưu lịch sử bán hàng.
-                            <br>2. Bắn tin nhắn chốt bill tổng hợp chi tiết về nhóm Telegram.
-                            <br>3. <b>Đóng đơn & giải phóng bàn về `🟢 Bàn trống`</b> ngay tức khắc trên máy của toàn bộ nhân viên.
-                        </div>
+                    </div>
+
+                    <div class="bg-white p-2.5 rounded-xl border border-emerald-300 text-[11px] text-emerald-900 font-medium">
+                        ➔ <b>Sau khi chốt thanh toán (bất kể Tiền mặt hay VietQR):</b>
+                        <br>1. Ghi nhận doanh thu tách bạch rõ: <i>Tiền mặt trong két</i> vs <i>Tiền chuyển khoản ngân hàng</i>.
+                        <br>2. Bắn ngay tin nhắn chốt bill tổng hợp chi tiết về Telegram (kèm ghi chú tiền thối nếu trả tiền mặt).
+                        <br>3. <b>Đóng đơn & giải phóng bàn về `🟢 Bàn trống`</b> ngay tức khắc cho lượt khách tiếp theo.
                     </div>
                 </div>
             </div>

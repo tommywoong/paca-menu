@@ -1388,7 +1388,7 @@ class PacaService {
     }
 
     // --- PAYMENT CONFIRMATION (IDEMPOTENT) ---
-    confirmPayment(orderId, confirmedBy = "Admin", paymentMethod = "vietqr") {
+    confirmPayment(orderId, confirmedBy = "Admin", paymentMethod = "vietqr", cashDetails = null) {
         const order = this.orders.find(o => o.id === orderId);
         if (!order) return null;
 
@@ -1403,6 +1403,10 @@ class PacaService {
         order.paidAt = new Date().toISOString();
         order.confirmedBy = confirmedBy;
         order.paymentMethod = paymentMethod;
+        if (paymentMethod === 'cash' && cashDetails) {
+            order.cashTendered = Number(cashDetails.tendered) || 0;
+            order.cashChange = Number(cashDetails.change) || 0;
+        }
         if (order.status === 'pending') order.status = 'preparing';
 
         // Auto deduct inventory on payment confirmation
@@ -1626,7 +1630,10 @@ ${roundNote ? `📝 *Ghi chú đợt này:* _${roundNote}_\n━━━━━━�
     }
 
     async sendTelegramPaymentConfirmation(order) {
-        const methodLabel = order.paymentMethod === 'cash' ? '💵 Tiền mặt' : '💳 Chuyển khoản VietQR';
+        let methodLabel = order.paymentMethod === 'cash' ? '💵 Tiền mặt' : '💳 Chuyển khoản VietQR';
+        if (order.paymentMethod === 'cash' && order.cashTendered && order.cashTendered >= order.totalAmount) {
+            methodLabel += `\n   └ 💵 _Khách đưa: ${this.formatMoney(order.cashTendered)}${order.cashChange > 0 ? ` • Thối lại: ${this.formatMoney(order.cashChange)}` : ''}_`;
+        }
         const roundsTag = (order.rounds && order.rounds > 1) ? ` (${order.rounds} đợt gọi món)` : '';
         const totalItemsQty = (order.items || []).reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
 
@@ -2139,6 +2146,10 @@ ${itemsSummary}
         let paidRevenue = 0;
         let paidCost = 0;
         let paidOrdersCount = 0;
+        let paidCashRevenue = 0;
+        let paidCashCount = 0;
+        let paidVietqrRevenue = 0;
+        let paidVietqrCount = 0;
         let unpaidAmount = 0;
         let unpaidOrdersCount = 0;
         let cancelledAmount = 0;
@@ -2235,6 +2246,14 @@ ${itemsSummary}
                 totalDiscount += (ord.discount?.amount || 0);
                 totalSurcharge += (ord.surcharge?.amount || 0);
 
+                if (ord.paymentMethod === 'cash') {
+                    paidCashRevenue += (ord.totalAmount || 0);
+                    paidCashCount += 1;
+                } else {
+                    paidVietqrRevenue += (ord.totalAmount || 0);
+                    paidVietqrCount += 1;
+                }
+
                 // Group daily
                 const d = new Date(ord.createdAt);
                 const dayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -2279,6 +2298,10 @@ ${itemsSummary}
             grossProfit,
             profitMargin,
             paidOrdersCount,
+            paidCashRevenue,
+            paidCashCount,
+            paidVietqrRevenue,
+            paidVietqrCount,
             averageOrderValue: aov,
             unpaidAmount,
             unpaidOrdersCount,
