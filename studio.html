@@ -228,6 +228,20 @@
                 <button onclick="addNewPage()" title="Thêm một trang mới vào thực đơn" class="bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs px-2.5 py-1 rounded-xl">
                     + Thêm trang
                 </button>
+                <div class="h-4 w-px bg-gray-700 mx-1"></div>
+                <button onclick="moveCurrentPage(-1)" title="Di chuyển trang này lên trước (sang trái)" class="bg-gray-800 hover:bg-gray-700 text-amber-300 hover:text-white font-bold text-xs px-2.5 py-1 rounded-xl border border-gray-700 flex items-center gap-1 active:scale-95 transition">
+                    <span>◀</span>
+                    <span>Lên trước</span>
+                </button>
+                <button onclick="moveCurrentPage(1)" title="Di chuyển trang này xuống sau (sang phải)" class="bg-gray-800 hover:bg-gray-700 text-amber-300 hover:text-white font-bold text-xs px-2.5 py-1 rounded-xl border border-gray-700 flex items-center gap-1 active:scale-95 transition">
+                    <span>Xuống sau</span>
+                    <span>▶</span>
+                </button>
+                <div class="h-4 w-px bg-gray-700 mx-1"></div>
+                <button onclick="extendPageHeight(300)" title="Kéo dài thêm chiều cao trang này thêm 300px để có thêm chỗ chứa món mới" class="bg-gray-800 hover:bg-gray-700 text-emerald-300 hover:text-white font-bold text-xs px-2.5 py-1 rounded-xl border border-gray-700 flex items-center gap-1 active:scale-95 transition">
+                    <span>📏</span>
+                    <span>+ Kéo dài trang</span>
+                </button>
                 <button onclick="duplicateCurrentPage()" title="Nhân bản trang đang chọn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white font-bold text-xs px-2.5 py-1 rounded-xl border border-gray-700">
                     📑 Nhân bản
                 </button>
@@ -240,9 +254,9 @@
                 </button>
             </div>
 
-            <!-- Cover Page Dynamic Category Sync Banner -->
-            <div id="coverPageSyncBanner" class="w-full max-w-[800px] mb-3 hidden z-10">
-                <!-- Populated dynamically when on page_cover -->
+            <!-- Smart Page Sync Banner (Cover category sync & Category new dish sync) -->
+            <div id="pageSmartSyncBanner" class="w-full max-w-[800px] mb-3 hidden z-10">
+                <!-- Populated dynamically by JS -->
             </div>
 
             <!-- The Interactive Canvas Container -->
@@ -804,55 +818,181 @@
             });
         }
 
+        // Match current active canvas page to its menu category
+        function getCategoryForCurrentPage() {
+            if (!engine || !engine.design || !engine.design.pages) return null;
+            const curPage = engine.getActivePage();
+            if (!curPage) return null;
+            if (curPage.id === 'page_cover' || engine.design.pages[0]?.id === curPage.id) return null;
+
+            const categories = window.paca?.getCategories ? window.paca.getCategories(true) : (window.paca?.menu?.categories || []);
+
+            // 1. Match by pageId
+            let matched = categories.find(c => c.pageId === curPage.id);
+            if (matched) return matched;
+
+            // 2. Match by ID patterns (e.g. curPage.id === 'page_' + c.id or curPage.id === c.id)
+            matched = categories.find(c => curPage.id === 'page_' + c.id || curPage.id === c.id);
+            if (matched) return matched;
+
+            // 3. Match by page title / category name
+            const titleLower = (curPage.title || '').toLowerCase().trim();
+            matched = categories.find(c => {
+                const vi = (c.name_vi || '').toLowerCase().trim();
+                const en = (c.name || '').toLowerCase().trim();
+                return (vi && titleLower.includes(vi)) || (en && titleLower.includes(en)) || 
+                       (titleLower && vi && vi.includes(titleLower)) || (titleLower && en && en.includes(titleLower));
+            });
+            return matched || null;
+        }
+
+        // Find products in this page's category that haven't been placed on canvas yet
+        function getUnplacedDishesForCurrentPage() {
+            const cat = getCategoryForCurrentPage();
+            if (!cat) return [];
+            const curPage = engine?.getActivePage();
+            if (!curPage) return [];
+
+            const allItems = window.paca?.menu?.items || window.paca?.menu?.products || [];
+            const catDishes = allItems.filter(i => (i.category === cat.id || i.category_id === cat.id) && i.is_active !== false);
+
+            const pageElements = curPage.elements || [];
+            return catDishes.filter(dish => {
+                const dId = String(dish.id).toLowerCase();
+                const dName = (dish.name || '').toLowerCase().trim();
+                const dNameVi = (dish.name_vi || '').toLowerCase().trim();
+
+                const isPlaced = pageElements.some(el => {
+                    if (el.binding?.productId && String(el.binding.productId).toLowerCase() === dId) return true;
+                    if (el.props?.productId && String(el.props.productId).toLowerCase() === dId) return true;
+                    if (el.id && (el.id === 'card_' + dish.id || el.id === 'bite_card_' + dish.id || el.id === dish.id)) return true;
+                    const elTitle = (el.props?.title || el.props?.name || '').toLowerCase().trim();
+                    if (elTitle && ((dName && elTitle === dName) || (dNameVi && elTitle === dNameVi))) return true;
+                    return false;
+                });
+                return !isPlaced;
+            });
+        }
+
+        // Add all unplaced dishes of this category to the bottom of the current page
+        function addUnplacedDishesToCurrentPage() {
+            const unplaced = getUnplacedDishesForCurrentPage();
+            if (unplaced.length === 0) {
+                alert("Trang này đã có đầy đủ tất cả các món thuộc danh mục!");
+                return;
+            }
+            engine.recordState();
+            unplaced.forEach(dish => {
+                addProductCard(dish.id);
+            });
+            engine.render();
+            engine.saveDraft();
+            updateCoverMissingCatsBanner();
+            alert(`✓ ĐÃ THÊM MÓN MỚI VÀO CUỐI TRANG THÀNH CÔNG!\n\nĐã thêm ${unplaced.length} món vào cuối trang:\n${unplaced.map(d => `• ${d.name} (${(d.price || 0).toLocaleString('vi-VN')}đ)`).join('\n')}\n\n👉 Chiều cao trang đã được tự động kéo dài. Bạn có thể kéo thả để tinh chỉnh vị trí nếu muốn!`);
+        }
+
         function updateCoverMissingCatsBanner() {
-            const banner = document.getElementById('coverPageSyncBanner');
+            const banner = document.getElementById('pageSmartSyncBanner') || document.getElementById('coverPageSyncBanner');
             if (!banner) return;
 
             const curPage = engine?.getActivePage();
-            const isCover = curPage && (curPage.id === 'page_cover' || engine.design?.pages?.[0]?.id === curPage.id);
-
-            if (!isCover) {
+            if (!curPage) {
                 banner.classList.add('hidden');
                 banner.innerHTML = '';
                 return;
             }
 
-            const missingCats = getMissingCoverCategories();
-            if (missingCats.length === 0) {
-                banner.innerHTML = `
-                    <div class="bg-gray-900/90 border border-gray-700/80 rounded-2xl p-2.5 flex items-center justify-between text-xs shadow-md">
-                        <div class="flex items-center gap-2 text-gray-300">
-                            <span class="text-emerald-400 font-bold">✓</span>
-                            <span>Trang Bìa đang hiển thị đủ các danh mục thực đơn.</span>
-                        </div>
-                        <button onclick="syncCategoriesToCoverPage(true)" title="Căn chỉnh và đồng bộ lại toàn bộ danh mục vào Trang Bìa" class="text-[11px] bg-gray-800 hover:bg-gray-700 text-amber-300 font-bold px-3 py-1 rounded-xl border border-gray-600 active:scale-95 transition flex items-center gap-1">
-                            <span>🔄</span>
-                            <span>Sắp xếp / Đồng bộ lại</span>
-                        </button>
-                    </div>
-                `;
-                banner.classList.remove('hidden');
-            } else {
-                const missingNames = missingCats.map(c => `${c.icon || '✦'} ${c.name_vi || c.name}`).join(', ');
-                banner.innerHTML = `
-                    <div class="bg-gradient-to-r from-amber-950/95 via-yellow-950/90 to-amber-900/90 border-2 border-amber-400 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xl animate-pulse">
-                        <div class="space-y-0.5">
-                            <div class="flex items-center gap-1.5 text-amber-300 font-black text-xs">
-                                <span class="text-base">⚠️</span>
-                                <span>TRANG BÌA CHƯA HIỆN ĐỦ DANH MỤC TỪ TRANG QUẢN TRỊ!</span>
+            const isCover = curPage.id === 'page_cover' || engine.design?.pages?.[0]?.id === curPage.id;
+
+            // CASE 1: Cover Page
+            if (isCover) {
+                const missingCats = getMissingCoverCategories();
+                if (missingCats.length === 0) {
+                    banner.innerHTML = `
+                        <div class="bg-gray-900/90 border border-gray-700/80 rounded-2xl p-2.5 flex items-center justify-between text-xs shadow-md">
+                            <div class="flex items-center gap-2 text-gray-300">
+                                <span class="text-emerald-400 font-bold">✓</span>
+                                <span>Trang Bìa đang hiển thị đủ các danh mục thực đơn.</span>
                             </div>
-                            <div class="text-[11px] text-white">
-                                Đang thiếu: <b class="text-amber-300 underline">${missingNames}</b>
-                            </div>
+                            <button onclick="syncCategoriesToCoverPage(true)" title="Căn chỉnh và đồng bộ lại toàn bộ danh mục vào Trang Bìa" class="text-[11px] bg-gray-800 hover:bg-gray-700 text-amber-300 font-bold px-3 py-1 rounded-xl border border-gray-600 active:scale-95 transition flex items-center gap-1">
+                                <span>🔄</span>
+                                <span>Sắp xếp / Đồng bộ lại</span>
+                            </button>
                         </div>
-                        <button onclick="syncCategoriesToCoverPage(false)" class="bg-amber-400 hover:bg-amber-300 text-paca-navy text-xs font-black px-4 py-2 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-1.5 flex-shrink-0">
-                            <span>🪄</span>
-                            <span>CẬP NHẬT ĐỦ DANH MỤC NGAY</span>
-                        </button>
-                    </div>
-                `;
-                banner.classList.remove('hidden');
+                    `;
+                    banner.classList.remove('hidden');
+                } else {
+                    const missingNames = missingCats.map(c => `${c.icon || '✦'} ${c.name_vi || c.name}`).join(', ');
+                    banner.innerHTML = `
+                        <div class="bg-gradient-to-r from-amber-950/95 via-yellow-950/90 to-amber-900/90 border-2 border-amber-400 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xl animate-pulse">
+                            <div class="space-y-0.5">
+                                <div class="flex items-center gap-1.5 text-amber-300 font-black text-xs">
+                                    <span class="text-base">⚠️</span>
+                                    <span>TRANG BÌA CHƯA HIỆN ĐỦ DANH MỤC TỪ TRANG QUẢN TRỊ!</span>
+                                </div>
+                                <div class="text-[11px] text-white">
+                                    Đang thiếu: <b class="text-amber-300 underline">${missingNames}</b>
+                                </div>
+                            </div>
+                            <button onclick="syncCategoriesToCoverPage(false)" class="bg-amber-400 hover:bg-amber-300 text-paca-navy text-xs font-black px-4 py-2 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-1.5 flex-shrink-0">
+                                <span>🪄</span>
+                                <span>CẬP NHẬT ĐỦ DANH MỤC NGAY</span>
+                            </button>
+                        </div>
+                    `;
+                    banner.classList.remove('hidden');
+                }
+                return;
             }
+
+            // CASE 2: Category Page with Unplaced Dishes
+            const curCat = getCategoryForCurrentPage();
+            if (curCat) {
+                const unplaced = getUnplacedDishesForCurrentPage();
+                const allItems = window.paca?.menu?.items || window.paca?.menu?.products || [];
+                const totalInCat = allItems.filter(i => (i.category === curCat.id || i.category_id === curCat.id) && i.is_active !== false).length;
+
+                if (unplaced.length > 0) {
+                    const unplacedNames = unplaced.map(d => `${d.name} (${(d.price || 0).toLocaleString('vi-VN')}đ)`).join(', ');
+                    banner.innerHTML = `
+                        <div class="bg-gradient-to-r from-amber-950/95 via-yellow-950/90 to-amber-900/90 border-2 border-amber-400 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xl animate-pulse">
+                            <div class="space-y-0.5">
+                                <div class="flex items-center gap-1.5 text-amber-300 font-black text-xs">
+                                    <span class="text-base">✨</span>
+                                    <span>PHÁT HIỆN ${unplaced.length} MÓN MỚI TRONG DANH MỤC "${curCat.name_vi || curCat.name}" CHƯA CÓ TRÊN TRANG NÀY!</span>
+                                </div>
+                                <div class="text-[11px] text-white">
+                                    Món mới: <b class="text-amber-300 underline">${unplacedNames}</b>
+                                </div>
+                            </div>
+                            <button onclick="addUnplacedDishesToCurrentPage()" class="bg-amber-400 hover:bg-amber-300 text-paca-navy text-xs font-black px-4 py-2 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-1.5 flex-shrink-0">
+                                <span>➕</span>
+                                <span>THÊM VÀO CUỐI TRANG & TỰ KÉO DÀI</span>
+                            </button>
+                        </div>
+                    `;
+                    banner.classList.remove('hidden');
+                } else {
+                    banner.innerHTML = `
+                        <div class="bg-gray-900/90 border border-gray-700/80 rounded-2xl p-2.5 flex items-center justify-between text-xs shadow-md">
+                            <div class="flex items-center gap-2 text-gray-300">
+                                <span class="text-emerald-400 font-bold">✓</span>
+                                <span>Trang "${curPage.title}" đang hiển thị đủ ${totalInCat} món của danh mục "${curCat.name_vi || curCat.name}".</span>
+                            </div>
+                            <button onclick="extendPageHeight(300)" title="Kéo dài thêm chiều cao trang này thêm 300px" class="text-[11px] bg-gray-800 hover:bg-gray-700 text-emerald-300 font-bold px-3 py-1 rounded-xl border border-gray-600 active:scale-95 transition flex items-center gap-1">
+                                <span>📏</span>
+                                <span>+ Kéo dài trang</span>
+                            </button>
+                        </div>
+                    `;
+                    banner.classList.remove('hidden');
+                }
+                return;
+            }
+
+            // CASE 3: Neutral Page (e.g. Intro or custom poster)
+            banner.classList.add('hidden');
+            banner.innerHTML = '';
         }
 
         function syncCategoriesToCoverPage(forceConfirm = false) {
@@ -1033,6 +1173,47 @@
             updateInspector(null);
             engine.saveDraft();
             alert(`✓ Đã xóa "${pageTitle}" thành công!`);
+        }
+
+        function moveCurrentPage(delta) {
+            if (!engine || !engine.design || !engine.design.pages) return;
+            const pages = engine.design.pages;
+            const curIdx = pages.findIndex(p => p.id === engine.activePageId);
+            if (curIdx === -1) return;
+            const targetIdx = curIdx + delta;
+            if (targetIdx < 0) {
+                alert("Trang này đã ở vị trí đầu tiên!");
+                return;
+            }
+            if (targetIdx >= pages.length) {
+                alert("Trang này đã ở vị trí cuối cùng!");
+                return;
+            }
+
+            engine.recordState();
+            const temp = pages[curIdx];
+            pages[curIdx] = pages[targetIdx];
+            pages[targetIdx] = temp;
+
+            updatePageTabs();
+            populateTargetPageSelect();
+            engine.render();
+            engine.saveDraft();
+            updateCoverMissingCatsBanner();
+            updateInspector(engine.getSelectedElement());
+        }
+
+        function extendPageHeight(pixels = 300) {
+            if (!engine || !engine.design || !engine.design.pages) return;
+            const curPage = engine.getActivePage();
+            if (!curPage) return;
+            engine.recordState();
+            curPage.height = Math.max(600, (curPage.height || 1200) + pixels);
+            engine.render();
+            engine.saveDraft();
+            updateInspector(engine.getSelectedElement());
+            updateCoverMissingCatsBanner();
+            alert(`✓ Đã cập nhật chiều cao cho "${curPage.title}": ${curPage.height}px (${pixels > 0 ? '+' : ''}${pixels}px)`);
         }
 
         function handleDeleteAction() {
@@ -1355,6 +1536,53 @@
             if (!el) {
                 noSel.classList.remove('hidden');
                 form.classList.add('hidden');
+                const curPage = engine?.getActivePage();
+                if (curPage) {
+                    const pages = engine.design?.pages || [];
+                    const curIdx = pages.findIndex(p => p.id === curPage.id);
+                    noSel.innerHTML = `
+                        <div class="space-y-3 text-left">
+                            <div class="bg-gray-800/80 p-3 rounded-2xl border border-gray-700/80 space-y-2">
+                                <div class="text-[11px] font-bold text-amber-300 flex items-center justify-between">
+                                    <span>📄 TRANG HIỆN TẠI</span>
+                                    <span class="text-gray-400">#${curIdx + 1} / ${pages.length}</span>
+                                </div>
+                                <div class="text-xs font-bold text-white">${curPage.title || 'Trang ' + (curIdx + 1)}</div>
+                                <div class="text-[10px] text-gray-400">
+                                    Kích thước: <span class="text-white font-mono">${curPage.width || 800}px</span> × <span class="text-emerald-400 font-mono font-bold">${curPage.height || 1200}px</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-800/60 p-3 rounded-2xl border border-gray-700/60 space-y-2">
+                                <div class="text-[11px] font-bold text-gray-300">📏 ĐIỀU CHỈNH CHIỀU CAO TRANG:</div>
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <button onclick="extendPageHeight(300)" class="bg-emerald-950/60 hover:bg-emerald-800 border border-emerald-600/60 text-emerald-300 hover:text-white text-xs font-bold py-1.5 px-2 rounded-xl transition active:scale-95 text-center">
+                                        +300px Kéo dài
+                                    </button>
+                                    <button onclick="extendPageHeight(-300)" class="bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 hover:text-white text-xs font-bold py-1.5 px-2 rounded-xl transition active:scale-95 text-center">
+                                        -300px Thu ngắn
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-800/60 p-3 rounded-2xl border border-gray-700/60 space-y-2">
+                                <div class="text-[11px] font-bold text-gray-300">🔃 THỨ TỰ TRANG:</div>
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <button onclick="moveCurrentPage(-1)" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-amber-300 hover:text-white text-xs font-bold py-1.5 px-2 rounded-xl transition active:scale-95 text-center">
+                                        ◀ Lên trước
+                                    </button>
+                                    <button onclick="moveCurrentPage(1)" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-amber-300 hover:text-white text-xs font-bold py-1.5 px-2 rounded-xl transition active:scale-95 text-center">
+                                        Xuống sau ▶
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="text-center pt-2 text-[10px] text-gray-500 italic">
+                                Chạm vào một đối tượng trên canvas để chỉnh sửa thuộc tính hoặc gắn món bán.
+                            </div>
+                        </div>
+                    `;
+                }
                 return;
             }
 

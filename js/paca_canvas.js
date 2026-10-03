@@ -536,6 +536,21 @@ class PacaCanvasEngine {
             { id: 'b08', defaultTitle: 'POPCORN CHICKEN CHEESE', defaultPrice: 95000, defaultBadge: 'M/L Options', image: '', desc: 'Gà chiên giòn rụm áo sốt cay ngọt Hàn Quốc phủ ngập phô mai kéo sợi thơm phức.' }
         ];
 
+        // Include any custom new dishes added to Bites in Admin (e.g. t4ss)
+        const customBites = (window.paca?.menu?.items || []).filter(i => 
+            i.category === 'bites' && !bitesItems.some(b => b.id === i.id)
+        );
+        customBites.forEach(cItem => {
+            bitesItems.push({
+                id: cItem.id,
+                defaultTitle: cItem.name,
+                defaultPrice: cItem.price,
+                defaultBadge: cItem.badge || 'Món Mới',
+                image: cItem.image || '',
+                desc: cItem.description_vi || cItem.description || 'Món nhắm mới chế biến tươi nóng phục vụ quý khách.'
+            });
+        });
+
         bitesItems.forEach(itemDef => {
             const boundProduct = window.paca?.menu?.items?.find(i => i.id === itemDef.id);
             const isSoldOut = boundProduct && boundProduct.is_available === false;
@@ -1296,13 +1311,74 @@ class PacaCanvasEngine {
         if (!page) return;
 
         const id = 'el_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 4);
+
+        let elW = type === 'text' ? 300 : (type === 'product_card' ? 340 : 200);
+        let elH = type === 'text' ? 50 : (type === 'product_card' ? 240 : 200);
+        let posX = 50;
+        let posY = 180;
+
+        if (type === 'product_card' || type === 'image') {
+            // Find existing cards or major elements on this page
+            const existingCards = (page.elements || []).filter(e => 
+                (e.type === 'product_card' || e.type === 'image' || (e.binding && e.binding.productId)) && (e.y >= 120)
+            );
+
+            if (existingCards.length > 0) {
+                // Sort by bottom Y coordinate descending
+                existingCards.sort((a, b) => ((b.y || 0) + (b.h || 200)) - ((a.y || 0) + (a.h || 200)));
+                const bottomMost = existingCards[0];
+                const lowestBottom = (bottomMost.y || 0) + (bottomMost.h || 240);
+
+                if (type === 'product_card' && bottomMost.type === 'product_card') {
+                    if (bottomMost.w) elW = bottomMost.w;
+                    if (bottomMost.h) elH = bottomMost.h;
+                }
+
+                // Match existing left and right column X positions
+                const leftCard = existingCards.find(c => (c.x || 0) < 250);
+                const rightCard = existingCards.find(c => (c.x || 0) >= 250);
+                const colLeftX = leftCard ? leftCard.x : 30;
+                const colRightX = rightCard ? rightCard.x : 415;
+
+                // Check 2-column layout (Left column: x < 250, Right column: x >= 250)
+                const isLeftCol = (bottomMost.x || 0) < 250;
+                const prevCard = existingCards[1];
+                const hasCompanionOnRight = prevCard && Math.abs((prevCard.y || 0) - (bottomMost.y || 0)) < 60 && (prevCard.x || 0) >= 250;
+
+                if (isLeftCol && !hasCompanionOnRight) {
+                    // Place next to the last card on the right column at same row!
+                    posX = colRightX;
+                    posY = bottomMost.y || 180;
+                } else {
+                    // Start a new row at the very bottom!
+                    posX = colLeftX;
+                    posY = lowestBottom + 25;
+                }
+            } else {
+                // If no cards yet, check bottom of all existing elements except quote
+                let maxBottom = 160;
+                (page.elements || []).forEach(e => {
+                    const b = (e.y || 0) + (e.h || 0);
+                    if (b > maxBottom && e.id !== 'cov_quote') maxBottom = b;
+                });
+                posY = maxBottom + 25;
+                posX = 50;
+            }
+
+            // AUTO-STRETCH PAGE HEIGHT SO IT NEVER CLIPS OR RUNS OUT OF ROOM!
+            const requiredHeight = posY + elH + 130;
+            if (requiredHeight > (page.height || 1000)) {
+                page.height = requiredHeight;
+            }
+        }
+
         const newEl = {
             id,
             type,
-            x: 200,
-            y: 200,
-            w: type === 'text' ? 300 : (type === 'product_card' ? 350 : 200),
-            h: type === 'text' ? 50 : (type === 'product_card' ? 250 : 200),
+            x: posX,
+            y: posY,
+            w: elW,
+            h: elH,
             rotate: 0,
             zIndex: (page.elements.length || 0) + 1,
             props,
@@ -1311,6 +1387,7 @@ class PacaCanvasEngine {
 
         page.elements.push(newEl);
         this.selectElement(id);
+        this.render();
         this.saveDraft();
         return newEl;
     }
