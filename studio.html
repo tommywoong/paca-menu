@@ -192,11 +192,11 @@
                         <span>Làm mới</span>
                     </button>
                 </div>
-                <p class="text-[11px] text-gray-400">Bấm vào món để chèn ngay thẻ món kèm liên kết `productId` và Giá Động vào trang:</p>
+                <div id="drawerBindingStatusBanner"></div>
                 <div id="studioProductCatFilters" class="flex flex-wrap gap-1 pb-1">
                     <!-- Populated by JS -->
                 </div>
-                <div id="productsDrawerList" class="space-y-2 max-h-[62vh] overflow-y-auto pr-1">
+                <div id="productsDrawerList" class="space-y-2 max-h-[58vh] overflow-y-auto pr-1">
                     <!-- Rendered by JS -->
                 </div>
             </div>
@@ -505,7 +505,13 @@
             engine = new PacaCanvasEngine({
                 mode: 'edit',
                 container: document.getElementById('canvasViewport'),
-                onSelectionChange: (el) => updateInspector(el),
+                onSelectionChange: (el) => {
+                    updateInspector(el);
+                    const prodDrawer = document.getElementById('drawerProducts');
+                    if (prodDrawer && !prodDrawer.classList.contains('hidden')) {
+                        renderProductsDrawer();
+                    }
+                },
                 onDesignChange: () => updatePageTabs()
             });
             await engine.init();
@@ -956,8 +962,65 @@
             if (targetCatId !== null) currentStudioProductCat = targetCatId;
             const filterContainer = document.getElementById('studioProductCatFilters');
             const list = document.getElementById('productsDrawerList');
+            const banner = document.getElementById('drawerBindingStatusBanner');
             const items = window.paca?.menu?.items || [];
             const categories = window.paca?.getCategories ? window.paca.getCategories(true) : [];
+            const selectedEl = engine ? engine.getSelectedElement() : null;
+
+            // Render status banner at top of drawer
+            if (banner) {
+                if (selectedEl) {
+                    const boundId = selectedEl.binding?.productId;
+                    const boundItem = boundId ? items.find(i => i.id === boundId) : null;
+                    const elTypeLabel = selectedEl.type === 'image' ? '🖼️ Hình Ảnh' : (selectedEl.type === 'product_card' ? '🍸 Thẻ Món' : (selectedEl.type === 'text' ? '🔤 Chữ' : 'Đối tượng'));
+
+                    if (boundItem) {
+                        banner.innerHTML = `
+                            <div class="bg-emerald-950/80 border border-emerald-500/60 rounded-xl p-2.5 space-y-1 shadow-sm">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-emerald-300 font-bold text-xs flex items-center gap-1">
+                                        <span>🎯</span>
+                                        <span>Đang chọn ${elTypeLabel}</span>
+                                    </span>
+                                    <button onclick="unbindCurrentElementProduct()" class="text-[10px] bg-red-950 hover:bg-red-800 text-red-200 font-bold px-2 py-0.5 rounded border border-red-700/60 transition" title="Gỡ bỏ liên kết món hiện tại">
+                                        Gỡ gắn món ✕
+                                    </button>
+                                </div>
+                                <div class="text-[11px] text-white">
+                                    Món đang gắn: <b class="text-amber-300">${boundItem.name}</b> <span class="text-emerald-300">(${window.paca.formatMoney(boundItem.price)})</span>
+                                </div>
+                                <div class="text-[10px] text-gray-300 italic">
+                                    💡 Bấm món khác bên dưới nếu muốn thay đổi món gắn vào ảnh này.
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        banner.innerHTML = `
+                            <div class="bg-gradient-to-r from-amber-950/90 to-yellow-950/80 border-2 border-amber-400 rounded-xl p-2.5 space-y-1 shadow-md">
+                                <div class="text-amber-300 font-black text-xs flex items-center gap-1">
+                                    <span>🎯</span>
+                                    <span>ĐANG CHỌN ${elTypeLabel.toUpperCase()} TRÊN CANVAS</span>
+                                </div>
+                                <div class="text-[11px] text-white font-bold">
+                                    👉 Bấm vào bất kỳ món nào dưới đây để GÁN GIÁ VÀO ẢNH NGAY!
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    banner.innerHTML = `
+                        <div class="bg-gray-800/80 border border-gray-700 rounded-xl p-2 text-[11px] text-gray-300 space-y-0.5">
+                            <div class="font-bold text-amber-300 flex items-center gap-1">
+                                <span>💡</span>
+                                <span>Cách gán giá cho hình ảnh:</span>
+                            </div>
+                            <div><b>Bước 1:</b> Bấm chọn 1 bức ảnh trên canvas (hiện viền xanh).</div>
+                            <div><b>Bước 2:</b> Bấm vào món bên dưới để gán giá tự động!</div>
+                            <div class="text-[10px] text-gray-400 italic pt-0.5">(Nếu không chọn ảnh, bấm món sẽ tạo Thẻ Món mới).</div>
+                        </div>
+                    `;
+                }
+            }
 
             if (filterContainer) {
                 let fHtml = `
@@ -994,15 +1057,73 @@
                 return;
             }
 
-            list.innerHTML = filteredItems.map(it => `
-                <div onclick="addProductCard('${it.id}')" class="bg-gray-800 hover:bg-gray-700 p-2 rounded-xl border border-gray-700 cursor-pointer flex items-center justify-between">
-                    <div>
-                        <div class="font-serif font-bold text-xs text-white">${it.name}</div>
-                        <div class="text-[10px] text-gray-400">${it.name_vi || ''}</div>
+            list.innerHTML = filteredItems.map(it => {
+                const isCurrentBound = selectedEl && selectedEl.binding?.productId === it.id;
+                return `
+                    <div onclick="handleDrawerProductClick('${it.id}')" class="p-2.5 rounded-xl border cursor-pointer flex items-center justify-between transition group ${isCurrentBound ? 'bg-amber-950/80 border-amber-400 ring-2 ring-amber-400/50 shadow-lg' : 'bg-gray-800 hover:bg-gray-700 border-gray-700 hover:border-amber-400/60'}">
+                        <div class="min-w-0 pr-2">
+                            <div class="font-serif font-bold text-xs text-white truncate group-hover:text-amber-300 transition">${it.name}</div>
+                            <div class="text-[10px] text-gray-400 truncate">${it.name_vi || ''}</div>
+                            <div class="font-bold text-amber-400 text-xs mt-0.5">${window.paca.formatMoney(it.price)}</div>
+                        </div>
+                        <div class="flex-shrink-0">
+                            ${isCurrentBound ? `
+                                <span class="bg-amber-400 text-paca-navy text-[10px] font-black px-2 py-1 rounded-lg flex items-center gap-1 shadow">
+                                    <span>✓</span>
+                                    <span>Đang gắn</span>
+                                </span>
+                            ` : (selectedEl ? `
+                                <button class="bg-amber-400 group-hover:bg-amber-300 text-paca-navy text-[10px] font-black px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow transition">
+                                    <span>+</span>
+                                    <span>Gán vào ảnh</span>
+                                </button>
+                            ` : `
+                                <span class="bg-gray-700 group-hover:bg-gray-600 text-gray-200 text-[10px] font-bold px-2 py-1 rounded-lg">
+                                    + Thẻ
+                                </span>
+                            `)}
+                        </div>
                     </div>
-                    <span class="font-bold text-amber-400 text-xs">${window.paca.formatMoney(it.price)}</span>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+        }
+
+        function handleDrawerProductClick(productId) {
+            const selectedEl = engine.getSelectedElement();
+            const item = window.paca?.menu?.items.find(i => i.id === productId);
+            if (!item) return;
+
+            const itemName = item.name_vi || item.name;
+            const itemPrice = window.paca?.formatMoney ? window.paca.formatMoney(item.price) : `${item.price}đ`;
+
+            if (selectedEl) {
+                // Gán món vào đối tượng đang chọn trên canvas
+                if (selectedEl.type === 'product_card') {
+                    engine.updateSelectedProps({
+                        title: item.name,
+                        price: Math.round(item.price / 1000),
+                        badge: item.badge || '',
+                        ingredients: (item.ingredients || []).join(' • '),
+                        desc_vi: item.description_vi || ''
+                    });
+                } else if (selectedEl.type === 'text') {
+                    engine.updateSelectedProps({
+                        text: item.name
+                    });
+                }
+                selectedEl.binding = { productId: item.id, action: 'open_modal' };
+                updateInspector(selectedEl);
+                engine.render();
+                engine.saveDraft();
+                renderProductsDrawer();
+
+                const elTypeVN = selectedEl.type === 'image' ? 'hình ảnh' : (selectedEl.type === 'product_card' ? 'thẻ món' : 'đối tượng');
+                alert(`✓ ĐÃ GÁN THÀNH CÔNG!\n\nĐã gán món: "${itemName}" (${itemPrice}) vào ${elTypeVN} này.\n\n✨ Khi khách xem menu bên trang đặt món (index.html), hình ảnh này sẽ có giá ${itemPrice} và khi khách bấm vào sẽ mở bảng chọn món!`);
+            } else {
+                // Chưa chọn đối tượng nào -> Thêm thẻ món mới
+                addProductCard(productId);
+                alert(`✓ Đã thêm thẻ món "${itemName}" (${itemPrice}) lên trang!\n\n💡 Mẹo: Nếu bạn muốn gán giá trực tiếp vào một bức ảnh có sẵn, hãy bấm chọn bức ảnh đó trên trang trước (hiện viền xanh), rồi bấm vào món trong danh sách này.`);
+            }
         }
 
         function addProductCard(productId) {
@@ -1449,6 +1570,7 @@
                 updateInspector(selectedEl);
                 engine.render();
                 engine.saveDraft();
+                renderProductsDrawer();
             } else {
                 // If no element selected, add as new product card
                 addProductCard(productId);
@@ -1464,6 +1586,8 @@
                 updateInspector(selectedEl);
                 engine.render();
                 engine.saveDraft();
+                renderProductsDrawer();
+                alert("✓ Đã gỡ bỏ liên kết món khỏi đối tượng này thành công!");
             }
             closeSmartProductPicker();
         }
