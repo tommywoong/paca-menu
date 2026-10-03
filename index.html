@@ -387,7 +387,7 @@
             if (window.paca?.startCloudOrderSync) {
                 window.paca.startCloudOrderSync(null, (updatedOrder) => {
                     const currentModalOrdId = document.getElementById('successOrderId')?.innerText;
-                    if (currentModalOrdId === updatedOrder.id) {
+                    if (updatedOrder && currentModalOrdId === updatedOrder.id) {
                         const statusBadge = document.getElementById('successOrderStatusBadge');
                         if (statusBadge) {
                             if (updatedOrder.paymentStatus === 'paid') {
