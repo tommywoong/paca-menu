@@ -1173,6 +1173,27 @@
                     </div>
                 </div>
 
+                <!-- Image Row -->
+                <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                    <label class="font-bold text-gray-700 block mb-1.5 text-xs">📸 Hình Ảnh Món Ăn / Đồ Uống:</label>
+                    <div class="flex items-center gap-3">
+                        <div id="dishEditImagePreviewBox" class="w-14 h-14 rounded-xl bg-white border border-gray-300 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
+                            <img id="dishEditImagePreview" src="" class="w-full h-full object-cover hidden" alt="Ảnh món">
+                            <span id="dishEditImagePlaceholder" class="text-xl text-gray-400">📷</span>
+                        </div>
+                        <div class="flex-1 space-y-1.5">
+                            <input type="text" id="dishEditImage" placeholder="Đường dẫn ảnh (URL hoặc assets/...)" oninput="updateDishImagePreview(this.value)" class="w-full border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white">
+                            <div class="flex items-center gap-2">
+                                <label class="bg-gray-200 hover:bg-gray-300 text-gray-800 text-[11px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition">
+                                    <span>Tải ảnh từ máy</span>
+                                    <input type="file" accept="image/*" onchange="handleDishImageUpload(event)" class="hidden">
+                                </label>
+                                <button type="button" onclick="clearDishImage()" class="text-gray-400 hover:text-red-600 text-[11px]">Xóa ảnh</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Category & Station Row -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
@@ -3745,27 +3766,37 @@
 
                 return `
                     <div class="bg-white rounded-xl p-3 border border-gray-200 shadow-sm flex items-center justify-between gap-3 hover:border-gray-300 transition">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="font-bold text-sm text-paca-navy truncate">${it.name}</span>
-                                ${it.badge ? `<span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-1.5 py-0.2 rounded">${it.badge}</span>` : ''}
-                                <span class="text-[10px] ${isKitchen ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-blue-100 text-blue-900 border-blue-300'} px-2 py-0.5 rounded-full font-bold border">
-                                    ${isKitchen ? '🍳 Bếp' : '🍸 Quầy Bar'}
-                                </span>
-                                <span class="text-[10px] text-gray-500 font-semibold">📁 ${catName}</span>
-                                ${stockBadge}
-                                ${optBadge}
-                            </div>
-                            <div class="text-[11px] text-gray-500 truncate">${it.name_vi || ''}</div>
-                            <div class="flex items-center gap-1.5 mt-1 flex-wrap">
-                                <span class="text-xs font-black text-paca-crimson">${window.paca.formatMoney(it.price)}</span>
-                                <span class="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                                    Vốn: ${it.cost_price ? window.paca.formatMoney(it.cost_price) : (it.costPrice ? window.paca.formatMoney(it.costPrice) : 'Chưa có')}
-                                </span>
-                                ${(it.cost_price || it.costPrice) ? `
-                                <span class="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                                    Lãi: +${window.paca.formatMoney(Math.max(0, it.price - (it.cost_price || it.costPrice || 0)))} (${it.price > 0 ? Math.round((Math.max(0, it.price - (it.cost_price || it.costPrice || 0)) / it.price) * 100) : 0}%)
-                                </span>` : ''}
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                            ${it.image ? `
+                                <img src="${it.image}" class="w-14 h-14 rounded-xl object-cover flex-shrink-0 border border-gray-300 shadow-sm" alt="${it.name}">
+                            ` : `
+                                <div class="w-14 h-14 rounded-xl bg-gray-100 border border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 flex-shrink-0">
+                                    <span class="text-xl">${isKitchen ? '🍳' : '🍸'}</span>
+                                    <span class="text-[8px] font-bold text-gray-400">No img</span>
+                                </div>
+                            `}
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="font-bold text-sm text-paca-navy truncate">${it.name}</span>
+                                    ${it.badge ? `<span class="bg-amber-100 text-amber-800 text-[9px] font-bold px-1.5 py-0.2 rounded">${it.badge}</span>` : ''}
+                                    <span class="text-[10px] ${isKitchen ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-blue-100 text-blue-900 border-blue-300'} px-2 py-0.5 rounded-full font-bold border">
+                                        ${isKitchen ? '🍳 Bếp' : '🍸 Quầy Bar'}
+                                    </span>
+                                    <span class="text-[10px] text-gray-500 font-semibold">📁 ${catName}</span>
+                                    ${stockBadge}
+                                    ${optBadge}
+                                </div>
+                                <div class="text-[11px] text-gray-500 truncate">${it.name_vi || ''}</div>
+                                <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                                    <span class="text-xs font-black text-paca-crimson">${window.paca.formatMoney(it.price)}</span>
+                                    <span class="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                        Vốn: ${it.cost_price ? window.paca.formatMoney(it.cost_price) : (it.costPrice ? window.paca.formatMoney(it.costPrice) : 'Chưa có')}
+                                    </span>
+                                    ${(it.cost_price || it.costPrice) ? `
+                                    <span class="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                        Lãi: +${window.paca.formatMoney(Math.max(0, it.price - (it.cost_price || it.costPrice || 0)))} (${it.price > 0 ? Math.round((Math.max(0, it.price - (it.cost_price || it.costPrice || 0)) / it.price) * 100) : 0}%)
+                                    </span>` : ''}
+                                </div>
                             </div>
                         </div>
 
@@ -4795,6 +4826,11 @@
                 document.getElementById('dishEditIngredients').value = Array.isArray(item.ingredients) ? item.ingredients.join(', ') : (item.ingredients || '');
                 document.getElementById('dishEditBadge').value = item.badge || '';
 
+                // Image preview
+                const imgVal = item.image || '';
+                document.getElementById('dishEditImage').value = imgVal;
+                updateDishImagePreview(imgVal);
+
                 // Inventory fields
                 setDishEditType(item.item_type || 'standard');
                 document.getElementById('dishEditCode').value = item.sku || `PACA-${item.id.toUpperCase()}`;
@@ -4817,6 +4853,10 @@
                 document.getElementById('dishEditNameVi').value = '';
                 document.getElementById('dishEditPrice').value = '180000';
                 document.getElementById('dishEditCostPrice').value = '45000';
+
+                // Clear image
+                document.getElementById('dishEditImage').value = '';
+                updateDishImagePreview('');
                 
                 const categories = window.paca.getCategories(true);
                 const defaultCat = (currentAdminMenuCategory && currentAdminMenuCategory !== 'all') ? currentAdminMenuCategory : (categories[0]?.id || 'week');
@@ -4853,6 +4893,41 @@
 
             updateDishProfitPreview();
             document.getElementById('dishEditorModal').classList.remove('hidden');
+        }
+
+        function updateDishImagePreview(url) {
+            const preview = document.getElementById('dishEditImagePreview');
+            const placeholder = document.getElementById('dishEditImagePlaceholder');
+            if (preview && placeholder) {
+                if (url && url.trim()) {
+                    preview.src = url.trim();
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                } else {
+                    preview.src = '';
+                    preview.classList.add('hidden');
+                    placeholder.classList.remove('hidden');
+                }
+            }
+        }
+
+        function clearDishImage() {
+            const input = document.getElementById('dishEditImage');
+            if (input) input.value = '';
+            updateDishImagePreview('');
+        }
+
+        function handleDishImageUpload(e) {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const dataUrl = event.target.result;
+                const input = document.getElementById('dishEditImage');
+                if (input) input.value = dataUrl;
+                updateDishImagePreview(dataUrl);
+            };
+            reader.readAsDataURL(file);
         }
 
         function closeDishEditorModal() {
@@ -4899,6 +4974,10 @@
 
             const ingredients = ingredientsRaw ? ingredientsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
 
+            // Existing item image fallback
+            const existingItem = id ? window.paca.menu?.items?.find(i => i.id === id) : null;
+            const image = document.getElementById('dishEditImage')?.value.trim() || existingItem?.image || '';
+
             window.paca.saveMenuItem({
                 id: id || undefined,
                 name,
@@ -4918,6 +4997,7 @@
                 description_vi,
                 badge,
                 ingredients,
+                image,
                 is_available: stock_quantity > 0
             });
 
@@ -4927,7 +5007,7 @@
             renderAdminCategories();
             renderInventoryTable();
             renderRevenueStats();
-            alert("Đã lưu thông tin hàng hóa, giá vốn và tồn kho thành công!");
+            alert("Đã lưu thông tin hàng hóa, hình ảnh, giá vốn và tồn kho thành công!");
         }
 
         // ==================== BATCH COST MODAL LOGIC ====================

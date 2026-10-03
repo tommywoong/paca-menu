@@ -887,7 +887,7 @@ class PacaCanvasEngine {
             // Interactive product card on poster
             const isSoldOut = boundProduct && boundProduct.is_available === false;
             const hasOptions = boundProduct && ((boundProduct.variants && boundProduct.variants.length > 0) || (boundProduct.options && boundProduct.options.length > 0) || (boundProduct.toppings && boundProduct.toppings.length > 0));
-            const itemImage = el.props.image;
+            const itemImage = el.props.image || boundProduct?.image;
 
             node.className += ' cursor-pointer active:scale-[0.98] transition-all p-2 sm:p-3 flex flex-col justify-between overflow-visible';
             node.style.backgroundColor = el.props.bg || '#940b05';
@@ -1131,25 +1131,43 @@ class PacaCanvasEngine {
                 node.appendChild(navBadge);
             }
         } else if (el.type === 'product_card') {
+            const boundProduct = el.binding?.productId ? (window.paca?.menu?.items || []).find(i => i.id === el.binding.productId) : null;
+            const itemImage = el.props.image || boundProduct?.image;
             const bgVal = (el.props.bg || '#940b05').toLowerCase();
             const isWhiteBg = bgVal === '#ffffff' || bgVal === '#fff' || bgVal === 'white';
             node.style.backgroundColor = el.props.bg || '#940b05';
             node.style.color = el.props.color || (isWhiteBg ? '#10234d' : '#ffffff');
             if (el.props.border) node.style.border = el.props.border;
             if (el.props.shadow) node.style.boxShadow = el.props.shadow;
-            node.style.borderRadius = '6px';
-            node.className += ' p-3 flex flex-col justify-between';
+            node.style.borderRadius = '8px';
+            node.className += ' p-2.5 sm:p-3 flex flex-col justify-between overflow-hidden';
+            
             node.innerHTML = `
-                <div>
-                    <div class="flex justify-between items-start font-serif font-black text-sm">
-                        <span>${el.props.title || 'Món'}</span>
-                        <span class="${isWhiteBg ? 'text-paca-crimson font-black' : 'text-amber-300 font-bold'}">${el.props.price || 180}k</span>
+                <div class="flex flex-col h-full justify-between">
+                    <div>
+                        <div class="flex justify-between items-start font-serif font-black text-sm">
+                            <span class="line-clamp-2">${el.props.title || (boundProduct ? boundProduct.name : 'Món')}</span>
+                            <span class="${isWhiteBg ? 'text-paca-crimson font-black' : 'text-amber-300 font-bold'} whitespace-nowrap ml-1">${el.props.price || (boundProduct ? Math.round(boundProduct.price / 1000) : 180)}k</span>
+                        </div>
+                        <div class="text-[10px] ${isWhiteBg ? 'text-gray-600' : 'opacity-80'} mt-0.5 line-clamp-1">${el.props.ingredients || ''}</div>
+                        <div class="text-xs ${isWhiteBg ? 'text-gray-800 font-medium' : 'text-amber-200'} mt-0.5 line-clamp-1">${el.props.desc_vi || ''}</div>
                     </div>
-                    <div class="text-[10px] ${isWhiteBg ? 'text-gray-600' : 'opacity-80'} mt-1">${el.props.ingredients || ''}</div>
-                    <div class="text-xs ${isWhiteBg ? 'text-gray-800 font-medium' : 'text-amber-200'} mt-1">${el.props.desc_vi || ''}</div>
-                </div>
-                <div class="mt-2 text-right">
-                    <span class="${isWhiteBg ? 'bg-paca-navy text-paca-cream' : 'bg-amber-400 text-paca-navy'} text-[10px] font-black px-2 py-0.5 rounded shadow-sm">+ GẮN: ${el.binding?.productId || 'Chưa gắn'}</span>
+
+                    ${itemImage ? `
+                        <div class="w-full flex-1 my-1.5 rounded-lg overflow-hidden bg-black/10 flex items-center justify-center min-h-[110px] max-h-[190px] border border-black/10">
+                            <img src="${itemImage}" class="w-full h-full object-cover rounded-lg pointer-events-none select-none" alt="${el.props.title}">
+                        </div>
+                    ` : `
+                        <div class="w-full flex-1 my-1.5 rounded-lg border-2 border-dashed ${isWhiteBg ? 'border-gray-300 bg-gray-50' : 'border-white/20 bg-white/5'} flex flex-col items-center justify-center min-h-[60px] text-center p-2 select-none pointer-events-none">
+                            <span class="text-base opacity-60">📸</span>
+                            <span class="text-[9px] ${isWhiteBg ? 'text-gray-400' : 'text-white/40'}">Chưa có ảnh món</span>
+                        </div>
+                    `}
+
+                    <div class="flex items-center justify-between gap-1 mt-1 pt-1 border-t ${isWhiteBg ? 'border-gray-200' : 'border-white/10'}">
+                        ${el.props.badge ? `<span class="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded shadow-sm">${el.props.badge}</span>` : '<span></span>'}
+                        <span class="${isWhiteBg ? 'bg-paca-navy text-paca-cream' : 'bg-amber-400 text-paca-navy'} text-[10px] font-black px-2 py-0.5 rounded shadow-sm">+ GẮN: ${el.binding?.productId || 'Chưa gắn'}</span>
+                    </div>
                 </div>
             `;
         }
