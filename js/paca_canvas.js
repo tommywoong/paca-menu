@@ -226,13 +226,27 @@ class PacaCanvasEngine {
         // Identify custom active categories that do not have dedicated pre-baked canvas pages
         const allCategories = window.paca?.getCategories ? window.paca.getCategories(true) : [];
         const bakedPageIds = new Set(pages.map(p => p.id));
-        const dynamicCats = allCategories.filter(c => c.is_active !== false && !bakedPageIds.has(c.pageId) && !bakedPageIds.has('page_' + c.id));
+        const dynamicCats = allCategories.filter(c => 
+            c.is_active !== false && 
+            !bakedPageIds.has(c.pageId) && 
+            !bakedPageIds.has('page_' + c.id) &&
+            !bakedPageIds.has('sec_cat_' + c.id) &&
+            !bakedPageIds.has(c.id)
+        );
 
         pages.forEach((page, pageIdx) => {
             // Check if page belongs to an inactive category
-            const catForPage = allCategories.find(c => c.pageId === page.id || ('page_' + c.id) === page.id);
+            const catForPage = allCategories.find(c => 
+                c.id === page.id ||
+                c.pageId === page.id || 
+                ('page_' + c.id) === page.id ||
+                ('sec_cat_' + c.id) === page.id ||
+                (page.id.startsWith('page_') && ('page_' + c.id) === page.id) ||
+                (c.name_vi && (page.title || '').trim().toLowerCase() === c.name_vi.trim().toLowerCase()) ||
+                (c.name && (page.title || '').trim().toLowerCase() === c.name.trim().toLowerCase())
+            );
             if (catForPage && catForPage.is_active === false) {
-                return; // Skip inactive category page
+                return; // Skip inactive category page completely!
             }
 
             // Before rendering the final page (page_wine_shots), render any dynamic custom categories!
@@ -276,15 +290,67 @@ class PacaCanvasEngine {
                 innerBox.appendChild(bgOverlay);
             }
 
-            // On Cover Page: dynamically render active categories marked show_on_cover !== false
+            // On Cover Page: dynamically filter active categories marked show_on_cover !== false
             if (page.id === 'page_cover') {
                 const hasExplicitNavLinks = (page.elements || []).some(el => el.type === 'link_nav');
                 if (hasExplicitNavLinks) {
-                    // Render all elements proportionally using percentage coordinates as designed in Studio
-                    (page.elements || []).forEach(el => {
+                    const nonLinkElements = (page.elements || []).filter(el => el.type !== 'link_nav');
+                    const rawNavLinks = (page.elements || []).filter(el => el.type === 'link_nav');
+
+                    // Filter only links that belong to an ACTIVE category marked for cover
+                    const activeNavLinks = rawNavLinks.filter(el => {
+                        const targetId = el.props?.targetPageId || '';
+                        const elId = el.id || '';
+                        const text = (el.props?.text || '').trim().toLowerCase();
+
+                        const matchedCat = allCategories.find(c => 
+                            c.id === targetId ||
+                            c.pageId === targetId ||
+                            ('sec_cat_' + c.id) === targetId ||
+                            ('page_' + c.id) === targetId ||
+                            elId === ('nav_link_cat_' + c.id) ||
+                            elId === ('nav_link_' + c.id) ||
+                            (c.name && text.includes(c.name.trim().toLowerCase())) ||
+                            (c.name_vi && text.includes(c.name_vi.trim().toLowerCase()))
+                        );
+
+                        // If linked to a category, check is_active and show_on_cover
+                        if (matchedCat) {
+                            return matchedCat.is_active !== false && matchedCat.show_on_cover !== false;
+                        }
+                        // If not explicitly matched, check if text contains an inactive category name
+                        const isInactiveCat = allCategories.some(c => 
+                            c.is_active === false && (
+                                (c.name && text.includes(c.name.trim().toLowerCase())) ||
+                                (c.name_vi && text.includes(c.name_vi.trim().toLowerCase()))
+                            )
+                        );
+                        if (isInactiveCat) return false;
+                        return true;
+                    });
+
+                    // Render non-link elements first
+                    nonLinkElements.forEach(el => {
                         const elNode = this.createCustomerElementNode(el, baseWidth, page.height);
                         if (elNode) innerBox.appendChild(elNode);
                     });
+
+                    // Evenly distribute and render active nav links so there are no empty gaps
+                    if (activeNavLinks.length > 0) {
+                        const firstY = rawNavLinks[0]?.y || 220;
+                        const availableHeight = Math.max(200, (page.height || 1000) - firstY - 140);
+                        const spacing = Math.min(75, Math.max(48, Math.floor(availableHeight / activeNavLinks.length)));
+
+                        activeNavLinks.forEach((el, idx) => {
+                            const adjustedEl = {
+                                ...el,
+                                y: firstY + idx * spacing,
+                                h: Math.min(el.h || 50, spacing - 10)
+                            };
+                            const elNode = this.createCustomerElementNode(adjustedEl, baseWidth, page.height);
+                            if (elNode) innerBox.appendChild(elNode);
+                        });
+                    }
                 } else {
                     // Fallback to dynamic cover category links if no link_nav elements placed
                     (page.elements || []).forEach(el => {
@@ -350,6 +416,7 @@ class PacaCanvasEngine {
 
     // --- DYNAMIC CATEGORY SECTION (For new/custom categories created in Admin) ---
     renderDynamicCategorySection(cat, wrapper, baseWidth) {
+        if (!cat || cat.is_active === false) return;
         const dishes = (window.paca?.menu?.items || []).filter(i => i.category === cat.id);
         const pageContainer = document.createElement('div');
         pageContainer.id = cat.pageId || ('sec_cat_' + cat.id);
@@ -712,6 +779,13 @@ class PacaCanvasEngine {
         let boundProduct = null;
         if (el.binding && el.binding.productId && window.paca?.menu?.items) {
             boundProduct = window.paca.menu.items.find(i => i.id === el.binding.productId);
+            if (boundProduct) {
+                const allCats = window.paca?.getCategories ? window.paca.getCategories(true) : [];
+                const prodCat = allCats.find(c => c.id === boundProduct.category);
+                if (prodCat && prodCat.is_active === false) {
+                    return null; // Omit dishes of hidden/inactive category!
+                }
+            }
         }
 
         // Element types

@@ -83,9 +83,9 @@
       "station": "bar",
       "default_station": "bar",
       "order": 6,
-      "is_active": true,
+      "is_active": false,
       "show_on_cover": false,
-      "show_on_nav": true,
+      "show_on_nav": false,
       "display_layout": "grid",
       "pageId": "sec_cat_mocktail",
       "description": "Đồ uống hoa quả sảng khoái không cồn dành cho mọi lứa tuổi"

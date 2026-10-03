@@ -420,7 +420,7 @@
             const container = document.getElementById('customerNavBarLinks');
             if (!container) return;
 
-            const activeCats = window.paca?.getCategories ? window.paca.getCategories().filter(c => c.show_on_nav !== false) : [];
+            const activeCats = (window.paca?.getCategories ? window.paca.getCategories(false) : []).filter(c => c.show_on_nav !== false && c.is_active !== false);
             let html = `
                 <a href="#page_cover" onclick="smoothScrollToTarget('page_cover', event)" class="hover:text-amber-300 transition">✦ Đầu trang</a>
             `;
@@ -1186,14 +1186,18 @@
 
         function renderStandardMenu() {
             const container = document.getElementById('standardItemsContainer');
-            const items = window.paca?.menu?.items || [];
+            if (!container) return;
+            const inactiveCatIds = new Set((window.paca?.getCategories ? window.paca.getCategories(true) : []).filter(c => c.is_active === false).map(c => c.id));
+            const items = (window.paca?.menu?.items || []).filter(it => !inactiveCatIds.has(it.category));
             container.innerHTML = items.map(it => renderStandardDishCard(it)).join('');
         }
 
         function filterStandardMenu() {
             const kw = document.getElementById('searchInput').value.trim().toLowerCase();
             const container = document.getElementById('standardItemsContainer');
-            const items = window.paca?.menu?.items || [];
+            if (!container) return;
+            const inactiveCatIds = new Set((window.paca?.getCategories ? window.paca.getCategories(true) : []).filter(c => c.is_active === false).map(c => c.id));
+            const items = (window.paca?.menu?.items || []).filter(it => !inactiveCatIds.has(it.category));
 
             const filtered = items.filter(it => it.name.toLowerCase().includes(kw) || (it.name_vi || '').toLowerCase().includes(kw));
             container.innerHTML = filtered.map(it => renderStandardDishCard(it)).join('');

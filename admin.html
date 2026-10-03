@@ -3933,6 +3933,13 @@
             const cat = window.paca.getCategoryById(catId);
             if (cat) {
                 cat.is_active = isActive;
+                if (!isActive) {
+                    cat.show_on_cover = false;
+                    cat.show_on_nav = false;
+                } else {
+                    cat.show_on_cover = true;
+                    cat.show_on_nav = true;
+                }
                 window.paca.saveCategory(cat);
                 populateMenuCategories();
                 renderAdminCategories();
