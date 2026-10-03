@@ -53,33 +53,22 @@
     <header class="bg-paca-navy text-white sticky top-0 z-40 shadow-lg">
         <div class="max-w-2xl mx-auto px-4 py-2.5 flex items-center justify-between">
             <div class="flex items-center space-x-2">
-                <a href="admin.html" title="Trang Quản Trị PACA ADMIN" class="w-9 h-9 rounded-full bg-paca-cream text-paca-navy flex items-center justify-center font-serif font-black text-xl border border-paca-navy hover:scale-105 active:scale-95 transition">
+                <div onclick="handleSecretAdminTap()" class="w-9 h-9 rounded-full bg-paca-cream text-paca-navy flex items-center justify-center font-serif font-black text-xl border border-paca-navy select-none cursor-pointer">
                     P
-                </a>
+                </div>
                 <div>
                     <h1 class="font-serif font-black text-base leading-tight tracking-wider text-paca-cream uppercase">PACA</h1>
                     <p class="text-[10px] text-blue-200">5A Pasteur, Đà Lạt • Tiny Cozy Bar</p>
                 </div>
             </div>
 
-            <!-- Table Indicator & Mode Switcher & Admin -->
+            <!-- Table Indicator (for customer orders) -->
             <div class="flex items-center space-x-2">
-                <!-- View Mode Toggle -->
-                <button onclick="toggleMenuMode()" id="btnModeToggle" class="bg-white/10 hover:bg-white/20 text-paca-cream text-[11px] font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1 border border-paca-cream/30 transition">
-                    <span id="modeIcon">🎨</span>
-                    <span id="modeLabel" class="hidden sm:inline">Chế độ Poster</span>
-                </button>
-
-                <button onclick="openTablePickerModal()" id="btnTableBadge" class="bg-paca-crimson hover:bg-paca-red text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center space-x-1.5 border border-red-300 shadow transition">
+                <button onclick="openTablePickerModal()" id="btnTableBadge" class="bg-paca-crimson hover:bg-paca-red text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center space-x-1.5 border border-red-300 shadow transition active:scale-95">
                     <span>🪑</span>
                     <span id="lblCurrentTable">Chọn bàn</span>
                     <span class="text-[10px] opacity-80">▼</span>
                 </button>
-
-                <a href="admin.html" title="Trang Quản Trị PACA Admin" class="bg-white/15 hover:bg-white/25 text-paca-cream text-xs font-bold px-2.5 py-1.5 rounded-full flex items-center gap-1 border border-paca-cream/30 transition active:scale-95">
-                    <span>⚙️</span>
-                    <span class="hidden sm:inline">Admin</span>
-                </a>
             </div>
         </div>
     </header>
@@ -112,23 +101,15 @@
             </div>
         </div>
 
-        <!-- Footer Info & Direct Admin/Studio Links -->
-        <footer class="w-full max-w-[800px] py-10 px-4 text-center text-xs text-paca-navy/70 space-y-2 border-t-2 border-paca-navy/20 mt-8">
+        <!-- Footer Info -->
+        <footer class="w-full max-w-[800px] py-12 px-4 text-center text-xs text-paca-navy/70 space-y-2 border-t-2 border-paca-navy/20 mt-8">
             <div class="font-serif font-black text-paca-navy text-sm uppercase tracking-wider">PACA • TINY COZY BAR</div>
             <div class="text-[11px] text-gray-600">5A Pasteur, Phường 4, TP. Đà Lạt • Tiny Cozy Bar in the heart of Da Lat</div>
-            <div class="pt-3 flex items-center justify-center gap-2 flex-wrap">
-                <a href="admin.html" class="inline-flex items-center gap-1.5 text-paca-navy hover:text-paca-crimson bg-white border-2 border-paca-navy rounded-xl px-3.5 py-1.5 text-xs font-bold shadow-[2px_2px_0px_#10234d] hover:shadow-[3px_3px_0px_#10234d] transition active:scale-95">
-                    <span>⚙️</span>
-                    <span>PACA ADMIN (Quản Trị)</span>
-                </a>
-                <a href="guide_admin.html" target="_blank" class="inline-flex items-center gap-1.5 text-white bg-paca-navy hover:bg-paca-dark border-2 border-paca-navy rounded-xl px-3.5 py-1.5 text-xs font-bold shadow-[2px_2px_0px_#ce1126] transition active:scale-95">
-                    <span>📖</span>
-                    <span>Cẩm Nang Hướng Dẫn</span>
-                </a>
-                <a href="studio.html" class="inline-flex items-center gap-1.5 text-paca-navy hover:text-paca-crimson bg-amber-100/80 border-2 border-paca-navy rounded-xl px-3.5 py-1.5 text-xs font-bold shadow-[2px_2px_0px_#10234d] hover:shadow-[3px_3px_0px_#10234d] transition active:scale-95">
-                    <span>🎨</span>
-                    <span>Canva Studio</span>
-                </a>
+            <div class="text-[11px] text-amber-800 font-serif italic pt-1">
+                “Chúc quý khách một buổi tối thật chill và ấm áp tại PACA!”
+            </div>
+            <div class="text-[10px] text-gray-500 pt-2 font-mono">
+                Open daily: 17:00 - 01:00
             </div>
         </footer>
 
@@ -455,7 +436,6 @@
 
             html += `
                 <button onclick="openCustomDishModal()" class="text-amber-300 hover:underline">✨ Món ngoài menu</button>
-                <a href="admin.html" class="text-amber-200 hover:text-white bg-white/10 px-2 py-0.5 rounded-full transition ml-1">⚙️ Quản trị</a>
             `;
             container.innerHTML = html;
             enableHorizontalScrollDrag(container);
@@ -523,6 +503,19 @@
                 el.scrollIntoView({ behavior: 'smooth' });
             } else if (!isPosterMode) {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // Secret Staff Access: Tap "P" logo 5 times rapidly to access Admin
+        let pLogoClickCount = 0;
+        let pLogoClickTimer = null;
+        function handleSecretAdminTap() {
+            pLogoClickCount++;
+            clearTimeout(pLogoClickTimer);
+            pLogoClickTimer = setTimeout(() => { pLogoClickCount = 0; }, 1500);
+            if (pLogoClickCount >= 5) {
+                pLogoClickCount = 0;
+                window.location.href = 'admin.html';
             }
         }
 
