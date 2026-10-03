@@ -7,7 +7,7 @@
       "id": "page_cover",
       "title": "Trang Mở Đầu",
       "width": 800,
-      "height": 920,
+      "height": 960,
       "bg": "#6d100c",
       "bgImage": "assets/canva/a353b44b4ccd31adfc7f396cd09c4e6d.jpg",
       "bgOverlay": "rgba(109, 16, 12, 0.82)",
@@ -180,10 +180,30 @@
           }
         },
         {
+          "id": "nav_link_6",
+          "type": "link_nav",
+          "x": 50,
+          "y": 645,
+          "w": 700,
+          "h": 50,
+          "rotate": 0,
+          "zIndex": 3,
+          "props": {
+            "text": "MOCKTAIL (KHÔNG CỒN)",
+            "targetPageId": "sec_cat_mocktail",
+            "size": 24,
+            "weight": "800",
+            "color": "#ffffff",
+            "align": "center",
+            "underline": true,
+            "icon": "🧃"
+          }
+        },
+        {
           "id": "cov_quote",
           "type": "text",
           "x": 50,
-          "y": 780,
+          "y": 820,
           "w": 700,
           "h": 40,
           "rotate": 0,

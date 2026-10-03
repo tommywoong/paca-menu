@@ -240,6 +240,11 @@
                 </button>
             </div>
 
+            <!-- Cover Page Dynamic Category Sync Banner -->
+            <div id="coverPageSyncBanner" class="w-full max-w-[800px] mb-3 hidden z-10">
+                <!-- Populated dynamically when on page_cover -->
+            </div>
+
             <!-- The Interactive Canvas Container -->
             <div id="canvasViewport" class="flex-1 flex justify-center pb-20">
                 <!-- Rendered by PacaCanvasEngine -->
@@ -522,6 +527,7 @@
 
             updatePageTabs();
             populateTargetPageSelect();
+            updateCoverMissingCatsBanner();
             // Listen for cross-tab updates from admin.html
             window.addEventListener('focus', () => {
                 syncStudioMenuData();
@@ -567,6 +573,7 @@
             renderProductsDrawer();
             populateProductBindingsSelect();
             populateTargetPageSelect();
+            updateCoverMissingCatsBanner();
 
             const pickerModal = document.getElementById('smartProductPickerModal');
             if (pickerModal && !pickerModal.classList.contains('hidden')) {
@@ -760,6 +767,190 @@
             updatePageTabs();
             engine.render();
             updateInspector(null);
+            updateCoverMissingCatsBanner();
+        }
+
+        // --- COVER PAGE DYNAMIC CATEGORY SYNC ---
+        function getMissingCoverCategories() {
+            if (!engine || !engine.design || !engine.design.pages) return [];
+            const coverPage = engine.design.pages.find(p => p.id === 'page_cover') || engine.design.pages[0];
+            if (!coverPage) return [];
+
+            const categories = window.paca?.getCategories ? window.paca.getCategories(true) : (window.paca?.menu?.categories || []);
+            const activeCats = categories.filter(c => c.is_active !== false && c.show_on_cover !== false);
+            
+            const links = (coverPage.elements || []).filter(e => e.type === 'link_nav');
+            const existingTargetIds = new Set(links.map(e => e.props?.targetPageId));
+            const existingTexts = links.map(e => (e.props?.text || '').toLowerCase());
+
+            return activeCats.filter(cat => {
+                const cId = cat.id;
+                const cName = (cat.name || '').toLowerCase();
+                const cNameVi = (cat.name_vi || '').toLowerCase();
+                
+                const hasTarget = existingTargetIds.has(cat.pageId) || 
+                                  existingTargetIds.has('sec_cat_' + cId) || 
+                                  existingTargetIds.has('page_' + cId) || 
+                                  existingTargetIds.has(cId);
+
+                const hasText = existingTexts.some(t => 
+                    (cName && t.includes(cName)) || 
+                    (cNameVi && t.includes(cNameVi)) || 
+                    (t && cName && cName.includes(t)) ||
+                    (t && cNameVi && cNameVi.includes(t))
+                );
+
+                return !hasTarget && !hasText;
+            });
+        }
+
+        function updateCoverMissingCatsBanner() {
+            const banner = document.getElementById('coverPageSyncBanner');
+            if (!banner) return;
+
+            const curPage = engine?.getActivePage();
+            const isCover = curPage && (curPage.id === 'page_cover' || engine.design?.pages?.[0]?.id === curPage.id);
+
+            if (!isCover) {
+                banner.classList.add('hidden');
+                banner.innerHTML = '';
+                return;
+            }
+
+            const missingCats = getMissingCoverCategories();
+            if (missingCats.length === 0) {
+                banner.innerHTML = `
+                    <div class="bg-gray-900/90 border border-gray-700/80 rounded-2xl p-2.5 flex items-center justify-between text-xs shadow-md">
+                        <div class="flex items-center gap-2 text-gray-300">
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>Trang Bìa đang hiển thị đủ các danh mục thực đơn.</span>
+                        </div>
+                        <button onclick="syncCategoriesToCoverPage(true)" title="Căn chỉnh và đồng bộ lại toàn bộ danh mục vào Trang Bìa" class="text-[11px] bg-gray-800 hover:bg-gray-700 text-amber-300 font-bold px-3 py-1 rounded-xl border border-gray-600 active:scale-95 transition flex items-center gap-1">
+                            <span>🔄</span>
+                            <span>Sắp xếp / Đồng bộ lại</span>
+                        </button>
+                    </div>
+                `;
+                banner.classList.remove('hidden');
+            } else {
+                const missingNames = missingCats.map(c => `${c.icon || '✦'} ${c.name_vi || c.name}`).join(', ');
+                banner.innerHTML = `
+                    <div class="bg-gradient-to-r from-amber-950/95 via-yellow-950/90 to-amber-900/90 border-2 border-amber-400 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xl animate-pulse">
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-1.5 text-amber-300 font-black text-xs">
+                                <span class="text-base">⚠️</span>
+                                <span>TRANG BÌA CHƯA HIỆN ĐỦ DANH MỤC TỪ TRANG QUẢN TRỊ!</span>
+                            </div>
+                            <div class="text-[11px] text-white">
+                                Đang thiếu: <b class="text-amber-300 underline">${missingNames}</b>
+                            </div>
+                        </div>
+                        <button onclick="syncCategoriesToCoverPage(false)" class="bg-amber-400 hover:bg-amber-300 text-paca-navy text-xs font-black px-4 py-2 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-1.5 flex-shrink-0">
+                            <span>🪄</span>
+                            <span>CẬP NHẬT ĐỦ DANH MỤC NGAY</span>
+                        </button>
+                    </div>
+                `;
+                banner.classList.remove('hidden');
+            }
+        }
+
+        function syncCategoriesToCoverPage(forceConfirm = false) {
+            if (!engine || !engine.design || !engine.design.pages) return;
+            const coverPage = engine.design.pages.find(p => p.id === 'page_cover') || engine.design.pages[0];
+            if (!coverPage) return;
+
+            const categories = window.paca?.getCategories ? window.paca.getCategories(true) : (window.paca?.menu?.categories || []);
+            const activeCats = categories.filter(c => c.is_active !== false && c.show_on_cover !== false);
+            if (activeCats.length === 0) {
+                alert("Không có danh mục nào đang bật trong Quản Trị.");
+                return;
+            }
+
+            if (forceConfirm) {
+                const ok = confirm(`🔄 TỰ ĐỘNG ĐỒNG BỘ DANH MỤC VÀO TRANG BÌA:\n\nBạn có muốn cập nhật Trang Bìa để hiển thị đầy đủ ${activeCats.length} danh mục từ Quản Trị không?\n\nDanh sách: ${activeCats.map(c => (c.icon || '') + ' ' + (c.name_vi || c.name)).join(', ')}`);
+                if (!ok) return;
+            }
+
+            engine.recordState();
+
+            // Keep non-link elements on cover (e.g. stars, PACA title, subtitle, bottom quote)
+            const nonLinks = (coverPage.elements || []).filter(el => el.type !== 'link_nav');
+            const quoteEl = nonLinks.find(el => el.id === 'cov_quote');
+
+            const pages = engine.design.pages;
+            const startY = 220;
+            const count = activeCats.length;
+            
+            // Adjust spacing and font size dynamically so 5, 6, 7 or 8 categories all look balanced!
+            let spacing = 75;
+            let fontSize = 24;
+            if (count >= 8) {
+                spacing = 58;
+                fontSize = 19;
+            } else if (count >= 7) {
+                spacing = 64;
+                fontSize = 21;
+            } else if (count >= 6) {
+                spacing = 70;
+                fontSize = 22;
+            }
+
+            const newLinks = activeCats.map((cat, idx) => {
+                const catNameVi = cat.name_vi || '';
+                const catNameEn = cat.name || '';
+                const upperTitle = (catNameEn || catNameVi).toUpperCase();
+                const icon = cat.icon || '✦';
+
+                // Determine targetPageId: check if there's a canvas page for this category
+                const cId = cat.id;
+                const matchedPage = pages.find(p => 
+                    p.id === cat.pageId || 
+                    p.id === ('page_' + cId) || 
+                    p.id === cId || 
+                    (catNameVi && (p.title || '').toLowerCase().includes(catNameVi.toLowerCase())) ||
+                    (catNameEn && (p.title || '').toLowerCase().includes(catNameEn.toLowerCase()))
+                );
+                const targetId = matchedPage ? matchedPage.id : (cat.pageId || ('sec_cat_' + cId));
+
+                return {
+                    id: 'nav_link_cat_' + cId,
+                    type: 'link_nav',
+                    x: 50,
+                    y: startY + idx * spacing,
+                    w: 700,
+                    h: Math.max(38, spacing - 14),
+                    rotate: 0,
+                    zIndex: 3,
+                    props: {
+                        text: upperTitle,
+                        targetPageId: targetId,
+                        size: fontSize,
+                        weight: '800',
+                        color: '#ffffff',
+                        align: 'center',
+                        underline: true,
+                        icon: icon
+                    }
+                };
+            });
+
+            // Adjust cover page height and bottom quote position so nothing is cut off
+            const lastLinkBottom = startY + count * spacing;
+            const requiredHeight = Math.max(920, lastLinkBottom + 130);
+            coverPage.height = requiredHeight;
+
+            if (quoteEl) {
+                quoteEl.y = requiredHeight - 75;
+            }
+
+            coverPage.elements = [...nonLinks.filter(el => el.id !== 'cov_quote'), ...newLinks, ...(quoteEl ? [quoteEl] : [])];
+
+            engine.render();
+            engine.saveDraft();
+            updateCoverMissingCatsBanner();
+
+            alert(`✓ ĐÃ ĐỒNG BỘ THÀNH CÔNG!\n\nTrang Bìa hiện đã có đầy đủ ${count} danh mục giống hệt Trang Quản Trị:\n${activeCats.map(c => `• ${c.icon || '✦'} ${(c.name || c.name_vi).toUpperCase()}`).join('\n')}\n\n👉 Bạn hãy bấm "🚀 XUẤT BẢN & ĐỒNG BỘ" để áp dụng sang điện thoại ngay nhé!`);
         }
 
         function addNewPage() {
