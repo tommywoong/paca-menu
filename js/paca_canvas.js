@@ -1131,23 +1131,25 @@ class PacaCanvasEngine {
                 node.appendChild(navBadge);
             }
         } else if (el.type === 'product_card') {
+            const bgVal = (el.props.bg || '#940b05').toLowerCase();
+            const isWhiteBg = bgVal === '#ffffff' || bgVal === '#fff' || bgVal === 'white';
             node.style.backgroundColor = el.props.bg || '#940b05';
-            node.style.color = el.props.color || '#fff';
+            node.style.color = el.props.color || (isWhiteBg ? '#10234d' : '#ffffff');
             if (el.props.border) node.style.border = el.props.border;
             if (el.props.shadow) node.style.boxShadow = el.props.shadow;
-            node.style.borderRadius = '4px';
+            node.style.borderRadius = '6px';
             node.className += ' p-3 flex flex-col justify-between';
             node.innerHTML = `
                 <div>
                     <div class="flex justify-between items-start font-serif font-black text-sm">
                         <span>${el.props.title || 'Món'}</span>
-                        <span class="text-amber-300 font-bold">${el.props.price || 180}k</span>
+                        <span class="${isWhiteBg ? 'text-paca-crimson font-black' : 'text-amber-300 font-bold'}">${el.props.price || 180}k</span>
                     </div>
-                    <div class="text-[10px] opacity-80 mt-1">${el.props.ingredients || ''}</div>
-                    <div class="text-xs text-amber-200 mt-1">${el.props.desc_vi || ''}</div>
+                    <div class="text-[10px] ${isWhiteBg ? 'text-gray-600' : 'opacity-80'} mt-1">${el.props.ingredients || ''}</div>
+                    <div class="text-xs ${isWhiteBg ? 'text-gray-800 font-medium' : 'text-amber-200'} mt-1">${el.props.desc_vi || ''}</div>
                 </div>
                 <div class="mt-2 text-right">
-                    <span class="bg-amber-400 text-paca-navy text-[10px] font-black px-2 py-0.5 rounded">+ GẮN: ${el.binding?.productId || 'Chưa gắn'}</span>
+                    <span class="${isWhiteBg ? 'bg-paca-navy text-paca-cream' : 'bg-amber-400 text-paca-navy'} text-[10px] font-black px-2 py-0.5 rounded shadow-sm">+ GẮN: ${el.binding?.productId || 'Chưa gắn'}</span>
                 </div>
             `;
         }
