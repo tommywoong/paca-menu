@@ -235,7 +235,11 @@ class PacaCanvasEngine {
         );
 
         pages.forEach((page, pageIdx) => {
-            // Check if page belongs to an inactive category
+            // Check if page belongs to an inactive or deleted category
+            const isCatPage = page.id.startsWith('sec_cat_') || 
+                              page.id.startsWith('page_cat_') || 
+                              ['page_week', 'page_bites', 'page_cocktail', 'page_beer', 'page_wine_shots'].includes(page.id);
+
             const catForPage = allCategories.find(c => 
                 c.id === page.id ||
                 c.pageId === page.id || 
@@ -245,6 +249,13 @@ class PacaCanvasEngine {
                 (c.name_vi && (page.title || '').trim().toLowerCase() === c.name_vi.trim().toLowerCase()) ||
                 (c.name && (page.title || '').trim().toLowerCase() === c.name.trim().toLowerCase())
             );
+
+            // If it is a category section page and the category was DELETED from Admin, skip it!
+            if (page.id.startsWith('sec_cat_') && !catForPage) {
+                return; // Category was deleted!
+            }
+
+            // If category is inactive, skip it!
             if (catForPage && catForPage.is_active === false) {
                 return; // Skip inactive category page completely!
             }
@@ -297,7 +308,7 @@ class PacaCanvasEngine {
                     const nonLinkElements = (page.elements || []).filter(el => el.type !== 'link_nav');
                     const rawNavLinks = (page.elements || []).filter(el => el.type === 'link_nav');
 
-                    // Filter only links that belong to an ACTIVE category marked for cover
+                    // Filter only links that belong to an ACTIVE, EXISTING category marked for cover
                     const activeNavLinks = rawNavLinks.filter(el => {
                         const targetId = el.props?.targetPageId || '';
                         const elId = el.id || '';
@@ -314,11 +325,22 @@ class PacaCanvasEngine {
                             (c.name_vi && text.includes(c.name_vi.trim().toLowerCase()))
                         );
 
-                        // If linked to a category, check is_active and show_on_cover
+                        // If linked to an existing category, check is_active and show_on_cover
                         if (matchedCat) {
                             return matchedCat.is_active !== false && matchedCat.show_on_cover !== false;
                         }
-                        // If not explicitly matched, check if text contains an inactive category name
+
+                        // Check if this link was created for a category (by ID prefix or targetPageId)
+                        const isCategoryLink = targetId.startsWith('sec_cat_') || 
+                                               elId.startsWith('nav_link_cat_') || 
+                                               ['page_week', 'page_bites', 'page_cocktail', 'page_beer', 'page_wine_shots'].includes(targetId);
+
+                        // If it IS a category link, but matchedCat is null, IT MEANS THE CATEGORY WAS DELETED!
+                        if (isCategoryLink) {
+                            return false; // Skip deleted category link!
+                        }
+
+                        // If not explicitly matched, check if text contains an inactive or deleted category name
                         const isInactiveCat = allCategories.some(c => 
                             c.is_active === false && (
                                 (c.name && text.includes(c.name.trim().toLowerCase())) ||
