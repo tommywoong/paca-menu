@@ -25,29 +25,18 @@ Hệ thống đã tích hợp sẵn 2 công cụ dòng lệnh **Cloudflare Pages
 
 ### CÁCH 2: Kết Nối Qua GitHub (Chuẩn Chuyên Nghiệp & Tự Động Hoá 100%)
 
-Nếu bạn muốn liên kết qua tài khoản GitHub của mình:
+Hệ thống đã liên kết với repository GitHub:
+- **Repository:** `https://github.com/tommywoong/paca-menu.git`
+- **Nhánh chính (Production):** `main`
+- **Nhánh thử nghiệm (Preview):** `preview`
 
-1. **Tạo Repository mới trên GitHub:**
-   - Đăng nhập [github.com](https://github.com), bấm **New repository**.
-   - Đặt tên: `paca-menu` (để chế độ Public hoặc Private tùy ý).
-
-2. **Liên kết mã nguồn từ máy tính lên GitHub:**
-   - Mở cửa sổ lệnh Terminal/PowerShell tại thư mục `D:\paca` và gõ:
-   ```bash
-   git remote add origin https://github.com/<tai-khoan-cua-ban>/paca-menu.git
-   git push -u origin main
-   git push -u origin preview
-   ```
-
-3. **Kết nối Cloudflare Pages hoặc Vercel:**
-   - **Với Cloudflare Pages:**
-     * Truy cập [dash.cloudflare.com](https://dash.cloudflare.com) -> **Workers & Pages** -> **Create application** -> **Pages** -> **Connect to Git**.
-     * Chọn repository `paca-menu`.
-     * Build command: để trống (None).
-     * Output directory: `.` (hoặc để trống vì là trang tĩnh).
-     * Bấm **Save and Deploy**.
-   - **Với Vercel:**
-     * Truy cập [vercel.com](https://vercel.com) -> **Add New...** -> **Project** -> Chọn `paca-menu` -> Bấm **Deploy**.
+Lệnh đẩy mã nguồn thủ công từ Terminal / PowerShell:
+```bash
+git add .
+git commit -m "Cập nhật menu PACA"
+git push origin main
+git push origin main:preview
+```
 
 ---
 
@@ -55,7 +44,7 @@ Nếu bạn muốn liên kết qua tài khoản GitHub của mình:
 
 Sau khi có link chạy trực tuyến:
 - Bạn có thể gắn tên miền riêng bất kỳ (ví dụ: `menu.pacabar.vn`, `qr.pacabar.com`, hoặc `pacabar.vn`).
-- Vào Cloudflare Pages hoặc Vercel -> Chọn mục **Custom Domains** -> Nhập tên miền của quán.
+- Vào Cloudflare Pages hoặc Vercel ➜ Chọn mục **Custom Domains** ➜ Nhập tên miền của quán.
 - Hệ thống sẽ hướng dẫn trỏ 1 bản ghi CNAME hoặc DNS duy nhất. Chứng chỉ bảo mật xanh **HTTPS/SSL** sẽ được cấp tự động miễn phí vĩnh viễn.
 
 ---
@@ -92,3 +81,17 @@ Mỗi khi bạn cần chỉnh sửa menu, hãy áp dụng quy trình 3 bước s
 - **Đổi giá / Đổi tên / Thêm món mới:** Mở form Sửa/Thêm món trên Admin, bấm Lưu là menu khách cập nhật ngay.
 - **Tạo danh mục / Ẩn hiện danh mục:** Dùng tab "Quản Lý Danh Mục" đã tích hợp.
 - **Tùy biến poster đồ hoạ Canva:** Dùng trình biên tập **Canva Studio** (`/studio.html`) và bấm **Xuất Bản Menu**.
+
+---
+
+## V. CƠ CHẾ CHỐNG LƯU ĐỆM KHI MỞ LINK TỪ ZALO & MOBILE WEBVIEW
+
+1. **Hiện tượng Cache trên Zalo:**
+   - Khi mở link trực tiếp từ khung chat Zalo, Zalo sử dụng trình duyệt nhúng nội bộ (In-App WebView). WebView này có cơ chế lưu đệm các file script rất chặt chẽ để tăng tốc độ tải.
+2. **Giải pháp kỹ thuật của hệ thống:**
+   - Toàn bộ các file JavaScript lõi (`paca_core.js`, `paca_canvas.js`) đều được gắn mã phiên bản chống cache (ví dụ: `?v=20261003_2125`).
+   - Thẻ `<head>` trang khách tích hợp bộ chỉ thị `Cache-Control: no-cache, no-store, must-revalidate` và `Pragma: no-cache`.
+   - Hàm khởi tạo `init()` trong `paca_core.js` tự động kiểm tra phiên bản; nếu phiên bản mới hơn bản lưu trong điện thoại, hệ thống sẽ tự động dọn sạch bộ nhớ đệm `localStorage` cũ và tải bản mới nhất từ máy chủ.
+3. **Thao tác nhanh trên Zalo nếu muốn ép làm mới tức thì:**
+   - Chạm vào biểu tượng **`...` (3 dấu chấm)** ở góc trên bên phải màn hình Zalo.
+   - Chọn **"Tải lại" / "Làm mới"** (hoặc đóng tab và bấm lại link).

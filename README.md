@@ -6,59 +6,91 @@ Hệ thống được thiết kế theo mô hình **Tiny Cozy Bar**, tối ưu h
 
 ## 🌟 TÍNH NĂNG NỔI BẬT
 
-1. **Khách Quét QR Tự Đặt Món (`index.html`)**:
-   - Giao diện phong cách **Retro Vintage Cozy Bar** chuẩn nhận diện thương hiệu PACA (Navy, Đỏ cổ điển, Be kem).
-   - Tự động nhận diện số bàn từ mã QR (`?table=B01`, `?table=BAR02`...).
-   - Thực đơn đầy đủ bóc tách từ Canva: *Menu of the week*, *Bites & Snacks*, *Cocktails*, *Mocktails*, *Bia & Tepache*, *Wine & Shots*.
-   - Cho phép thêm ghi chú cho từng món (*ít đá, ít ngọt, không cay...*).
-   - **Chức năng yêu cầu món ngoài menu (Off-menu)**: Khách có thể tự nhập món cocktail yêu thích theo tinh thần *"If you want something off-menu, just ask!"*.
-   - Đặt xong hiển thị ngay **Mã VietQR động** đúng số tiền để khách thanh toán chuyển khoản liền tay.
-
-2. **Quản Trị Thu Ngân & Bar Mobile-First (`admin.html`)**:
-   - **Đơn Hàng Realtime**: Phát chuông ting-ting rộn rã khi có đơn mới. Đổi trạng thái: *Chờ xử lý ➜ Đang làm ➜ Đã thanh toán*.
-   - **In Bill Thu Ngân (Cashier)**: Đầy đủ tên món, đơn giá, tổng tiền và **Mã VietQR tự động** in ngay trên hóa đơn để khách quét.
-   - **In Phiếu Bếp / Bar**: Tách phiếu đồ ăn cho Bếp, đồ uống cho Bar, **giấu hoàn toàn giá tiền** để quầy tập trung làm món.
-   - **Quản Lý Bàn & QR Studio**:
-     - Thêm/sửa/xóa bàn linh hoạt.
-     - Tạo mã QR tức thì cho từng bàn.
-     - Nút tải ảnh PNG để gửi in bảng mica / decal.
-     - Nút in tem QR dán bàn trực tiếp ra máy in nhiệt khổ 80mm!
-   - **Tạo & Điều Chỉnh Menu Bằng Tay**:
-     - Thêm món mới bằng tay (*Tên món, tên tiếng Việt, giá, phân loại Bar hay Bếp, mô tả song ngữ, thành phần, huy hiệu*).
-     - Công tắc bật/tắt **"Còn món / Hết món"** 1 chạm.
-     - Xuất/nhập file JSON để sao lưu hoặc thay đổi thực đơn theo mùa.
-   - **Thống Kê Doanh Thu**: Doanh thu hôm nay, tuần này, tháng này, top 5 món bán chạy nhất.
-   - **Cài Đặt Hệ Thống Trực Quan**: Cấu hình Ngân hàng VietQR, Máy in nhiệt K80/K58, Bot Telegram chỉ trong vài giây.
+### 1. Khách Quét QR Tự Đặt Món (`index.html`)
+- **Giao diện Retro Vintage Cozy Bar**: Tái hiện trọn vẹn phong cách Canva thẩm mỹ cao (Navy `#10234d`, Đỏ mận `#940b05`, Be kem `#f6dcaf`).
+- **Tự động nhận diện bàn**: Tự động nhận diện số bàn từ mã QR (`?table=1`, `?t=BAR02`...).
+- **Hai chế độ xem linh hoạt**:
+  - **Chế độ Poster Canvas Dài (Mặc định)**: Tương tác chạm mở chi tiết món, hiển thị hình ảnh món ăn sắc nét, hiệu ứng lướt mượt mà.
+  - **Chế độ Danh sách Tiêu chuẩn**: Có ô tìm kiếm món ăn nhanh và lọc theo tên tiếng Việt/Anh.
+- **Tự động lọc danh mục thông minh**:
+  - Khi danh mục bị **Ẩn** hoặc **Xóa** ở Quản Trị, nút liên kết trên Trang Bìa Poster lập tức biến mất, các nút còn lại tự động dãn đều vị trí.
+  - Các món thuộc danh mục bị ẩn hoàn toàn bị loại khỏi menu và tìm kiếm.
+- **Chống lưu đệm (Anti-Caching) tối ưu cho Zalo & Mobile WebView**:
+  - Gắn đuôi định danh phiên bản `?v=...` trên toàn bộ tệp script.
+  - Thẻ `Cache-Control: no-cache` và cơ chế tự động làm sạch `localStorage` cũ khi mở từ Zalo In-App Browser.
+- **Yêu cầu món ngoài menu (Off-menu)**: Cho phép khách tự yêu cầu đồ uống cocktail theo sở thích cá nhân.
+- **Thanh toán VietQR động**: Hiển thị ngay mã QR ngân hàng đúng số tiền đơn hàng để khách chuyển khoản tức thì.
+- **Cử chỉ bí mật mở Quản Trị**: Chạm liên tiếp 5 lần vào logo chữ "P" ở thanh tiêu đề để đăng nhập Quản Trị (ẩn hoàn toàn nút quản trị đối với khách).
 
 ---
 
-## 🚀 HƯỚNG DẪN ĐƯA LÊN HOSTING MIỄN PHÍ VĨNH VIỄN (0 ĐỒNG)
-
-Hệ thống được thiết kế dạng **Static Jamstack PWA**, bạn có thể đưa lên hosting miễn phí chạy trọn đời với tốc độ cực nhanh:
-
-### Cách tốt nhất: Cloudflare Pages (Miễn phí 100%, Băng thông vô hạn, Tốc độ VN cực nhanh)
-1. Đăng ký tài khoản miễn phí tại [cloudflare.com](https://pages.cloudflare.com/).
-2. Vào mục **Workers & Pages** ➜ **Create application** ➜ **Pages** ➜ **Upload assets**.
-3. Kéo toàn bộ thư mục `D:\paca` thả vào trình duyệt.
-4. Bấm **Deploy**. Bạn sẽ nhận ngay một địa chỉ web miễn phí dạng: `https://paca-bar.pages.dev`.
-5. Đổi tên miền phụ hoặc gắn tên miền riêng bất kỳ lúc nào hoàn toàn miễn phí.
-
----
-
-## 🖨️ HƯỚNG DẪN IN BILL TỪ ĐIỆN THOẠI (KHÔNG CẦN MÁY TÍNH)
-
-1. Đảm bảo điện thoại của bạn đang kết nối chung mạng **Wi-Fi** với máy in nhiệt tại quán.
-2. Trên trang `admin.html`, khi bấm nút **"🖨️ In Bill Thu Ngân"** hoặc **"🍳 In Bếp"**:
-   - **Trên iPhone (iOS):** Trình duyệt Safari sẽ mở hộp thoại AirPrint/In mạng, chọn máy in nhiệt và bấm **In**.
-   - **Trên Android:** Chọn máy in nhiệt qua dịch vụ in mặc định hoặc cài app miễn phí **RawBT Print Service** để in 1-chạm cực nhanh.
-3. Trong mục **Cài Đặt** trên web, bạn có thể chọn khổ giấy **K80 (80mm)** hoặc **K58 (58mm)** tùy theo máy in đang có.
+### 2. PACA Studio Canvas Editor (`studio.html`)
+- **Trình chỉnh sửa Canvas kéo-thả chuyên nghiệp**:
+  - Thiết kế nhiều trang Canvas độc lập (Trang Bìa, Cocktail, Bites, Craft Beer, Wine & Shots...).
+  - Hỗ trợ đổi nền, ảnh bìa, tỷ lệ co giãn phản hồi (Responsive 800px Base).
+- **Hệ thống thẻ món đa sắc (Multi-Color Themes)**:
+  - 4 bộ màu phong cách: **Navy Blue**, **Crimson Red**, **Retro White**, **Emerald Green**.
+  - Tự động phối màu so le xen kẽ (Auto-alternating) và nút đổi màu 1-chạm.
+- **Gán món thông minh (1-Click Product Binding)**:
+  - Gán trực tiếp món từ menu Quản trị vào thẻ trên Canvas. Tự động đồng bộ tên song ngữ, hình ảnh món, huy hiệu và giá tiền.
+- **Tự động đồng bộ Trang Bìa (Cover Page Synchronizer)**:
+  - Nút đồng bộ tự động đọc danh mục hoạt động từ Quản Trị và căn đều các nút điều hướng trên Trang Bìa.
+- **Tự động nới rộng trang (Auto-stretch Height)**:
+  - Tự động kéo dãn chiều cao trang khi thêm món mới ở cuối trang mà không đè lên câu trích dẫn hoặc chân trang.
+- **Đồng bộ Đám mây 1-chạm (Cloud Sync Publish)**:
+  - Xuất bản thiết kế mới nhất tức thì tới tất cả điện thoại khách quét qua `ntfy.sh/paca_design_sync_dalat_2025`.
 
 ---
 
-## ✈️ HƯỚNG DẪN CẤU HÌNH BOT TELEGRAM (TRONG 1 PHÚT)
+### 3. Quản Trị Thu Ngân & Pha Chế Mobile-First (`admin.html`)
+- **Đơn Hàng Realtime & Bàn Mở (Running Tabs)**:
+  - Khách gọi thêm món nhiều đợt tự động gộp vào phiên bàn đang mở.
+  - Đổi trạng thái: *Chờ xử lý ➜ Đang pha chế / làm bếp ➜ Đã ra món ➜ Đã thanh toán*.
+  - Chuông báo âm thanh ting-ting khi có đơn mới từ khách.
+- **Thanh Toán Tiền Mặt & VietQR**:
+  - Hộp thoại thanh toán tiền mặt với các nút mệnh giá nhanh (50k, 100k, 200k, 500k) và tự động tính tiền thừa trả khách.
+  - Mã VietQR động cho thu ngân quét nhận tiền.
+- **In Phiếu Nhiệt Trực Tiếp (ESC/POS Printing)**:
+  - In Bill Thu Ngân (kèm mã VietQR).
+  - In Phiếu Bếp / Quầy Bar (tự động giấu giá tiền).
+  - In tem mã QR dán bàn khổ K80/K58.
+- **Chốt Ca Kinh Doanh Cuối Ngày (Daily Shift Close)**:
+  - Kiểm đếm tiền mặt, đối soát chuyển khoản VietQR, ghi chú chênh lệch.
+  - Tự động in Phiếu chốt ca thu ngân lưu quầy.
+  - Tự động bắn báo cáo ca kinh doanh về nhóm Telegram của Quản lý.
+- **Quản Lý Bàn & QR Studio**:
+  - Thêm, sửa, xóa bàn; tải ảnh mã QR PNG chất lượng cao.
+- **Quản Lý Thực Đơn & Kho Món**:
+  - Quản lý danh mục (Bật/Tắt Hiện/Ẩn, Trang Bìa, Thanh Nav, sắp xếp thứ tự).
+  - Thêm món mới, tải ảnh món ăn, thiết lập giá vốn, theo dõi tồn kho.
+  - Công tắc "Còn món / Hết món" 1-chạm.
+- **Phân Quyền Mã PIN Bảo Mật**:
+  - Mã PIN 4 số phân quyền: **Quản Lý** (toàn quyền) và **Nhân Viên** (nhận đơn, in bill, pha chế).
 
-1. Mở Telegram, tìm bot **`@BotFather`** và gửi lệnh `/newbot`.
-2. Đặt tên cho bot (ví dụ: `Paca Bar Order Bot`) và username kết thúc bằng `bot` (ví dụ: `PacaBarOrder_bot`).
-3. Copy đoạn **HTTP API Token** nhận được (dạng: `789456123:AAH_xxx...`).
-4. Để lấy Chat ID của bạn: Tìm bot **`@userinfobot`** và bấm Start, copy dãy số **Id** của bạn (ví dụ: `987654321`).
-5. Mở `admin.html` ➜ Vào tab **Cài Đặt** ➜ Dán Token và Chat ID vào ➜ Tích chọn **Bật thông báo** ➜ Bấm nút **"Gửi tin nhắn thử nghiệm"** để kiểm tra!
+---
+
+## 🚀 HƯỚNG DẪN TRIỂN KHAI ONLINE & CẬP NHẬT
+
+### 1. Triển khai qua GitHub & Cloudflare Pages (Tự động 100%)
+- Mã nguồn được đồng bộ trực tiếp lên GitHub: `https://github.com/tommywoong/paca-menu.git` (nhánh `main` và `preview`).
+- Cloudflare Pages / Workers tự động lấy mã nguồn mới mỗi khi đẩy commit lên GitHub.
+
+### 2. Triển khai 1-Chạm bằng Batch Script
+- `deploy-preview.bat`: Đẩy bản xem thử lên Cloudflare / Vercel.
+- `deploy-production.bat`: Đẩy bản chính thức phục vụ khách hàng.
+
+---
+
+## 🖨️ HƯỚNG DẪN IN BILL TỪ ĐIỆN THOẠI
+1. Đảm bảo điện thoại kết nối chung Wi-Fi với máy in nhiệt tại quán.
+2. Bấm nút **"🖨️ In Bill Thu Ngân"** hoặc **"🍳 In Bếp"**:
+   - **iOS (iPhone/iPad):** Chọn máy in qua hộp thoại AirPrint mặc định.
+   - **Android:** In qua dịch vụ in mặc định hoặc ứng dụng **RawBT Print Service**.
+3. Cài đặt khổ giấy K80 (80mm) hoặc K58 (58mm) trong mục Cài Đặt.
+
+---
+
+## ✈️ CẤU HÌNH BOT TELEGRAM
+1. Tạo bot qua `@BotFather` trên Telegram, copy Token API.
+2. Lấy Chat ID nhóm hoặc cá nhân qua `@userinfobot`.
+3. Nhập Token và Chat ID vào mục **Cài Đặt** trong `admin.html`, bấm **Lưu & Thử nghiệm**.
