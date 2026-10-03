@@ -442,6 +442,23 @@ class PacaService {
             if (res.ok) serverMenu = await res.json();
         } catch (e) {}
 
+        // Check Cloud Sync for newer menu updates (e.g. from manager's computer to phone)
+        try {
+            const cloudMenuPayload = await this.pullMenuFromCloud();
+            if (cloudMenuPayload && cloudMenuPayload.menu && Array.isArray(cloudMenuPayload.menu.categories)) {
+                const localTs = parseInt(localStorage.getItem('paca_menu_saved_timestamp') || '0');
+                if (cloudMenuPayload.timestamp > localTs || !localStorage.getItem(PACA_STORAGE_KEYS.MENU)) {
+                    console.log("PACA: Loaded newer menu from Cloud Sync!");
+                    this.menu = cloudMenuPayload.menu;
+                    this.normalizeCategories();
+                    this.saveMenu(this.menu, false);
+                    return this.menu;
+                }
+            }
+        } catch (e) {
+            console.warn("PACA: Cloud menu check skipped", e);
+        }
+
         const local = localStorage.getItem(PACA_STORAGE_KEYS.MENU);
         if (local) {
             try {
@@ -536,11 +553,69 @@ class PacaService {
         return await this.loadMenu();
     }
 
-    saveMenu(menuData) {
+    async pushMenuToCloud(menu = null) {
+        const m = menu || this.menu;
+        if (!m) return false;
+        try {
+            const payload = JSON.stringify({
+                timestamp: Date.now(),
+                menu: m
+            });
+            await fetch(`https://ntfy.sh/paca_menu_sync_dalat_2025`, {
+                method: 'PUT',
+                headers: {
+                    'Filename': 'paca_menu.json',
+                    'Title': 'PACA Menu Saved'
+                },
+                body: payload
+            });
+            console.log("PACA: Menu pushed to Cloud Sync successfully!");
+            return true;
+        } catch (e) {
+            console.warn("PACA: Failed to push menu to Cloud Sync", e);
+            return false;
+        }
+    }
+
+    async pullMenuFromCloud() {
+        try {
+            const res = await fetch(`https://ntfy.sh/paca_menu_sync_dalat_2025/json?poll=1&since=24h`, { cache: 'no-store' });
+            const text = await res.text();
+            if (!text) return null;
+            const lines = text.trim().split('\n');
+            let latestAttachmentUrl = null;
+            let latestTime = 0;
+            for (const line of lines) {
+                try {
+                    const item = JSON.parse(line);
+                    if (item.attachment && item.attachment.url && item.time > latestTime) {
+                        latestAttachmentUrl = item.attachment.url;
+                        latestTime = item.time;
+                    }
+                } catch (e) {}
+            }
+            if (latestAttachmentUrl) {
+                const fileRes = await fetch(latestAttachmentUrl);
+                const fileData = await fileRes.json();
+                if (fileData && fileData.menu && Array.isArray(fileData.menu.categories)) {
+                    return fileData;
+                }
+            }
+        } catch (e) {
+            console.warn("PACA: Failed to pull menu from Cloud Sync", e);
+        }
+        return null;
+    }
+
+    saveMenu(menuData, pushToCloud = true) {
         this.menu = menuData;
         localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
+        localStorage.setItem('paca_menu_saved_timestamp', Date.now().toString());
         if (this.broadcastChannel) {
             this.broadcastChannel.postMessage({ type: 'MENU_SAVED', timestamp: Date.now() });
+        }
+        if (pushToCloud) {
+            this.pushMenuToCloud(this.menu);
         }
     }
 

@@ -7,7 +7,8 @@
 const PACA_CANVAS_KEYS = {
     PUBLISHED_DESIGN: 'paca_published_canvas_v2',
     DRAFT_DESIGN: 'paca_draft_canvas_v2',
-    SETTINGS: 'paca_canvas_settings_v2'
+    SETTINGS: 'paca_canvas_settings_v2',
+    CLOUD_TOPIC: 'paca_design_sync_dalat_2025'
 };
 
 class PacaCanvasEngine {
@@ -40,16 +41,40 @@ class PacaCanvasEngine {
         // Priority 1: Check published design (or draft if edit mode)
         const storageKey = this.mode === 'edit' ? PACA_CANVAS_KEYS.DRAFT_DESIGN : PACA_CANVAS_KEYS.PUBLISHED_DESIGN;
         const local = localStorage.getItem(storageKey);
+        let currentDesign = null;
         if (local) {
             try {
                 const parsed = JSON.parse(local);
                 if (parsed && Array.isArray(parsed.pages) && parsed.pages.length > 0) {
-                    this.design = parsed;
-                    return this.design;
+                    currentDesign = parsed;
                 }
             } catch (e) {
                 console.warn("Invalid local canvas design", e);
             }
+        }
+
+        // On mobile / client view: Check if cloud sync has a newer published design!
+        if (this.mode === 'view') {
+            try {
+                const cloudPayload = await this.pullFromCloudSync();
+                if (cloudPayload && cloudPayload.design && Array.isArray(cloudPayload.design.pages)) {
+                    const localTs = parseInt(localStorage.getItem('paca_canvas_published_timestamp') || '0');
+                    if (cloudPayload.timestamp > localTs || !currentDesign) {
+                        console.log("PACA: Loaded newer design from Cloud Sync with", cloudPayload.design.pages.length, "pages");
+                        this.design = cloudPayload.design;
+                        localStorage.setItem(PACA_CANVAS_KEYS.PUBLISHED_DESIGN, JSON.stringify(this.design));
+                        localStorage.setItem('paca_canvas_published_timestamp', cloudPayload.timestamp.toString());
+                        return this.design;
+                    }
+                }
+            } catch (err) {
+                console.warn("PACA: Cloud sync check skipped", err);
+            }
+        }
+
+        if (currentDesign) {
+            this.design = currentDesign;
+            return this.design;
         }
 
         // Priority 2: Fetch default 7-page template
@@ -80,15 +105,75 @@ class PacaCanvasEngine {
         if (this.onDesignChange) this.onDesignChange(this.design);
     }
 
-    publish() {
-        if (!this.design) return;
+    async publish(pushToCloud = true) {
+        if (!this.design) return false;
         this.saveDraft();
         localStorage.setItem(PACA_CANVAS_KEYS.PUBLISHED_DESIGN, JSON.stringify(this.design));
+        localStorage.setItem('paca_canvas_published_timestamp', Date.now().toString());
+
         // Also broadcast event to update client views
         if (window.paca && window.paca.broadcastChannel) {
             window.paca.broadcastChannel.postMessage({ type: 'CANVAS_PUBLISHED', timestamp: Date.now() });
         }
+
+        if (pushToCloud) {
+            await this.pushToCloudSync();
+        }
         return true;
+    }
+
+    async pushToCloudSync() {
+        if (!this.design) return false;
+        try {
+            const payload = JSON.stringify({
+                version: "1.0",
+                timestamp: Date.now(),
+                design: this.design
+            });
+            await fetch(`https://ntfy.sh/${PACA_CANVAS_KEYS.CLOUD_TOPIC}`, {
+                method: 'PUT',
+                headers: {
+                    'Filename': 'paca_design.json',
+                    'Title': 'PACA Design Published'
+                },
+                body: payload
+            });
+            console.log("PACA: Design published to Cloud Sync successfully!");
+            return true;
+        } catch (e) {
+            console.warn("PACA: Failed to push design to Cloud Sync", e);
+            return false;
+        }
+    }
+
+    async pullFromCloudSync() {
+        try {
+            const res = await fetch(`https://ntfy.sh/${PACA_CANVAS_KEYS.CLOUD_TOPIC}/json?poll=1&since=24h`, { cache: 'no-store' });
+            const text = await res.text();
+            if (!text) return null;
+            const lines = text.trim().split('\n');
+            let latestAttachmentUrl = null;
+            let latestTime = 0;
+            for (const line of lines) {
+                try {
+                    const item = JSON.parse(line);
+                    if (item.attachment && item.attachment.url && item.time > latestTime) {
+                        latestAttachmentUrl = item.attachment.url;
+                        latestTime = item.time;
+                    }
+                } catch (e) {}
+            }
+            if (latestAttachmentUrl) {
+                const fileRes = await fetch(latestAttachmentUrl);
+                const fileData = await fileRes.json();
+                if (fileData && fileData.design && Array.isArray(fileData.design.pages)) {
+                    return fileData;
+                }
+            }
+        } catch (e) {
+            console.warn("PACA: Failed to pull design from Cloud Sync", e);
+        }
+        return null;
     }
 
     recordState() {

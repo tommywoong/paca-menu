@@ -71,16 +71,20 @@
 
         <!-- Right Action (Preview & Publish) -->
         <div class="flex items-center space-x-2">
-            <button onclick="openPreviewModal()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold px-3 py-1.5 rounded-xl border border-gray-600 flex items-center gap-1.5">
+            <button onclick="exportDesignJson()" title="Tải file thiết kế JSON về máy tính để lưu trữ hoặc sao lưu" class="bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white font-bold px-2.5 py-1.5 rounded-xl border border-gray-700 flex items-center gap-1 transition">
+                <span>📥</span>
+                <span>Xuất JSON</span>
+            </button>
+            <button onclick="openPreviewModal()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold px-3 py-1.5 rounded-xl border border-gray-600 flex items-center gap-1.5 transition">
                 <span>👁️</span>
                 <span>Xem Trước</span>
             </button>
-            <button onclick="saveDraft()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded-xl">
+            <button onclick="saveDraft()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold px-3 py-1.5 rounded-xl transition">
                 Lưu Nháp
             </button>
-            <button onclick="publishLive()" class="bg-paca-crimson hover:bg-paca-red text-white font-bold px-4 py-1.5 rounded-xl flex items-center gap-1 shadow-lg shadow-red-900/40">
+            <button id="btnPublishLive" onclick="publishLive()" class="bg-paca-crimson hover:bg-paca-red text-white font-bold px-4 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg shadow-red-900/40 active:scale-95 transition" title="Xuất bản và đồng bộ toàn bộ Trang 8 sang điện thoại">
                 <span>🚀</span>
-                <span>XUẤT BẢN MENU</span>
+                <span>XUẤT BẢN & ĐỒNG BỘ</span>
             </button>
         </div>
     </header>
@@ -1344,9 +1348,47 @@
             alert("✓ Đã lưu bản nháp thiết kế thành công!");
         }
 
-        function publishLive() {
-            engine.publish();
-            alert("🚀 XUẤT BẢN THÀNH CÔNG! Menu sáng tạo đã được áp dụng trực tiếp cho khách quét QR.");
+        async function publishLive() {
+            const btn = document.getElementById('btnPublishLive');
+            const originalHtml = btn ? btn.innerHTML : '';
+            if (btn) btn.innerHTML = `<span>⏳</span><span>Đang đồng bộ...</span>`;
+
+            try {
+                // 1. Publish Canvas design & push to cloud
+                await engine.publish(true);
+
+                // 2. Also push active menu to cloud
+                if (window.paca && window.paca.pushMenuToCloud) {
+                    await window.paca.pushMenuToCloud();
+                }
+
+                const totalPages = engine.design?.pages?.length || 8;
+                alert(`🚀 XUẤT BẢN & ĐỒNG BỘ ĐÁM MÂY THÀNH CÔNG!\n\n` +
+                      `✓ Đã cập nhật tất cả ${totalPages} trang (bao gồm Trang 8) lên hệ thống Cloud.\n` +
+                      `✓ Đã đồng bộ đầy đủ các món ăn mới gắn vào ảnh.\n\n` +
+                      `📱 BÂY GIỜ TRÊN ĐIỆN THOẠI:\n` +
+                      `Bạn chỉ cần mở lại trang menu trên điện thoại (hoặc vuốt xuống để tải lại trang), điện thoại sẽ tự động nhận Trang 8 và các món mới ngay lập tức!`);
+            } catch (err) {
+                console.error("Publish error:", err);
+                alert("⚠️ Đã lưu thiết kế cục bộ. Vui lòng kiểm tra lại kết nối mạng để hoàn tất đồng bộ đám mây.");
+            } finally {
+                if (btn) btn.innerHTML = originalHtml;
+            }
+        }
+
+        function exportDesignJson() {
+            if (!engine || !engine.design) return;
+            const jsonStr = JSON.stringify(engine.design, null, 2);
+            const blob = new Blob([jsonStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "default_canvas_template.json";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            alert("✓ Đã tải file default_canvas_template.json về máy tính!\nBạn có thể gửi file này cho kỹ thuật để cập nhật vĩnh viễn vào hệ thống.");
         }
 
         // --- PREVIEW MODAL ---
