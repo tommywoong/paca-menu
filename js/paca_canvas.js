@@ -79,7 +79,7 @@ class PacaCanvasEngine {
 
         // Priority 2: Fetch default 7-page template
         try {
-            const res = await fetch('data/default_canvas_template.json?v=' + Date.now());
+            const res = await fetch('data/default_canvas_template.json?v=' + Date.now(), { cache: 'no-store' });
             this.design = await res.json();
             // Save as draft initially
             localStorage.setItem(PACA_CANVAS_KEYS.DRAFT_DESIGN, JSON.stringify(this.design));

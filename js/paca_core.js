@@ -201,6 +201,18 @@ class PacaService {
 
     // --- INITIALIZATION ---
     async init() {
+        const CURRENT_VERSION = '20261003_2120';
+        const savedVer = localStorage.getItem('paca_app_version');
+        if (savedVer !== CURRENT_VERSION) {
+            console.log(`PACA: Updating from version ${savedVer} to ${CURRENT_VERSION}. Invalidating stale caches...`);
+            localStorage.setItem('paca_app_version', CURRENT_VERSION);
+            // Invalidate stale caches so fresh menu & canvas are pulled immediately
+            localStorage.removeItem(PACA_STORAGE_KEYS.MENU);
+            localStorage.removeItem('paca_menu_saved_timestamp');
+            localStorage.removeItem('paca_published_canvas_v2');
+            localStorage.removeItem('paca_canvas_published_timestamp');
+        }
+
         await this.loadConfig();
         this.loadUsers();
         await this.loadMenu();
@@ -438,7 +450,7 @@ class PacaService {
     async loadMenu() {
         let serverMenu = null;
         try {
-            const res = await fetch('data/menu.json?v=' + Date.now());
+            const res = await fetch('data/menu.json?v=' + Date.now(), { cache: 'no-store' });
             if (res.ok) serverMenu = await res.json();
         } catch (e) {}
 
