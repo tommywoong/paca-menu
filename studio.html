@@ -602,11 +602,146 @@
             if (!engine || !engine.design) return;
             const pages = engine.design.pages || [];
 
-            container.innerHTML = pages.map((p, idx) => `
+            let html = pages.map((p, idx) => `
                 <button onclick="selectPage('${p.id}')" class="px-3 py-1 rounded-xl text-xs font-bold transition ${engine.activePageId === p.id ? 'bg-paca-navy text-paca-cream border border-paca-cream/30' : 'bg-gray-800 text-gray-400 hover:text-white'}">
                     ${idx + 1}. ${p.title || 'Trang ' + (idx + 1)}
                 </button>
             `).join('');
+
+            // Check if there are active categories from admin without a poster page
+            const unpagedCats = getCategoriesWithoutPages();
+            if (unpagedCats.length > 0) {
+                unpagedCats.forEach(c => {
+                    const cName = c.name_vi || c.name;
+                    html += `
+                        <button onclick="createPageForCategory('${c.id}')" title="Bấm để tạo ngay 1 trang thiết kế Poster cho danh mục ${cName}" class="px-2.5 py-1 rounded-xl text-xs font-bold transition bg-amber-500/20 text-amber-300 border border-amber-400/50 hover:bg-amber-400 hover:text-paca-navy flex items-center gap-1 shadow">
+                            <span>✨ + Tạo trang:</span>
+                            <span class="underline">${cName}</span>
+                        </button>
+                    `;
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        function getCategoriesWithoutPages() {
+            const pages = engine.design?.pages || [];
+            const categories = window.paca?.getCategories ? window.paca.getCategories(true) : (window.paca?.menu?.categories || []);
+            return categories.filter(c => {
+                if (c.is_active === false) return false;
+                const cId = c.id;
+                const cName = (c.name_vi || c.name || '').toLowerCase();
+                const hasPage = pages.some(p => {
+                    const pId = p.id;
+                    const pTitle = (p.title || '').toLowerCase();
+                    return pId === c.pageId || pId === ('page_' + cId) || pId === cId || (cName && pTitle.includes(cName));
+                });
+                return !hasPage;
+            });
+        }
+
+        function createPageForCategory(catId) {
+            const cat = window.paca?.getCategoryById ? window.paca.getCategoryById(catId) : (window.paca?.menu?.categories || []).find(c => c.id === catId);
+            if (!cat) return;
+
+            const catName = cat.name_vi || cat.name;
+            const catPageId = cat.pageId || ('page_' + cat.id);
+            const count = (engine.design.pages || []).length + 1;
+
+            // Filter items in this category
+            const items = (window.paca?.menu?.items || []).filter(i => i.category === cat.id);
+
+            const elements = [
+                // Title element
+                {
+                    id: 'el_title_' + Date.now().toString(36),
+                    type: 'text',
+                    x: 50,
+                    y: 60,
+                    w: 700,
+                    h: 70,
+                    rotate: 0,
+                    zIndex: 2,
+                    props: {
+                        text: `${cat.icon || '✨'} ${catName.toUpperCase()}`,
+                        size: 32,
+                        weight: '900',
+                        color: '#10234d',
+                        align: 'center',
+                        font: 'Playfair Display, serif'
+                    }
+                },
+                // Subtitle element
+                {
+                    id: 'el_sub_' + Date.now().toString(36),
+                    type: 'text',
+                    x: 80,
+                    y: 130,
+                    w: 640,
+                    h: 40,
+                    rotate: 0,
+                    zIndex: 2,
+                    props: {
+                        text: cat.description || `Khám phá các món hấp dẫn trong thực đơn ${catName} của PACA!`,
+                        size: 14,
+                        weight: '500',
+                        color: '#4b5563',
+                        align: 'center',
+                        italic: true
+                    }
+                }
+            ];
+
+            // Place product cards for items in this category (laid out in 2 columns)
+            items.slice(0, 8).forEach((it, idx) => {
+                const col = idx % 2;
+                const row = Math.floor(idx / 2);
+                const cardX = 50 + col * 360;
+                const cardY = 200 + row * 260;
+                elements.push({
+                    id: 'el_card_' + it.id + '_' + Date.now().toString(36),
+                    type: 'product_card',
+                    x: cardX,
+                    y: cardY,
+                    w: 340,
+                    h: 240,
+                    rotate: 0,
+                    zIndex: 2,
+                    props: {
+                        bg: '#940b05',
+                        color: '#ffffff',
+                        border: '2px solid #10234d',
+                        shadow: '4px 4px 0px #10234d',
+                        title: it.name,
+                        price: Math.round(it.price / 1000),
+                        badge: it.badge || '',
+                        ingredients: (it.ingredients || []).join(' • '),
+                        desc_vi: it.description_vi || ''
+                    },
+                    binding: { productId: it.id, action: 'open_modal' }
+                });
+            });
+
+            const calculatedHeight = Math.max(1200, 260 + Math.ceil(Math.max(1, items.length) / 2) * 280);
+
+            const newPage = {
+                id: catPageId,
+                title: `${cat.icon || ''} ${catName}`.trim(),
+                width: 800,
+                height: calculatedHeight,
+                bg: "#f6dcaf",
+                elements: elements
+            };
+
+            engine.recordState();
+            engine.design.pages.push(newPage);
+            selectPage(newPage.id);
+            engine.saveDraft();
+            updatePageTabs();
+            populateTargetPageSelect();
+
+            alert(`✓ Đã tạo thành công trang thiết kế cho danh mục "${catName}" kèm ${items.length} món ăn!\nBạn có thể tự do chỉnh sửa, kéo thả hình ảnh và chữ theo ý thích.`);
         }
 
         function selectPage(pageId) {
@@ -846,7 +981,16 @@
                 : items.filter(i => i.category === currentStudioProductCat);
 
             if (filteredItems.length === 0) {
-                list.innerHTML = `<div class="text-xs text-gray-500 italic p-3 text-center">Không có món nào trong danh mục này</div>`;
+                const catObj = categories.find(c => c.id === currentStudioProductCat);
+                const catName = catObj ? (catObj.name_vi || catObj.name) : 'này';
+                list.innerHTML = `
+                    <div class="text-xs text-gray-400 italic p-3 text-center bg-gray-900/60 rounded-xl border border-gray-800 space-y-2">
+                        <div>Chưa có món nào thuộc danh mục <b>"${catName}"</b>.</div>
+                        <a href="admin.html#tabMenu" target="_blank" class="inline-block bg-paca-navy hover:bg-paca-dark text-paca-cream text-[10px] font-bold px-2.5 py-1.5 rounded-lg border border-amber-500/40">
+                            + Thêm món vào "${catName}" ↗
+                        </a>
+                    </div>
+                `;
                 return;
             }
 
