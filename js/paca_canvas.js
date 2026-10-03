@@ -193,45 +193,53 @@ class PacaCanvasEngine {
 
             // On Cover Page: dynamically render active categories marked show_on_cover !== false
             if (page.id === 'page_cover') {
-                // Render non-nav elements (title, subtitle, decorative stars)
-                (page.elements || []).forEach(el => {
-                    if (el.type !== 'link_nav') {
+                const hasExplicitNavLinks = (page.elements || []).some(el => el.type === 'link_nav');
+                if (hasExplicitNavLinks) {
+                    // Render all elements proportionally using percentage coordinates as designed in Studio
+                    (page.elements || []).forEach(el => {
                         const elNode = this.createCustomerElementNode(el, baseWidth, page.height);
                         if (elNode) innerBox.appendChild(elNode);
-                    }
-                });
-
-                // Render dynamic cover category links
-                const coverCats = allCategories.filter(c => c.is_active !== false && c.show_on_cover !== false);
-                if (coverCats.length > 0) {
-                    const navContainer = document.createElement('div');
-                    navContainer.id = 'coverDynamicNavContainer';
-                    navContainer.className = 'absolute z-10 flex flex-col items-center justify-center space-y-2.5 sm:space-y-4';
-                    navContainer.style.left = '5%';
-                    navContainer.style.right = '5%';
-                    navContainer.style.top = '24%';
-                    navContainer.style.bottom = '8%';
-
-                    coverCats.forEach(cat => {
-                        const linkBtn = document.createElement('button');
-                        linkBtn.className = 'group relative w-full max-w-lg text-center font-serif font-black tracking-wider uppercase text-white hover:text-amber-300 transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 py-1';
-                        const targetId = cat.pageId || ('sec_cat_' + cat.id);
-                        linkBtn.innerHTML = `
-                            <span class="text-base sm:text-2xl">${cat.icon || '✦'}</span>
-                            <span class="underline decoration-amber-400/60 decoration-2 underline-offset-4 text-sm sm:text-xl md:text-2xl drop-shadow-md">
-                                ${cat.name || cat.name_vi}
-                            </span>
-                        `;
-                        linkBtn.onclick = (e) => {
-                            e.preventDefault();
-                            const targetEl = document.getElementById(targetId);
-                            if (targetEl) {
-                                targetEl.scrollIntoView({ behavior: 'smooth' });
-                            }
-                        };
-                        navContainer.appendChild(linkBtn);
                     });
-                    innerBox.appendChild(navContainer);
+                } else {
+                    // Fallback to dynamic cover category links if no link_nav elements placed
+                    (page.elements || []).forEach(el => {
+                        if (el.type !== 'link_nav') {
+                            const elNode = this.createCustomerElementNode(el, baseWidth, page.height);
+                            if (elNode) innerBox.appendChild(elNode);
+                        }
+                    });
+
+                    const coverCats = allCategories.filter(c => c.is_active !== false && c.show_on_cover !== false);
+                    if (coverCats.length > 0) {
+                        const navContainer = document.createElement('div');
+                        navContainer.id = 'coverDynamicNavContainer';
+                        navContainer.className = 'absolute z-10 flex flex-col items-center justify-center space-y-2.5 sm:space-y-4';
+                        navContainer.style.left = '5%';
+                        navContainer.style.right = '5%';
+                        navContainer.style.top = '24%';
+                        navContainer.style.bottom = '8%';
+
+                        coverCats.forEach(cat => {
+                            const linkBtn = document.createElement('button');
+                            linkBtn.className = 'group relative w-full max-w-lg text-center font-serif font-black tracking-wider uppercase text-white hover:text-amber-300 transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 py-1';
+                            const targetId = cat.pageId || ('sec_cat_' + cat.id);
+                            linkBtn.innerHTML = `
+                                <span class="text-base sm:text-2xl">${cat.icon || '✦'}</span>
+                                <span class="underline decoration-amber-400/60 decoration-2 underline-offset-4 text-sm sm:text-xl md:text-2xl drop-shadow-md">
+                                    ${cat.name || cat.name_vi}
+                                </span>
+                            `;
+                            linkBtn.onclick = (e) => {
+                                e.preventDefault();
+                                const targetEl = document.getElementById(targetId);
+                                if (targetEl) {
+                                    targetEl.scrollIntoView({ behavior: 'smooth' });
+                                }
+                            };
+                            navContainer.appendChild(linkBtn);
+                        });
+                        innerBox.appendChild(navContainer);
+                    }
                 }
             } else {
                 // Render all elements proportionally using percentage coordinates
@@ -621,8 +629,12 @@ class PacaCanvasEngine {
                     ${el.props.text}
                 </span>
             `;
-            node.onclick = () => {
-                const targetEl = document.getElementById(el.props.targetPageId);
+            node.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const targetId = el.props.targetPageId;
+                if (!targetId) return;
+                const targetEl = document.getElementById(targetId);
                 if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
             };
             return node;
@@ -644,6 +656,16 @@ class PacaCanvasEngine {
             const baseSize = el.props.size || 16;
             node.style.fontSize = `clamp(10px, ${(baseSize / baseW) * 100}vw, ${baseSize}px)`;
             node.innerText = el.props.text;
+
+            if (el.props.targetPageId) {
+                node.className += ' cursor-pointer hover:opacity-80 active:scale-[0.98] transition';
+                node.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const targetEl = document.getElementById(el.props.targetPageId);
+                    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+                };
+            }
             return node;
         }
 
@@ -652,18 +674,113 @@ class PacaCanvasEngine {
             if (el.props.border) node.style.border = el.props.border;
             if (el.props.radius) node.style.borderRadius = `${el.props.radius}px`;
             if (el.props.shadow) node.style.boxShadow = el.props.shadow;
+            if (el.props.targetPageId) {
+                node.className += ' cursor-pointer hover:opacity-90 active:scale-[0.98] transition';
+                node.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const targetEl = document.getElementById(el.props.targetPageId);
+                    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+                };
+            }
             return node;
         }
 
         if (el.type === 'image') {
+            const isBound = !!boundProduct;
+            const isSoldOut = boundProduct && boundProduct.is_available === false;
+            const hasOptions = boundProduct && ((boundProduct.variants && boundProduct.variants.length > 0) || (boundProduct.options && boundProduct.options.length > 0) || (boundProduct.toppings && boundProduct.toppings.length > 0));
+
             const img = document.createElement('img');
             img.src = el.props.src;
-            img.className = 'w-full h-full object-contain pointer-events-none';
+            img.className = 'w-full h-full object-cover pointer-events-none transition-transform duration-300';
             if (el.props.fit) img.style.objectFit = el.props.fit;
             if (el.props.radius) img.style.borderRadius = `${el.props.radius}px`;
             if (el.props.opacity) img.style.opacity = el.props.opacity;
-            node.appendChild(img);
-            return node;
+
+            if (isBound) {
+                node.className += ' cursor-pointer group overflow-hidden relative active:scale-[0.98] transition-all select-none shadow-md';
+                node.style.borderRadius = el.props.radius ? `${el.props.radius}px` : '12px';
+                if (isSoldOut) node.style.opacity = '0.85';
+
+                node.appendChild(img);
+
+                // Live price badge & title banner overlay
+                const livePriceFormatted = window.paca?.formatMoney ? window.paca.formatMoney(boundProduct.price) : `${boundProduct.price}đ`;
+
+                let actionBtnHtml = '';
+                if (isSoldOut) {
+                    actionBtnHtml = `<span class="bg-black/60 text-white/90 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full cursor-not-allowed">HẾT MÓN</span>`;
+                } else if (hasOptions) {
+                    actionBtnHtml = `<span class="bg-amber-400 text-paca-navy text-[9px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-full shadow hover:bg-amber-300">Tuỳ chọn ▾</span>`;
+                } else {
+                    actionBtnHtml = `<span class="bg-amber-400 text-paca-navy text-[9px] sm:text-[10px] font-black px-2.5 py-0.5 rounded-full shadow hover:bg-amber-300">+ Thêm</span>`;
+                }
+
+                // Retro circular SOLD OUT stamp
+                const soldOutBadgeHtml = isSoldOut ? `
+                    <div class="absolute -top-2 -right-2 z-30 pointer-events-none select-none" style="transform: rotate(12deg); width: 56px; height: 56px;">
+                        <img src="assets/canva/8bfa0742f6571d5384f3b5184c981ed2.png" class="w-full h-full object-contain drop-shadow-md" alt="SOLD OUT">
+                    </div>
+                ` : '';
+
+                const overlay = document.createElement('div');
+                overlay.className = 'absolute inset-0 flex flex-col justify-between pointer-events-none p-2';
+                overlay.innerHTML = `
+                    ${soldOutBadgeHtml}
+                    <div class="flex justify-end">
+                        <span class="bg-black/75 backdrop-blur-sm text-amber-300 font-extrabold text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full border border-amber-400/40 shadow-sm pointer-events-auto">
+                            ${livePriceFormatted}
+                        </span>
+                    </div>
+                    <div class="bg-gradient-to-t from-black/90 via-black/60 to-transparent -mx-2 -mb-2 p-2 pt-4 flex items-end justify-between gap-1 pointer-events-auto">
+                        <div class="leading-tight text-white pr-1 overflow-hidden">
+                            <div class="font-serif font-black text-[11px] sm:text-xs md:text-sm tracking-wide uppercase line-clamp-1 drop-shadow">
+                                ${boundProduct.name}
+                            </div>
+                            <div class="text-[9px] text-amber-200 line-clamp-1 opacity-90 drop-shadow">
+                                ${boundProduct.name_vi || ''}
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0">
+                            ${actionBtnHtml}
+                        </div>
+                    </div>
+                `;
+                node.appendChild(overlay);
+
+                node.onclick = (e) => {
+                    e.stopPropagation();
+                    if (isSoldOut) {
+                        if (window.showToast) window.showToast("Món này tạm thời hết hàng, bạn vui lòng chọn món khác nhé! 🍹", "warning");
+                        else alert("Món này tạm thời hết hàng, bạn vui lòng chọn món khác nhé!");
+                        return;
+                    }
+                    const prodId = el.binding.productId;
+                    if (hasOptions) {
+                        if (window.openDetailModal) window.openDetailModal(prodId);
+                    } else {
+                        if (window.quickAddToCart) window.quickAddToCart(prodId);
+                        else if (window.openDetailModal) window.openDetailModal(prodId);
+                    }
+                };
+                return node;
+            } else if (el.props.targetPageId) {
+                // Image used as navigation banner
+                node.className += ' cursor-pointer hover:opacity-90 active:scale-[0.98] transition';
+                if (el.props.radius) node.style.borderRadius = `${el.props.radius}px`;
+                node.appendChild(img);
+                node.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const targetEl = document.getElementById(el.props.targetPageId);
+                    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth' });
+                };
+                return node;
+            } else {
+                node.appendChild(img);
+                return node;
+            }
         }
 
         if (el.type === 'product_card') {
@@ -851,6 +968,12 @@ class PacaCanvasEngine {
             node.style.fontStyle = el.props.italic ? 'italic' : 'normal';
             node.style.color = el.props.color || '#000';
             node.innerText = el.props.text;
+            if (el.props.targetPageId) {
+                const navBadge = document.createElement('span');
+                navBadge.className = 'absolute -top-2.5 -right-2 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-blue-400 shadow z-20 pointer-events-none';
+                navBadge.innerText = `🔗 ${el.props.targetPageId}`;
+                node.appendChild(navBadge);
+            }
         } else if (el.type === 'link_nav') {
             node.style.display = 'flex';
             node.style.alignItems = 'center';
@@ -867,18 +990,46 @@ class PacaCanvasEngine {
                     ${el.props.icon ? `<span class="mr-1">${el.props.icon}</span>` : ''}
                     ${el.props.text || 'Liên kết'}
                 </span>
+                <span class="absolute -top-2.5 -right-2 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-blue-400 shadow z-20 pointer-events-none">
+                    🔗 ${el.props.targetPageId || 'Chưa gắn'}
+                </span>
             `;
         } else if (el.type === 'shape') {
             node.style.backgroundColor = el.props.fill || 'transparent';
             if (el.props.border) node.style.border = el.props.border;
             if (el.props.radius) node.style.borderRadius = `${el.props.radius}px`;
             if (el.props.shadow) node.style.boxShadow = el.props.shadow;
+            if (el.props.targetPageId) {
+                const navBadge = document.createElement('span');
+                navBadge.className = 'absolute -top-2.5 -right-2 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-blue-400 shadow z-20 pointer-events-none';
+                navBadge.innerText = `🔗 ${el.props.targetPageId}`;
+                node.appendChild(navBadge);
+            }
         } else if (el.type === 'image') {
             const img = document.createElement('img');
             img.src = el.props.src;
             img.className = 'w-full h-full object-contain pointer-events-none';
             if (el.props.radius) img.style.borderRadius = `${el.props.radius}px`;
             node.appendChild(img);
+
+            let boundProduct = null;
+            if (el.binding && el.binding.productId && window.paca?.menu?.items) {
+                boundProduct = window.paca.menu.items.find(i => i.id === el.binding.productId);
+            }
+            if (boundProduct || el.binding?.productId) {
+                const badge = document.createElement('div');
+                badge.className = 'absolute bottom-1 left-1 right-1 bg-black/90 text-white px-1.5 py-0.5 rounded text-[10px] flex items-center justify-between border border-amber-400/70 pointer-events-none z-10 shadow';
+                badge.innerHTML = `
+                    <span class="font-bold text-amber-300 truncate max-w-[65%]">🏷️ ${boundProduct ? boundProduct.name : el.binding.productId}</span>
+                    <span class="font-mono text-emerald-400 font-bold">${boundProduct && window.paca?.formatMoney ? window.paca.formatMoney(boundProduct.price) : ''}</span>
+                `;
+                node.appendChild(badge);
+            } else if (el.props.targetPageId) {
+                const navBadge = document.createElement('span');
+                navBadge.className = 'absolute -top-2.5 -right-2 bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-blue-400 shadow z-20 pointer-events-none';
+                navBadge.innerText = `🔗 ${el.props.targetPageId}`;
+                node.appendChild(navBadge);
+            }
         } else if (el.type === 'product_card') {
             node.style.backgroundColor = el.props.bg || '#940b05';
             node.style.color = el.props.color || '#fff';

@@ -522,9 +522,26 @@ class PacaService {
         this.menu.categories.sort((a, b) => (a.order || 0) - (b.order || 0));
     }
 
+    async reloadMenu() {
+        const local = localStorage.getItem(PACA_STORAGE_KEYS.MENU);
+        if (local) {
+            try {
+                this.menu = JSON.parse(local);
+                this.normalizeCategories();
+                return this.menu;
+            } catch (e) {
+                console.warn("Invalid local menu on reload", e);
+            }
+        }
+        return await this.loadMenu();
+    }
+
     saveMenu(menuData) {
         this.menu = menuData;
         localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
+        if (this.broadcastChannel) {
+            this.broadcastChannel.postMessage({ type: 'MENU_SAVED', timestamp: Date.now() });
+        }
     }
 
     toggleItemAvailability(itemId, isAvailable) {

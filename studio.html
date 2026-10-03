@@ -66,7 +66,7 @@
             <button onclick="changeZoom(0.1)" title="Phóng to" class="p-1.5 hover:bg-gray-800 rounded font-bold text-gray-300">+</button>
             <div class="h-3 w-px bg-gray-700 mx-1"></div>
             <button onclick="engine.duplicateSelectedElement()" title="Nhân bản (Duplicate)" class="p-1.5 hover:bg-gray-800 rounded text-gray-300">📑</button>
-            <button onclick="engine.deleteSelectedElement()" title="Xóa phần tử" class="p-1.5 hover:bg-gray-800 rounded text-red-400 hover:text-red-300">🗑️</button>
+            <button onclick="handleDeleteAction()" title="Xóa phần tử đang chọn (hoặc xóa trang)" class="p-1.5 hover:bg-gray-800 rounded text-red-400 hover:text-red-300">🗑️</button>
         </div>
 
         <!-- Right Action (Preview & Publish) -->
@@ -185,7 +185,13 @@
 
             <!-- DRAWER: PRODUCTS BINDING -->
             <div id="drawerProducts" class="drawer-content hidden space-y-3">
-                <h3 class="font-bold text-sm text-paca-cream">Gắn Món Bán Trực Tiếp</h3>
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-sm text-paca-cream">Gắn Món Bán Trực Tiếp</h3>
+                    <button onclick="syncStudioMenuData(true)" title="Cập nhật danh mục và món mới nhất từ Quản trị" class="text-[10px] bg-gray-800 hover:bg-gray-700 text-amber-300 px-2 py-1 rounded-lg border border-amber-500/30 flex items-center gap-1 font-bold active:scale-95 transition">
+                        <span>🔄</span>
+                        <span>Làm mới</span>
+                    </button>
+                </div>
                 <p class="text-[11px] text-gray-400">Bấm vào món để chèn ngay thẻ món kèm liên kết `productId` và Giá Động vào trang:</p>
                 <div id="studioProductCatFilters" class="flex flex-wrap gap-1 pb-1">
                     <!-- Populated by JS -->
@@ -210,13 +216,23 @@
         <!-- Canvas Workspace Area -->
         <main class="flex-1 bg-gray-950 overflow-auto flex flex-col items-center p-6 relative">
             <!-- Page Selector Bar -->
-            <div class="mb-4 flex items-center space-x-2 bg-gray-900 border border-gray-800 rounded-2xl p-1.5 z-10 select-none">
+            <div class="mb-4 flex flex-wrap items-center gap-1.5 bg-gray-900 border border-gray-800 rounded-2xl p-1.5 z-10 select-none">
                 <span class="text-[11px] font-bold text-gray-400 px-2">Trang:</span>
-                <div id="pageSelectorTabs" class="flex space-x-1">
+                <div id="pageSelectorTabs" class="flex flex-wrap gap-1">
                     <!-- Rendered by JS -->
                 </div>
-                <button onclick="addNewPage()" class="bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs px-2.5 py-1 rounded-xl">
+                <button onclick="addNewPage()" title="Thêm một trang mới vào thực đơn" class="bg-gray-800 hover:bg-gray-700 text-white font-bold text-xs px-2.5 py-1 rounded-xl">
                     + Thêm trang
+                </button>
+                <button onclick="duplicateCurrentPage()" title="Nhân bản trang đang chọn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white font-bold text-xs px-2.5 py-1 rounded-xl border border-gray-700">
+                    📑 Nhân bản
+                </button>
+                <button onclick="renameCurrentPage()" title="Đổi tên tiêu đề trang này" class="bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white font-bold text-xs px-2.5 py-1 rounded-xl border border-gray-700">
+                    ✏️ Đổi tên
+                </button>
+                <button onclick="deleteCurrentPage()" title="Xóa vĩnh viễn trang đang mở khỏi thực đơn" class="bg-red-950/70 hover:bg-red-800 text-red-300 hover:text-white font-bold text-xs px-2.5 py-1 rounded-xl border border-red-700/60 flex items-center gap-1 transition">
+                    <span>🗑️</span>
+                    <span>Xóa trang</span>
                 </button>
             </div>
 
@@ -304,6 +320,20 @@
                             <label class="font-bold text-gray-400 block mb-0.5 text-[10px]">Mô tả tiếng Việt:</label>
                             <textarea id="propCardDesc" rows="2" oninput="updatePropCard('desc_vi')" class="w-full bg-gray-900 border border-gray-700 rounded-xl px-2.5 py-1 text-white text-xs"></textarea>
                         </div>
+                    </div>
+                <!-- NAVIGATION LINK TARGET BOX -->
+                <div id="linkNavInspectorBox" class="bg-blue-950/40 border border-blue-500/40 rounded-xl p-3 space-y-2 hidden">
+                    <div class="flex items-center space-x-1.5 text-blue-300 font-bold text-xs">
+                        <span>🔗</span>
+                        <span>ĐIỀU HƯỚNG / CHUYỂN TRANG</span>
+                    </div>
+                    <p class="text-[10px] text-gray-300">Gắn liên kết để khi khách chạm vào phần tử này trên menu, màn hình sẽ cuộn mượt đến trang hoặc danh mục được chọn.</p>
+                    <div>
+                        <label class="font-bold text-gray-400 block mb-1 text-[10px]">Chuyển đến trang / danh mục:</label>
+                        <select id="propTargetPageSelect" onchange="updatePropTargetPage()" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-2.5 py-1.5 text-white font-bold text-xs">
+                            <option value="">-- Không điều hướng (Chữ / hình tĩnh) --</option>
+                            <!-- Populated dynamically -->
+                        </select>
                     </div>
                 </div>
 
@@ -393,7 +423,13 @@
                         <p class="text-[11px] text-gray-400">Gắn món từ thực đơn PACA vào canvas để hiển thị giá động và nhận đơn tức thì</p>
                     </div>
                 </div>
-                <button onclick="closeSmartProductPicker()" class="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 text-white flex items-center justify-center font-bold text-sm">✕</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="syncStudioMenuData(true)" title="Lấy món và danh mục mới nhất từ Quản trị" class="bg-gray-700 hover:bg-gray-600 text-amber-300 text-xs font-bold px-2.5 py-1.5 rounded-xl border border-amber-500/40 flex items-center gap-1 active:scale-95 transition">
+                        <span>🔄</span>
+                        <span class="hidden sm:inline">Làm mới menu</span>
+                    </button>
+                    <button onclick="closeSmartProductPicker()" class="w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 text-white flex items-center justify-center font-bold text-sm">✕</button>
+                </div>
             </div>
 
             <!-- Search & Filters -->
@@ -475,8 +511,25 @@
             await engine.init();
 
             updatePageTabs();
-            populateProductBindingsSelect();
-            renderProductsDrawer();
+            populateTargetPageSelect();
+            // Listen for cross-tab updates from admin.html
+            window.addEventListener('focus', () => {
+                syncStudioMenuData();
+            });
+
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'paca_menu_data') {
+                    syncStudioMenuData();
+                }
+            });
+
+            if (window.paca && window.paca.broadcastChannel) {
+                window.paca.broadcastChannel.addEventListener('message', (e) => {
+                    if (['MENU_SAVED', 'MENU_ITEM_SAVED', 'CATEGORIES_CHANGED', 'MENU_BATCH_COST_SAVED'].includes(e.data?.type)) {
+                        syncStudioMenuData();
+                    }
+                });
+            }
 
             // Direct tester for Smart Product Picker
             const urlParams = new URLSearchParams(window.location.search);
@@ -484,6 +537,39 @@
                 openSmartProductPicker();
             }
         });
+
+        // --- SYNC MENU FROM ADMIN / LOCALSTORAGE ---
+        async function syncStudioMenuData(showToast = false) {
+            try {
+                if (window.paca && window.paca.reloadMenu) {
+                    await window.paca.reloadMenu();
+                } else {
+                    const local = localStorage.getItem('paca_menu_data');
+                    if (local) {
+                        window.paca.menu = JSON.parse(local);
+                        if (window.paca.normalizeCategories) window.paca.normalizeCategories();
+                    }
+                }
+            } catch (err) {
+                console.warn("Could not reload menu:", err);
+            }
+
+            renderProductsDrawer();
+            populateProductBindingsSelect();
+            populateTargetPageSelect();
+
+            const pickerModal = document.getElementById('smartProductPickerModal');
+            if (pickerModal && !pickerModal.classList.contains('hidden')) {
+                populatePickerCategories();
+                renderPickerProducts();
+            }
+
+            if (showToast) {
+                const totalItems = window.paca?.menu?.items?.length || 0;
+                const totalCats = (window.paca?.getCategories ? window.paca.getCategories(true) : window.paca?.menu?.categories)?.length || 0;
+                alert(`✓ Đã đồng bộ thành công thực đơn mới nhất từ Quản trị!\n- Tổng cộng: ${totalItems} món ăn & thức uống\n- Số danh mục: ${totalCats} danh mục.`);
+            }
+        }
 
         // --- TOOL TABS ---
         function switchToolTab(tabId) {
@@ -503,7 +589,10 @@
             if (tabId === 'tabImages') document.getElementById('drawerImages').classList.remove('hidden');
             if (tabId === 'tabText') document.getElementById('drawerText').classList.remove('hidden');
             if (tabId === 'tabShapes') document.getElementById('drawerShapes').classList.remove('hidden');
-            if (tabId === 'tabProducts') document.getElementById('drawerProducts').classList.remove('hidden');
+            if (tabId === 'tabProducts') {
+                syncStudioMenuData();
+                document.getElementById('drawerProducts').classList.remove('hidden');
+            }
             if (tabId === 'tabUpload') document.getElementById('drawerUpload').classList.remove('hidden');
         }
 
@@ -541,6 +630,131 @@
             engine.recordState();
             engine.design.pages.push(newPage);
             selectPage(newPage.id);
+            engine.saveDraft();
+            populateTargetPageSelect();
+        }
+
+        function duplicateCurrentPage() {
+            if (!engine || !engine.design || !engine.design.pages) return;
+            const pages = engine.design.pages;
+            const curIdx = pages.findIndex(p => p.id === engine.activePageId);
+            const curPage = curIdx !== -1 ? pages[curIdx] : pages[0];
+
+            const newPage = JSON.parse(JSON.stringify(curPage));
+            newPage.id = 'page_' + Date.now().toString(36);
+            newPage.title = (curPage.title || 'Trang') + ' (Bản sao)';
+            (newPage.elements || []).forEach((el, i) => {
+                el.id = 'el_' + Date.now().toString(36) + '_' + i;
+            });
+
+            engine.recordState();
+            pages.splice(curIdx + 1, 0, newPage);
+            selectPage(newPage.id);
+            engine.saveDraft();
+            populateTargetPageSelect();
+            alert(`✓ Đã nhân bản "${curPage.title}" thành công!`);
+        }
+
+        function renameCurrentPage() {
+            if (!engine || !engine.design || !engine.design.pages) return;
+            const pages = engine.design.pages;
+            const curIdx = pages.findIndex(p => p.id === engine.activePageId);
+            const curPage = curIdx !== -1 ? pages[curIdx] : pages[0];
+            const currentTitle = curPage.title || `Trang ${curIdx + 1}`;
+            const newTitle = prompt("Nhập tên mới cho trang này:", currentTitle);
+            if (newTitle && newTitle.trim()) {
+                engine.recordState();
+                curPage.title = newTitle.trim();
+                updatePageTabs();
+                populateTargetPageSelect();
+                engine.saveDraft();
+            }
+        }
+
+        function deleteCurrentPage() {
+            if (!engine || !engine.design || !engine.design.pages) return;
+            const pages = engine.design.pages;
+            if (pages.length <= 1) {
+                alert("⚠️ Thực đơn phải có ít nhất 1 trang! Bạn không thể xóa hết toàn bộ các trang.");
+                return;
+            }
+            const curIdx = pages.findIndex(p => p.id === engine.activePageId);
+            const curPage = curIdx !== -1 ? pages[curIdx] : pages[0];
+            const pageTitle = curPage.title || `Trang ${curIdx + 1}`;
+
+            const ok = confirm(`🗑️ XÁC NHẬN XÓA TRANG:\n\nBạn có chắc chắn muốn xóa "${pageTitle}" không?\n\nMọi hình ảnh, chữ và nội dung trên trang này sẽ bị xóa khỏi thực đơn.`);
+            if (!ok) return;
+
+            engine.recordState();
+            pages.splice(curIdx, 1);
+            const nextIdx = Math.max(0, curIdx - 1);
+            engine.activePageId = pages[nextIdx].id;
+            engine.selectedElementId = null;
+
+            updatePageTabs();
+            populateTargetPageSelect();
+            engine.render();
+            updateInspector(null);
+            engine.saveDraft();
+            alert(`✓ Đã xóa "${pageTitle}" thành công!`);
+        }
+
+        function handleDeleteAction() {
+            if (engine.selectedElementId) {
+                engine.deleteSelectedElement();
+            } else {
+                const curPage = engine.getActivePage();
+                const pageTitle = curPage ? (curPage.title || 'trang này') : 'trang này';
+                const wantDeletePage = confirm(`Bạn chưa chọn đối tượng nào trên canvas để xóa.\n\n👉 Bạn có muốn XÓA NGUYÊN TRANG "${pageTitle}" này không?`);
+                if (wantDeletePage) {
+                    deleteCurrentPage();
+                }
+            }
+        }
+
+        function populateTargetPageSelect() {
+            const select = document.getElementById('propTargetPageSelect');
+            if (!select || !engine || !engine.design) return;
+            const currentVal = select.value;
+            const pages = engine.design.pages || [];
+            const categories = window.paca?.menu?.categories || [];
+
+            let html = `<option value="">-- Không điều hướng (Chữ / hình tĩnh) --</option>`;
+
+            html += `<optgroup label="📄 CÁC TRANG POSTER TRONG MENU">`;
+            pages.forEach((p, idx) => {
+                html += `<option value="${p.id}">Trang ${idx + 1}: ${p.title || p.id}</option>`;
+            });
+            html += `</optgroup>`;
+
+            if (categories.length > 0) {
+                html += `<optgroup label="🍹 CÁC DANH MỤC THỰC ĐƠN">`;
+                categories.forEach(cat => {
+                    const catTarget = cat.pageId || ('sec_cat_' + cat.id);
+                    html += `<option value="${catTarget}">${cat.icon || '✦'} ${cat.name_vi || cat.name}</option>`;
+                });
+                html += `</optgroup>`;
+            }
+
+            select.innerHTML = html;
+            select.value = currentVal;
+        }
+
+        function updatePropTargetPage() {
+            const select = document.getElementById('propTargetPageSelect');
+            const targetId = select.value;
+            const el = engine.getSelectedElement();
+            if (!el) return;
+
+            engine.recordState();
+            if (targetId) {
+                if (el.type === 'text') el.type = 'link_nav';
+                el.props.targetPageId = targetId;
+            } else {
+                if (el.type === 'link_nav') el.type = 'text';
+                delete el.props.targetPageId;
+            }
+            engine.render();
             engine.saveDraft();
         }
 
@@ -726,6 +940,18 @@
                 }
             } else if (cardBox) {
                 cardBox.classList.add('hidden');
+            }
+
+            // Navigation link target
+            populateTargetPageSelect();
+            const linkBox = document.getElementById('linkNavInspectorBox');
+            if (linkBox) {
+                if (el.type === 'text' || el.type === 'link_nav' || el.type === 'image' || el.type === 'shape') {
+                    linkBox.classList.remove('hidden');
+                    document.getElementById('propTargetPageSelect').value = el.props.targetPageId || '';
+                } else {
+                    linkBox.classList.add('hidden');
+                }
             }
 
             // Binding
@@ -946,7 +1172,8 @@
         // --- SMART PRODUCT PICKER SYSTEM ---
         let pickerActiveCategory = 'all';
 
-        function openSmartProductPicker() {
+        async function openSmartProductPicker() {
+            await syncStudioMenuData();
             pickerActiveCategory = 'all';
             document.getElementById('pickerSearchInput').value = '';
             populatePickerCategories();
@@ -959,7 +1186,7 @@
         }
 
         function populatePickerCategories() {
-            const categories = window.paca?.menu?.categories || [];
+            const categories = window.paca?.getCategories ? window.paca.getCategories(true) : (window.paca?.menu?.categories || []);
             const container = document.getElementById('pickerCategoryTabs');
             let html = `
                 <button onclick="setPickerCategory('all')" class="px-2.5 py-1 rounded-lg whitespace-nowrap ${pickerActiveCategory === 'all' ? 'bg-amber-400 text-paca-navy font-black' : 'bg-gray-800 text-gray-300'}">
