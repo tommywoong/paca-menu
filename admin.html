@@ -117,6 +117,12 @@
                     <span class="hidden sm:inline">Khóa</span>
                 </button>
 
+                <!-- Cloud Sync Button -->
+                <button onclick="triggerManualCloudSync()" id="btnHeaderCloudSync" class="bg-blue-500/20 hover:bg-blue-600/30 text-cyan-200 text-xs px-2 py-1.5 rounded-lg border border-cyan-300/40 font-bold flex items-center gap-1 active:scale-95 transition" title="Đồng bộ đơn hàng & thực đơn từ đám mây">
+                    <span id="headerSyncIcon" class="inline-block transition-transform duration-700">🔄</span>
+                    <span class="hidden sm:inline">Đồng bộ</span>
+                </button>
+
                 <button onclick="toggleAudioMute()" id="btnMuteAudio" class="bg-white/10 hover:bg-white/20 text-white text-xs px-2 py-1.5 rounded-lg flex items-center gap-1 border border-white/20">
                     <span id="muteIcon">🔔</span>
                     <span id="muteText" class="hidden sm:inline">Chuông</span>
@@ -2175,7 +2181,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261003_2125"></script>
+    <script src="js/paca_core.js?v=20261004_1700"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -2458,9 +2464,47 @@
                 );
             }
 
+            // Listen for Realtime Cloud Menu updates
+            if (window.paca?.setOnMenuCloudUpdateCallback) {
+                window.paca.setOnMenuCloudUpdateCallback((newMenu) => {
+                    console.log("PACA Admin: Cloud menu updated, re-rendering UI...");
+                    renderAdminMenu();
+                    renderAdminCategories();
+                    renderInventoryTable();
+                    renderTablesAdmin();
+                    renderOrders();
+                });
+            }
+
             // Init all horizontal drag and scroll listeners on PC/Desktop
             setTimeout(initAllHorizontalScrolls, 100);
         });
+
+        // Trigger manual cloud sync with feedback
+        async function triggerManualCloudSync() {
+            const icon = document.getElementById('headerSyncIcon');
+            if (icon) icon.classList.add('animate-spin');
+            showAdminToast("🔄 Đang đồng bộ đơn hàng & thực đơn với Cloud...", true);
+            try {
+                if (window.paca?.forceFullCloudSync) {
+                    const res = await window.paca.forceFullCloudSync();
+                    renderOrders();
+                    renderTablesAdmin();
+                    renderRevenueStats();
+                    renderAdminMenu();
+                    renderAdminCategories();
+                    renderInventoryTable();
+                    showAdminToast(`✅ Đồng bộ thành công! Hiện có ${res?.orderCount || window.paca.orders.length} đơn hàng.`, true);
+                }
+            } catch (e) {
+                console.error("Manual cloud sync error", e);
+                showAdminToast("⚠️ Đồng bộ thất bại, vui lòng kiểm tra kết nối!", false);
+            } finally {
+                setTimeout(() => {
+                    if (icon) icon.classList.remove('animate-spin');
+                }, 800);
+            }
+        }
 
         // Tab Switching
         function switchTab(tabId) {
@@ -2729,11 +2773,13 @@
                                     </button>
                                 ` : ''}
 
+                                ${window.paca.isAdmin() ? `
                                 <button onclick="openDeleteOrderConfirmModal('${ord.id}')" title="Xóa vĩnh viễn đơn hàng" 
                                     class="bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 text-[11px] font-bold px-2 py-1.5 rounded-xl border border-red-200 flex items-center gap-1 transition active:scale-95">
                                     <span>🗑️</span>
                                     <span>Xóa</span>
                                 </button>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -3162,6 +3208,10 @@
         let deleteOrderStep = 1; // 1: Waiting checkbox, 2: Ready for second explicit click
 
         function openDeleteOrderConfirmModal(orderId) {
+            if (!window.paca.isAdmin()) {
+                showAdminToast("⛔ BẢO MẬT: Chỉ tài khoản Quản Lý (Admin) mới có quyền xóa đơn hàng! Nhân viên thu ngân không thể xóa đơn.", false);
+                return;
+            }
             const order = window.paca.orders.find(o => o.id === orderId);
             if (!order) return;
 
@@ -3260,6 +3310,11 @@
         }
 
         function executePermanentDeleteOrder() {
+            if (!window.paca.isAdmin()) {
+                alert("⛔ BẢO MẬT: Chỉ tài khoản Quản Lý (Admin) mới có quyền xóa đơn hàng!");
+                closeDeleteOrderConfirmModal();
+                return;
+            }
             if (!pendingDeleteOrderId) return;
             const targetId = pendingDeleteOrderId;
             
@@ -5549,10 +5604,12 @@
                                         class="bg-white hover:bg-gray-100 text-paca-navy text-xs font-bold px-2 py-1.5 rounded-xl border border-gray-300 shadow-sm">
                                         🖨️ In
                                     </button>
+                                    ${window.paca.isAdmin() ? `
                                     <button onclick="openDeleteOrderConfirmModal('${ord.id}')" title="Xóa vĩnh viễn đơn này" 
                                         class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-2 py-1.5 rounded-xl border border-red-200 shadow-sm">
                                         🗑️
                                     </button>
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -6387,7 +6444,7 @@
             if (shouldShowQr) {
                 openVietQrFullscreen(newOrder.id);
             } else if (!shouldPrintImmediately) {
-                alert(`✓ Đã tạo thành công đơn hàng #${newOrder.id} (${creatorName}) cho ${tableName}!`);
+                showAdminToast(`✓ Đã tạo thành công đơn hàng #${newOrder.id} (${creatorName}) cho ${tableName}!`, true);
             }
         }
 

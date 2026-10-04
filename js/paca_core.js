@@ -12,7 +12,8 @@ const PACA_STORAGE_KEYS = {
     USERS: 'paca_users_data_v1',
     CURRENT_USER: 'paca_current_user_v1',
     INVENTORY_LOGS: 'paca_inventory_logs_v1',
-    DAILY_CLOSES: 'paca_daily_closes_v1'
+    DAILY_CLOSES: 'paca_daily_closes_v1',
+    DELETED_ORDERS: 'paca_deleted_orders_v1'
 };
 
 const DEFAULT_UNITS = ['Ly', 'Chai', 'Lon', 'Phần', 'Đĩa', 'Gói', 'Set', 'Shot', 'Thùng', 'Két', 'Bình', 'Tháp'];
@@ -188,8 +189,12 @@ class PacaService {
         this.dailyCloses = [];
         this.broadcastChannel = null;
         this.cloudSyncTopic = 'paca_orders_live_da_lat_2025';
+        this.cloudOrdersSnapshotTopic = 'paca_orders_snapshot_dalat_2025';
+        this.cloudMenuTopic = 'paca_menu_sync_dalat_2025';
         this.cloudEventSource = null;
         this.cloudSyncTimer = null;
+        this.onMenuCloudUpdateCallback = null;
+        this._snapshotTimer = null;
         this.initBroadcast();
     }
 
@@ -201,14 +206,12 @@ class PacaService {
 
     // --- INITIALIZATION ---
     async init() {
-        const CURRENT_VERSION = '20261003_2125';
+        const CURRENT_VERSION = '20261004_1700';
         const savedVer = localStorage.getItem('paca_app_version');
         if (savedVer !== CURRENT_VERSION) {
-            console.log(`PACA: Updating from version ${savedVer} to ${CURRENT_VERSION}. Invalidating stale caches...`);
+            console.log(`PACA: Updating from version ${savedVer} to ${CURRENT_VERSION}.`);
             localStorage.setItem('paca_app_version', CURRENT_VERSION);
-            // Invalidate stale caches so fresh menu & canvas are pulled immediately
-            localStorage.removeItem(PACA_STORAGE_KEYS.MENU);
-            localStorage.removeItem('paca_menu_saved_timestamp');
+            // Invalidate stale canvas caches so fresh canvas layout is pulled
             localStorage.removeItem('paca_published_canvas_v2');
             localStorage.removeItem('paca_canvas_published_timestamp');
         }
@@ -623,6 +626,34 @@ class PacaService {
         return null;
     }
 
+    setOnMenuCloudUpdateCallback(cb) {
+        this.onMenuCloudUpdateCallback = cb;
+    }
+
+    async checkMenuCloudUpdate() {
+        try {
+            const cloudMenuPayload = await this.pullMenuFromCloud();
+            if (cloudMenuPayload && cloudMenuPayload.menu && cloudMenuPayload.timestamp) {
+                const localTs = parseInt(localStorage.getItem('paca_menu_saved_timestamp') || '0');
+                if (cloudMenuPayload.timestamp > localTs) {
+                    console.log("PACA: Newer menu detected from Cloud Sync! Updating local menu...");
+                    this.menu = cloudMenuPayload.menu;
+                    this.normalizeCategories();
+                    localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
+                    localStorage.setItem('paca_menu_saved_timestamp', cloudMenuPayload.timestamp.toString());
+                    if (this.onMenuCloudUpdateCallback) {
+                        this.onMenuCloudUpdateCallback(this.menu);
+                    }
+                    if (this.broadcastChannel) {
+                        this.broadcastChannel.postMessage({ type: 'MENU_SAVED', timestamp: cloudMenuPayload.timestamp });
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("PACA: checkMenuCloudUpdate error:", e);
+        }
+    }
+
     saveMenu(menuData, pushToCloud = true) {
         this.menu = menuData;
         localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
@@ -632,6 +663,7 @@ class PacaService {
         }
         if (pushToCloud) {
             this.pushMenuToCloud(this.menu);
+            this.pushOrderToCloud({ timestamp: Date.now() }, 'MENU_UPDATED');
         }
     }
 
@@ -1372,80 +1404,245 @@ class PacaService {
         }
     }
 
+    getDeletedOrderIds() {
+        try {
+            return JSON.parse(localStorage.getItem(PACA_STORAGE_KEYS.DELETED_ORDERS) || '[]');
+        } catch (e) {
+            return [];
+        }
+    }
+
+    recordDeletedOrder(orderId) {
+        if (!orderId) return;
+        try {
+            const list = this.getDeletedOrderIds();
+            if (!list.includes(orderId)) {
+                list.push(orderId);
+                if (list.length > 500) list.shift();
+                localStorage.setItem(PACA_STORAGE_KEYS.DELETED_ORDERS, JSON.stringify(list));
+            }
+        } catch (e) {
+            console.warn("recordDeletedOrder error", e);
+        }
+    }
+
+    isOrderDeleted(orderId) {
+        if (!orderId) return false;
+        const list = this.getDeletedOrderIds();
+        return list.includes(orderId);
+    }
+
     deleteOrder(orderId) {
+        if (!this.isAdmin()) {
+            console.warn("PACA: deleteOrder blocked - unauthorized role (only admin allowed)");
+            return null;
+        }
         const idx = this.orders.findIndex(o => o.id === orderId);
         if (idx !== -1) {
             const removed = this.orders.splice(idx, 1)[0];
             if (removed && removed.inventoryDeducted) {
                 this.restoreOrderStock(removed);
             }
+            this.recordDeletedOrder(orderId);
             this.saveOrders();
             if (this.broadcastChannel) {
                 this.broadcastChannel.postMessage({ type: 'ORDER_DELETED', orderId });
             }
             this.pushOrderToCloud({ id: orderId }, 'DELETE_ORDER');
+            this.debouncePushOrdersSnapshot();
             return removed;
         }
         return null;
     }
 
-    // --- REALTIME CLOUD ORDER SYNC ---
-    async pushOrderToCloud(order, action = 'CREATE_ORDER') {
+    // --- REALTIME CLOUD ORDER SYNC & SNAPSHOT RECONCILIATION ---
+    debouncePushOrdersSnapshot() {
+        if (this._snapshotTimer) clearTimeout(this._snapshotTimer);
+        this._snapshotTimer = setTimeout(() => {
+            this.pushOrdersSnapshotToCloud();
+        }, 1200);
+    }
+
+    async pushOrdersSnapshotToCloud() {
         try {
-            const payload = JSON.stringify({ action, order, timestamp: Date.now() });
-            await fetch(`https://ntfy.sh/${this.cloudSyncTopic}`, {
+            const activeOrders = this.orders.filter(o => !this.isOrderDeleted(o.id)).slice(0, 100);
+            const payload = JSON.stringify({
+                type: 'ORDERS_SNAPSHOT',
+                timestamp: Date.now(),
+                device: this.getCurrentUser()?.name || 'Device',
+                orders: activeOrders
+            });
+            await fetch(`https://ntfy.sh/${this.cloudOrdersSnapshotTopic}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain; charset=utf-8' },
                 body: payload
             });
+            console.log(`PACA: Pushed snapshot of ${activeOrders.length} orders to cloud.`);
         } catch (e) {
-            console.warn("Failed to push order to cloud sync", e);
+            console.warn("PACA: pushOrdersSnapshotToCloud error:", e);
         }
     }
 
-    async syncCloudOrders(onUpdateCallback) {
+    async pullOrdersSnapshotFromCloud() {
         try {
-            const res = await fetch(`https://ntfy.sh/${this.cloudSyncTopic}/json?poll=1&since=24h`, { cache: 'no-store' });
+            const res = await fetch(`https://ntfy.sh/${this.cloudOrdersSnapshotTopic}/json?poll=1&since=48h`, { cache: 'no-store' });
+            if (!res.ok) return null;
             const text = await res.text();
-            if (!text) return;
+            if (!text) return null;
             const lines = text.trim().split('\n');
-            let hasChanges = false;
+            let latestSnapshot = null;
             for (const line of lines) {
                 try {
                     const item = JSON.parse(line);
                     if (item.event === 'message' && item.message) {
-                        const payload = JSON.parse(item.message);
-                        if (payload.action === 'CREATE_ORDER' && payload.order) {
-                            const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
-                            if (existingIdx === -1) {
-                                this.orders.unshift(payload.order);
-                                hasChanges = true;
-                            }
-                        } else if (payload.action === 'UPDATE_ORDER' && payload.order) {
-                            const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
-                            if (existingIdx !== -1) {
-                                this.orders[existingIdx] = { ...this.orders[existingIdx], ...payload.order };
-                                hasChanges = true;
-                            } else {
-                                this.orders.unshift(payload.order);
-                                hasChanges = true;
-                            }
-                        } else if (payload.action === 'DELETE_ORDER') {
-                            const targetId = payload.order?.id || payload.orderId;
-                            if (targetId) {
-                                const existingIdx = this.orders.findIndex(o => o.id === targetId);
-                                if (existingIdx !== -1) {
-                                    this.orders.splice(existingIdx, 1);
-                                    hasChanges = true;
-                                }
+                        const parsed = JSON.parse(item.message);
+                        if (parsed.type === 'ORDERS_SNAPSHOT' && Array.isArray(parsed.orders)) {
+                            if (!latestSnapshot || (parsed.timestamp && parsed.timestamp > (latestSnapshot.timestamp || 0))) {
+                                latestSnapshot = parsed;
                             }
                         }
                     }
-                } catch (err) {}
+                } catch (e) {}
             }
+            return latestSnapshot;
+        } catch (e) {
+            console.warn("PACA: pullOrdersSnapshotFromCloud error:", e);
+            return null;
+        }
+    }
+
+    async pushOrderToCloud(order, action = 'CREATE_ORDER', retries = 3) {
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                const payload = JSON.stringify({ action, order, timestamp: Date.now() });
+                const res = await fetch(`https://ntfy.sh/${this.cloudSyncTopic}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+                    body: payload
+                });
+                if (res.ok) {
+                    if (action === 'CREATE_ORDER' || action === 'UPDATE_ORDER' || action === 'DELETE_ORDER') {
+                        this.debouncePushOrdersSnapshot();
+                    }
+                    return true;
+                }
+            } catch (e) {
+                console.warn(`PACA: pushOrderToCloud attempt ${attempt} failed:`, e);
+                if (attempt < retries) {
+                    await new Promise(r => setTimeout(r, 500 * attempt));
+                }
+            }
+        }
+        if (action === 'CREATE_ORDER' || action === 'UPDATE_ORDER' || action === 'DELETE_ORDER') {
+            this.debouncePushOrdersSnapshot();
+        }
+        return false;
+    }
+
+    async syncCloudOrders(onUpdateCallback) {
+        try {
+            let hasChanges = false;
+
+            // 1. Process recent live topic events
+            try {
+                const res = await fetch(`https://ntfy.sh/${this.cloudSyncTopic}/json?poll=1&since=24h`, { cache: 'no-store' });
+                const text = await res.text();
+                if (text) {
+                    const lines = text.trim().split('\n');
+                    for (const line of lines) {
+                        try {
+                            const item = JSON.parse(line);
+                            if (item.event === 'message' && item.message) {
+                                const payload = JSON.parse(item.message);
+                                if (payload.action === 'MENU_UPDATED') {
+                                    this.checkMenuCloudUpdate();
+                                } else if (payload.action === 'CREATE_ORDER' && payload.order) {
+                                    if (this.isOrderDeleted(payload.order.id)) continue;
+                                    const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
+                                    if (existingIdx === -1) {
+                                        this.orders.unshift(payload.order);
+                                        hasChanges = true;
+                                    }
+                                } else if (payload.action === 'UPDATE_ORDER' && payload.order) {
+                                    if (this.isOrderDeleted(payload.order.id)) continue;
+                                    const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
+                                    if (existingIdx !== -1) {
+                                        this.orders[existingIdx] = { ...this.orders[existingIdx], ...payload.order };
+                                        hasChanges = true;
+                                    } else {
+                                        this.orders.unshift(payload.order);
+                                        hasChanges = true;
+                                    }
+                                } else if (payload.action === 'DELETE_ORDER') {
+                                    const targetId = payload.order?.id || payload.orderId;
+                                    if (targetId) {
+                                        this.recordDeletedOrder(targetId);
+                                        const existingIdx = this.orders.findIndex(o => o.id === targetId);
+                                        if (existingIdx !== -1) {
+                                            this.orders.splice(existingIdx, 1);
+                                            hasChanges = true;
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (err) {}
+                    }
+                }
+            } catch (err) {
+                console.warn("PACA: cloudSyncTopic poll error:", err);
+            }
+
+            // 2. Bidirectional reconciliation with Cloud Orders Snapshot
+            let needPushSnapshot = false;
+            try {
+                const snapshot = await this.pullOrdersSnapshotFromCloud();
+                if (snapshot && Array.isArray(snapshot.orders)) {
+                    // Pull missing/newer orders from snapshot
+                    for (const cloudOrd of snapshot.orders) {
+                        if (!cloudOrd || !cloudOrd.id || this.isOrderDeleted(cloudOrd.id)) continue;
+                        const localIdx = this.orders.findIndex(o => o.id === cloudOrd.id);
+                        if (localIdx === -1) {
+                            this.orders.unshift(cloudOrd);
+                            hasChanges = true;
+                        } else {
+                            const localOrd = this.orders[localIdx];
+                            if (cloudOrd.paymentStatus === 'paid' && localOrd.paymentStatus !== 'paid') {
+                                this.orders[localIdx] = { ...localOrd, ...cloudOrd };
+                                hasChanges = true;
+                            } else if (cloudOrd.status === 'completed' && localOrd.status !== 'completed') {
+                                this.orders[localIdx] = { ...localOrd, ...cloudOrd };
+                                hasChanges = true;
+                            }
+                        }
+                    }
+
+                    // Check if local has active orders missing from cloud snapshot
+                    for (const localOrd of this.orders) {
+                        if (localOrd && localOrd.id && !this.isOrderDeleted(localOrd.id)) {
+                            const inCloud = snapshot.orders.some(co => co.id === localOrd.id);
+                            if (!inCloud) {
+                                needPushSnapshot = true;
+                            }
+                        }
+                    }
+                } else if (this.orders.length > 0) {
+                    needPushSnapshot = true;
+                }
+            } catch (snapErr) {
+                console.warn("PACA: snapshot reconcile error:", snapErr);
+            }
+
+            // 3. Check menu cloud update
+            this.checkMenuCloudUpdate();
+
             if (hasChanges) {
+                this.orders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
                 this.saveOrders();
                 if (onUpdateCallback) onUpdateCallback();
+            }
+
+            if (needPushSnapshot) {
+                this.debouncePushOrdersSnapshot();
             }
         } catch (e) {
             console.warn("Cloud sync poll error:", e);
@@ -1453,7 +1650,7 @@ class PacaService {
     }
 
     startCloudOrderSync(onNewOrderCallback, onUpdateCallback) {
-        // 1. Initial catch-up for past 24h
+        // 1. Initial catch-up
         this.syncCloudOrders(() => {
             if (onUpdateCallback) onUpdateCallback();
         });
@@ -1469,7 +1666,12 @@ class PacaService {
                     const data = JSON.parse(event.data);
                     if (data.event === 'message' && data.message) {
                         const payload = JSON.parse(data.message);
+                        if (payload.action === 'MENU_UPDATED') {
+                            this.checkMenuCloudUpdate();
+                            return;
+                        }
                         if (payload.action === 'CREATE_ORDER' && payload.order) {
+                            if (this.isOrderDeleted(payload.order.id)) return;
                             const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
                             if (existingIdx === -1) {
                                 this.orders.unshift(payload.order);
@@ -1477,6 +1679,7 @@ class PacaService {
                                 if (onNewOrderCallback) onNewOrderCallback(payload.order);
                             }
                         } else if (payload.action === 'UPDATE_ORDER' && payload.order) {
+                            if (this.isOrderDeleted(payload.order.id)) return;
                             const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
                             if (existingIdx !== -1) {
                                 this.orders[existingIdx] = { ...this.orders[existingIdx], ...payload.order };
@@ -1488,6 +1691,7 @@ class PacaService {
                         } else if (payload.action === 'DELETE_ORDER') {
                             const targetId = payload.order?.id || payload.orderId;
                             if (targetId) {
+                                this.recordDeletedOrder(targetId);
                                 const existingIdx = this.orders.findIndex(o => o.id === targetId);
                                 if (existingIdx !== -1) {
                                     this.orders.splice(existingIdx, 1);
@@ -1503,14 +1707,22 @@ class PacaService {
             console.warn("Cloud EventSource init error", e);
         }
 
-        // 3. Fallback poll interval every 5 seconds
+        // 3. Fallback poll interval every 4 seconds
         if (!this.cloudSyncTimer) {
             this.cloudSyncTimer = setInterval(() => {
                 this.syncCloudOrders(() => {
                     if (onUpdateCallback) onUpdateCallback();
                 });
-            }, 5000);
+            }, 4000);
         }
+    }
+
+    async forceFullCloudSync() {
+        console.log("PACA: Forcing full cloud sync...");
+        await this.checkMenuCloudUpdate();
+        await this.syncCloudOrders();
+        await this.pushOrdersSnapshotToCloud();
+        return { orderCount: this.orders.length, menu: this.menu };
     }
 
     // --- PAYMENT CONFIRMATION (IDEMPOTENT) ---

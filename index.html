@@ -346,8 +346,8 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261004_1550"></script>
-    <script src="js/paca_canvas.js?v=20261004_1550"></script>
+    <script src="js/paca_core.js?v=20261004_1700"></script>
+    <script src="js/paca_canvas.js?v=20261004_1700"></script>
     <script>
         let isPosterMode = true;
         let canvasEngine = null;
@@ -376,10 +376,15 @@
                 selectTable(window.paca.tables[0]);
             }
 
-            // Push any existing local orders to Cloud Sync (e.g. order placed prior to sync)
-            if (window.paca?.orders && window.paca.orders.length > 0) {
-                window.paca.orders.forEach(ord => {
-                    window.paca.pushOrderToCloud(ord, 'CREATE_ORDER');
+            // Listen for Realtime Cloud Menu updates
+            if (window.paca?.setOnMenuCloudUpdateCallback) {
+                window.paca.setOnMenuCloudUpdateCallback(async (newMenu) => {
+                    console.log("PACA Customer: Cloud menu updated, refreshing view...");
+                    if (canvasEngine) {
+                        try { await canvasEngine.loadPublished(); } catch (e) {}
+                    }
+                    renderCustomerNavBar();
+                    renderStandardMenu();
                 });
             }
 

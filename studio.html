@@ -583,8 +583,8 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261004_1550"></script>
-    <script src="js/paca_canvas.js?v=20261004_1550"></script>
+    <script src="js/paca_core.js?v=20261004_1700"></script>
+    <script src="js/paca_canvas.js?v=20261004_1700"></script>
     <script>
         let engine = null;
         let canvaManifest = null;
@@ -2052,9 +2052,12 @@
                 // 1. Publish Canvas design & push to cloud
                 await engine.publish(true);
 
-                // 2. Also push active menu to cloud
+                // 2. Also push active menu to cloud & notify all screens
                 if (window.paca && window.paca.pushMenuToCloud) {
                     await window.paca.pushMenuToCloud();
+                    if (window.paca.pushOrderToCloud) {
+                        await window.paca.pushOrderToCloud({ timestamp: Date.now() }, 'MENU_UPDATED');
+                    }
                 }
 
                 const totalPages = engine.design?.pages?.length || 8;
