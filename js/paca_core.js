@@ -655,18 +655,29 @@ class PacaService {
                 const localTs = parseInt(localStorage.getItem('paca_menu_saved_timestamp') || '0');
                 const localCount = (this.menu?.items || []).length;
                 const cloudCount = (cloudMenuPayload.menu.items || []).length;
-                if (cloudMenuPayload.timestamp > localTs || (localCount === 0 && cloudCount > 0)) {
+                
+                // Only overwrite local menu if:
+                // 1) Cloud payload is strictly newer than local timestamp AND has valid categories
+                // 2) Or local menu was completely empty while cloud has items
+                const isNewer = cloudMenuPayload.timestamp > localTs;
+                const isLocalEmpty = localCount === 0 && cloudCount > 0;
+
+                if ((isNewer || isLocalEmpty) && Array.isArray(cloudMenuPayload.menu.categories)) {
                     console.log("PACA: Newer menu detected from Cloud Sync! Updating local menu...");
                     this.menu = cloudMenuPayload.menu;
                     this.normalizeCategories();
                     localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
-                    localStorage.setItem('paca_menu_saved_timestamp', cloudMenuPayload.timestamp.toString());
+                    localStorage.setItem('paca_menu_saved_timestamp', Math.max(cloudMenuPayload.timestamp, localTs).toString());
                     if (this.onMenuCloudUpdateCallback) {
                         this.onMenuCloudUpdateCallback(this.menu);
                     }
                     if (this.broadcastChannel) {
                         this.broadcastChannel.postMessage({ type: 'MENU_SAVED', timestamp: cloudMenuPayload.timestamp });
                     }
+                } else if (localTs > cloudMenuPayload.timestamp && localCount > 0) {
+                    // Local changes are NEWER than Cloud -> push local changes to Cloud to ensure cloud is up to date!
+                    console.log("PACA: Local menu is newer than Cloud Sync. Updating Cloud with local edits...");
+                    this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Background pushMenuToCloud skipped", e));
                 }
             }
         } catch (e) {

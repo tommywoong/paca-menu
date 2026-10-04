@@ -128,10 +128,13 @@ class PacaCanvasEngine {
                             console.log("PACA: Newer design received from Cloud Sync! Updating view...");
                             this.design = cloudPayload.design;
                             this.safeSetItem(PACA_CANVAS_KEYS.PUBLISHED_DESIGN, JSON.stringify(this.design));
-                            this.safeSetItem('paca_canvas_published_timestamp', cloudPayload.timestamp.toString());
+                            this.safeSetItem('paca_canvas_published_timestamp', Math.max(cloudPayload.timestamp, localTs).toString());
                             if (this.container) {
                                 this.render();
                             }
+                        } else if (localTs > cloudPayload.timestamp && this.design) {
+                            // Local published design is newer than cloud -> sync to cloud
+                            this.pushToCloudSync().catch(e => console.warn("PACA: Background pushToCloudSync skipped", e));
                         }
                     }
                 } catch (err) {
@@ -311,8 +314,8 @@ class PacaCanvasEngine {
             );
 
             // If it is a category section page and the category was DELETED from Admin, skip it!
-            if (page.id.startsWith('sec_cat_') && !catForPage) {
-                return; // Category was deleted!
+            if (isCatPage && !catForPage) {
+                return; // Category was deleted from Admin!
             }
 
             // If category is inactive, skip it!
