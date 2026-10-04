@@ -206,12 +206,20 @@ class PacaService {
 
     // --- INITIALIZATION ---
     async init() {
-        const CURRENT_VERSION = '20261004_1700';
+        const CURRENT_VERSION = '20261004_1720';
         const savedVer = localStorage.getItem('paca_app_version');
         if (savedVer !== CURRENT_VERSION) {
             console.log(`PACA: Updating from version ${savedVer} to ${CURRENT_VERSION}.`);
             localStorage.setItem('paca_app_version', CURRENT_VERSION);
-            // Invalidate stale canvas caches so fresh canvas layout is pulled
+            // If local menu was somehow empty or corrupted, clear it so fresh data/menu.json loads
+            try {
+                const localM = JSON.parse(localStorage.getItem(PACA_STORAGE_KEYS.MENU) || 'null');
+                if (!localM || !localM.items || localM.items.length === 0) {
+                    localStorage.removeItem(PACA_STORAGE_KEYS.MENU);
+                }
+            } catch (e) {
+                localStorage.removeItem(PACA_STORAGE_KEYS.MENU);
+            }
             localStorage.removeItem('paca_published_canvas_v2');
             localStorage.removeItem('paca_canvas_published_timestamp');
         }
@@ -451,89 +459,68 @@ class PacaService {
 
     // --- MENU ---
     async loadMenu() {
-        let serverMenu = null;
-        try {
-            const res = await fetch('data/menu.json?v=' + Date.now(), { cache: 'no-store' });
-            if (res.ok) serverMenu = await res.json();
-        } catch (e) {}
+        let loaded = false;
 
-        // Check Cloud Sync for newer menu updates (e.g. from manager's computer to phone)
-        try {
-            const cloudMenuPayload = await this.pullMenuFromCloud();
-            if (cloudMenuPayload && cloudMenuPayload.menu && Array.isArray(cloudMenuPayload.menu.categories)) {
-                const localTs = parseInt(localStorage.getItem('paca_menu_saved_timestamp') || '0');
-                if (cloudMenuPayload.timestamp > localTs || !localStorage.getItem(PACA_STORAGE_KEYS.MENU)) {
-                    console.log("PACA: Loaded newer menu from Cloud Sync!");
-                    this.menu = cloudMenuPayload.menu;
-                    this.normalizeCategories();
-                    this.saveMenu(this.menu, false);
-                    return this.menu;
-                }
-            }
-        } catch (e) {
-            console.warn("PACA: Cloud menu check skipped", e);
-        }
-
+        // 1. Try local cache first if it contains valid categories and items
         const local = localStorage.getItem(PACA_STORAGE_KEYS.MENU);
         if (local) {
             try {
-                this.menu = JSON.parse(local);
-                if (this.menu && this.menu.categories && this.menu.categories.length > 0) {
-                    if (serverMenu && serverMenu.items) {
-                        let hasChanges = false;
-                        serverMenu.items.forEach(sIt => {
-                            let localIt = this.menu.items.find(i => i.id === sIt.id || i.name === sIt.name);
-                            if (!localIt) {
-                                this.menu.items.push(JSON.parse(JSON.stringify(sIt)));
-                                hasChanges = true;
-                            } else {
-                                if (localIt.cost_price === undefined || localIt.cost_price === null) {
-                                    localIt.cost_price = sIt.cost_price;
-                                    localIt.costPrice = sIt.cost_price;
-                                    hasChanges = true;
-                                }
-                                if (localIt.unit === undefined) { localIt.unit = sIt.unit || 'Ly'; hasChanges = true; }
-                                if (localIt.stock_quantity === undefined) { localIt.stock_quantity = sIt.stock_quantity !== undefined ? sIt.stock_quantity : 30; hasChanges = true; }
-                                if (localIt.low_stock_threshold === undefined) { localIt.low_stock_threshold = sIt.low_stock_threshold || 5; hasChanges = true; }
-                                if (localIt.track_stock === undefined) { localIt.track_stock = sIt.track_stock !== false; hasChanges = true; }
-                                if (localIt.item_type === undefined) { localIt.item_type = sIt.item_type || 'standard'; hasChanges = true; }
-                                if (localIt.sku === undefined) { localIt.sku = sIt.sku || `PACA-${localIt.id.toUpperCase()}`; hasChanges = true; }
-                                if ((!localIt.options || localIt.options.length === 0) && sIt.options && sIt.options.length > 0) {
-                                    localIt.options = sIt.options;
-                                    hasChanges = true;
-                                }
-                                if ((!localIt.image || localIt.image.trim() === '') && sIt.image) {
-                                    localIt.image = sIt.image;
-                                    hasChanges = true;
-                                }
-                            }
-                        });
-                        if (hasChanges) {
-                            this.saveMenu(this.menu);
-                        }
-                    }
+                const parsed = JSON.parse(local);
+                if (parsed && Array.isArray(parsed.categories) && parsed.categories.length > 0 && Array.isArray(parsed.items) && parsed.items.length > 0) {
+                    this.menu = parsed;
                     this.normalizeCategories();
-                    return this.menu;
+                    loaded = true;
                 }
             } catch (e) {
                 console.warn("Invalid local menu", e);
             }
         }
-        if (serverMenu) {
-            this.menu = serverMenu;
-            this.normalizeCategories();
-            this.saveMenu(this.menu);
-            return this.menu;
+
+        // 2. If not loaded from local, fetch data/menu.json
+        if (!loaded) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                const res = await fetch('data/menu.json?v=' + Date.now(), { cache: 'no-store', signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                    this.menu = await res.json();
+                    this.normalizeCategories();
+                    localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
+                    loaded = true;
+                }
+            } catch (e) {
+                console.warn("Failed to fetch data/menu.json with cache-buster", e);
+            }
         }
-        try {
-            const res = await fetch('data/menu.json');
-            this.menu = await res.json();
-            this.normalizeCategories();
-            this.saveMenu(this.menu);
-        } catch (e) {
-            console.error("Failed to load menu", e);
+
+        // 3. Fallback to basic fetch
+        if (!loaded) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                const res = await fetch('data/menu.json', { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                    this.menu = await res.json();
+                    this.normalizeCategories();
+                    localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
+                    loaded = true;
+                }
+            } catch (e) {
+                console.error("Failed to load fallback menu.json", e);
+            }
+        }
+
+        if (!this.menu || !Array.isArray(this.menu.categories)) {
             this.menu = { categories: [], items: [] };
         }
+
+        // 4. Background non-blocking check for newer Cloud menu updates
+        setTimeout(() => {
+            this.checkMenuCloudUpdate().catch(e => console.warn("Background menu cloud check error", e));
+        }, 150);
+
         return this.menu;
     }
 
@@ -598,7 +585,14 @@ class PacaService {
 
     async pullMenuFromCloud() {
         try {
-            const res = await fetch(`https://ntfy.sh/paca_menu_sync_dalat_2025/json?poll=1&since=24h`, { cache: 'no-store' });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3500);
+            const res = await fetch(`https://ntfy.sh/paca_menu_sync_dalat_2025/json?poll=1&since=24h`, {
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            if (!res.ok) return null;
             const text = await res.text();
             if (!text) return null;
             const lines = text.trim().split('\n');
@@ -614,7 +608,11 @@ class PacaService {
                 } catch (e) {}
             }
             if (latestAttachmentUrl) {
-                const fileRes = await fetch(latestAttachmentUrl);
+                const attController = new AbortController();
+                const attTimeout = setTimeout(() => attController.abort(), 3500);
+                const fileRes = await fetch(latestAttachmentUrl, { signal: attController.signal });
+                clearTimeout(attTimeout);
+                if (!fileRes.ok) return null;
                 const fileData = await fileRes.json();
                 if (fileData && fileData.menu && Array.isArray(fileData.menu.categories)) {
                     return fileData;
@@ -635,7 +633,9 @@ class PacaService {
             const cloudMenuPayload = await this.pullMenuFromCloud();
             if (cloudMenuPayload && cloudMenuPayload.menu && cloudMenuPayload.timestamp) {
                 const localTs = parseInt(localStorage.getItem('paca_menu_saved_timestamp') || '0');
-                if (cloudMenuPayload.timestamp > localTs) {
+                const localCount = (this.menu?.items || []).length;
+                const cloudCount = (cloudMenuPayload.menu.items || []).length;
+                if (cloudMenuPayload.timestamp > localTs || (localCount === 0 && cloudCount > 0)) {
                     console.log("PACA: Newer menu detected from Cloud Sync! Updating local menu...");
                     this.menu = cloudMenuPayload.menu;
                     this.normalizeCategories();
@@ -1472,11 +1472,15 @@ class PacaService {
                 device: this.getCurrentUser()?.name || 'Device',
                 orders: activeOrders
             });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3500);
             await fetch(`https://ntfy.sh/${this.cloudOrdersSnapshotTopic}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-                body: payload
+                body: payload,
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
             console.log(`PACA: Pushed snapshot of ${activeOrders.length} orders to cloud.`);
         } catch (e) {
             console.warn("PACA: pushOrdersSnapshotToCloud error:", e);
@@ -1485,7 +1489,13 @@ class PacaService {
 
     async pullOrdersSnapshotFromCloud() {
         try {
-            const res = await fetch(`https://ntfy.sh/${this.cloudOrdersSnapshotTopic}/json?poll=1&since=48h`, { cache: 'no-store' });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3500);
+            const res = await fetch(`https://ntfy.sh/${this.cloudOrdersSnapshotTopic}/json?poll=1&since=48h`, {
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
             if (!res.ok) return null;
             const text = await res.text();
             if (!text) return null;
@@ -1515,11 +1525,15 @@ class PacaService {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
                 const payload = JSON.stringify({ action, order, timestamp: Date.now() });
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
                 const res = await fetch(`https://ntfy.sh/${this.cloudSyncTopic}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-                    body: payload
+                    body: payload,
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 if (res.ok) {
                     if (action === 'CREATE_ORDER' || action === 'UPDATE_ORDER' || action === 'DELETE_ORDER') {
                         this.debouncePushOrdersSnapshot();
@@ -1545,47 +1559,55 @@ class PacaService {
 
             // 1. Process recent live topic events
             try {
-                const res = await fetch(`https://ntfy.sh/${this.cloudSyncTopic}/json?poll=1&since=24h`, { cache: 'no-store' });
-                const text = await res.text();
-                if (text) {
-                    const lines = text.trim().split('\n');
-                    for (const line of lines) {
-                        try {
-                            const item = JSON.parse(line);
-                            if (item.event === 'message' && item.message) {
-                                const payload = JSON.parse(item.message);
-                                if (payload.action === 'MENU_UPDATED') {
-                                    this.checkMenuCloudUpdate();
-                                } else if (payload.action === 'CREATE_ORDER' && payload.order) {
-                                    if (this.isOrderDeleted(payload.order.id)) continue;
-                                    const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
-                                    if (existingIdx === -1) {
-                                        this.orders.unshift(payload.order);
-                                        hasChanges = true;
-                                    }
-                                } else if (payload.action === 'UPDATE_ORDER' && payload.order) {
-                                    if (this.isOrderDeleted(payload.order.id)) continue;
-                                    const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
-                                    if (existingIdx !== -1) {
-                                        this.orders[existingIdx] = { ...this.orders[existingIdx], ...payload.order };
-                                        hasChanges = true;
-                                    } else {
-                                        this.orders.unshift(payload.order);
-                                        hasChanges = true;
-                                    }
-                                } else if (payload.action === 'DELETE_ORDER') {
-                                    const targetId = payload.order?.id || payload.orderId;
-                                    if (targetId) {
-                                        this.recordDeletedOrder(targetId);
-                                        const existingIdx = this.orders.findIndex(o => o.id === targetId);
-                                        if (existingIdx !== -1) {
-                                            this.orders.splice(existingIdx, 1);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                const res = await fetch(`https://ntfy.sh/${this.cloudSyncTopic}/json?poll=1&since=24h`, {
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                    const text = await res.text();
+                    if (text) {
+                        const lines = text.trim().split('\n');
+                        for (const line of lines) {
+                            try {
+                                const item = JSON.parse(line);
+                                if (item.event === 'message' && item.message) {
+                                    const payload = JSON.parse(item.message);
+                                    if (payload.action === 'MENU_UPDATED') {
+                                        this.checkMenuCloudUpdate();
+                                    } else if (payload.action === 'CREATE_ORDER' && payload.order) {
+                                        if (this.isOrderDeleted(payload.order.id)) continue;
+                                        const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
+                                        if (existingIdx === -1) {
+                                            this.orders.unshift(payload.order);
                                             hasChanges = true;
+                                        }
+                                    } else if (payload.action === 'UPDATE_ORDER' && payload.order) {
+                                        if (this.isOrderDeleted(payload.order.id)) continue;
+                                        const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
+                                        if (existingIdx !== -1) {
+                                            this.orders[existingIdx] = { ...this.orders[existingIdx], ...payload.order };
+                                            hasChanges = true;
+                                        } else {
+                                            this.orders.unshift(payload.order);
+                                            hasChanges = true;
+                                        }
+                                    } else if (payload.action === 'DELETE_ORDER') {
+                                        const targetId = payload.order?.id || payload.orderId;
+                                        if (targetId) {
+                                            this.recordDeletedOrder(targetId);
+                                            const existingIdx = this.orders.findIndex(o => o.id === targetId);
+                                            if (existingIdx !== -1) {
+                                                this.orders.splice(existingIdx, 1);
+                                                hasChanges = true;
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        } catch (err) {}
+                            } catch (err) {}
+                        }
                     }
                 }
             } catch (err) {
@@ -1631,9 +1653,6 @@ class PacaService {
             } catch (snapErr) {
                 console.warn("PACA: snapshot reconcile error:", snapErr);
             }
-
-            // 3. Check menu cloud update
-            this.checkMenuCloudUpdate();
 
             if (hasChanges) {
                 this.orders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
