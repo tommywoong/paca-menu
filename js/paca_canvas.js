@@ -8,7 +8,9 @@ const PACA_CANVAS_KEYS = {
     PUBLISHED_DESIGN: 'paca_published_canvas_v2',
     DRAFT_DESIGN: 'paca_draft_canvas_v2',
     SETTINGS: 'paca_canvas_settings_v2',
-    CLOUD_TOPIC: 'paca_design_sync_dalat_2025'
+    CLOUD_TOPIC: 'paca_design_sync_dalat_2025',
+    CLOUD_BROKER: 'https://ntfy.envs.net',
+    CLOUD_BROKER_FALLBACK: 'https://ntfy.sh'
 };
 
 class PacaCanvasEngine {
@@ -172,69 +174,77 @@ class PacaCanvasEngine {
 
     async pushToCloudSync() {
         if (!this.design) return false;
-        try {
-            const payload = JSON.stringify({
-                version: "1.0",
-                timestamp: Date.now(),
-                design: this.design
-            });
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
-            await fetch(`https://ntfy.sh/${PACA_CANVAS_KEYS.CLOUD_TOPIC}`, {
-                method: 'PUT',
-                headers: {
-                    'Filename': 'paca_design.json',
-                    'Title': 'PACA Design Published'
-                },
-                body: payload,
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            console.log("PACA: Design published to Cloud Sync successfully!");
-            return true;
-        } catch (e) {
-            console.warn("PACA: Failed to push design to Cloud Sync", e);
-            return false;
+        const payload = JSON.stringify({
+            version: "1.0",
+            timestamp: Date.now(),
+            design: this.design
+        });
+        const brokers = [PACA_CANVAS_KEYS.CLOUD_BROKER, PACA_CANVAS_KEYS.CLOUD_BROKER_FALLBACK];
+        for (const broker of brokers) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                const res = await fetch(`${broker}/${PACA_CANVAS_KEYS.CLOUD_TOPIC}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Filename': 'paca_design.json',
+                        'Title': 'PACA Design Published'
+                    },
+                    body: payload,
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                    console.log(`PACA: Design published to Cloud Sync (${broker}) successfully!`);
+                    return true;
+                }
+            } catch (e) {
+                console.warn(`PACA: Failed to push design to Cloud Sync via ${broker}`, e);
+            }
         }
+        return false;
     }
 
     async pullFromCloudSync() {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
-            const res = await fetch(`https://ntfy.sh/${PACA_CANVAS_KEYS.CLOUD_TOPIC}/json?poll=1&since=24h`, {
-                cache: 'no-store',
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            if (!res.ok) return null;
-            const text = await res.text();
-            if (!text) return null;
-            const lines = text.trim().split('\n');
-            let latestAttachmentUrl = null;
-            let latestTime = 0;
-            for (const line of lines) {
-                try {
-                    const item = JSON.parse(line);
-                    if (item.attachment && item.attachment.url && item.time > latestTime) {
-                        latestAttachmentUrl = item.attachment.url;
-                        latestTime = item.time;
-                    }
-                } catch (e) {}
-            }
-            if (latestAttachmentUrl) {
-                const attController = new AbortController();
-                const attTimeout = setTimeout(() => attController.abort(), 3500);
-                const fileRes = await fetch(latestAttachmentUrl, { signal: attController.signal });
-                clearTimeout(attTimeout);
-                if (!fileRes.ok) return null;
-                const fileData = await fileRes.json();
-                if (fileData && fileData.design && Array.isArray(fileData.design.pages)) {
-                    return fileData;
+        const brokers = [PACA_CANVAS_KEYS.CLOUD_BROKER, PACA_CANVAS_KEYS.CLOUD_BROKER_FALLBACK];
+        for (const broker of brokers) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                const res = await fetch(`${broker}/${PACA_CANVAS_KEYS.CLOUD_TOPIC}/json?poll=1&since=24h`, {
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                if (!res.ok) continue;
+                const text = await res.text();
+                if (!text) continue;
+                const lines = text.trim().split('\n');
+                let latestAttachmentUrl = null;
+                let latestTime = 0;
+                for (const line of lines) {
+                    try {
+                        const item = JSON.parse(line);
+                        if (item.attachment && item.attachment.url && item.time > latestTime) {
+                            latestAttachmentUrl = item.attachment.url;
+                            latestTime = item.time;
+                        }
+                    } catch (e) {}
                 }
+                if (latestAttachmentUrl) {
+                    const attController = new AbortController();
+                    const attTimeout = setTimeout(() => attController.abort(), 3500);
+                    const fileRes = await fetch(latestAttachmentUrl, { signal: attController.signal });
+                    clearTimeout(attTimeout);
+                    if (!fileRes.ok) continue;
+                    const fileData = await fileRes.json();
+                    if (fileData && fileData.design && Array.isArray(fileData.design.pages)) {
+                        return fileData;
+                    }
+                }
+            } catch (e) {
+                console.warn(`PACA: Failed to pull design from Cloud Sync via ${broker}`, e);
             }
-        } catch (e) {
-            console.warn("PACA: Failed to pull design from Cloud Sync", e);
         }
         return null;
     }

@@ -711,12 +711,43 @@
             const container = document.getElementById('pageSelectorTabs');
             if (!engine || !engine.design) return;
             const pages = engine.design.pages || [];
+            const allCategories = window.paca?.getCategories ? window.paca.getCategories(true) : (window.paca?.menu?.categories || []);
 
-            let html = pages.map((p, idx) => `
-                <button onclick="selectPage('${p.id}')" class="px-3 py-1 rounded-xl text-xs font-bold transition ${engine.activePageId === p.id ? 'bg-paca-navy text-paca-cream border border-paca-cream/30' : 'bg-gray-800 text-gray-400 hover:text-white'}">
-                    ${idx + 1}. ${p.title || 'Trang ' + (idx + 1)}
+            let orphanedPages = [];
+
+            let html = pages.map((p, idx) => {
+                const isCatPage = p.id.startsWith('sec_cat_') || 
+                                  p.id.startsWith('page_cat_') || 
+                                  ['page_week', 'page_bites', 'page_cocktail', 'page_beer', 'page_wine_shots'].includes(p.id);
+                const catForPage = allCategories.find(c => 
+                    c.id === p.id ||
+                    c.pageId === p.id || 
+                    ('page_' + c.id) === p.id ||
+                    ('sec_cat_' + c.id) === p.id ||
+                    (p.id.startsWith('page_') && ('page_' + c.id) === p.id) ||
+                    (c.name_vi && (p.title || '').trim().toLowerCase() === c.name_vi.trim().toLowerCase()) ||
+                    (c.name && (p.title || '').trim().toLowerCase() === c.name.trim().toLowerCase())
+                );
+                const isOrphaned = isCatPage && !catForPage;
+                if (isOrphaned) orphanedPages.push(p);
+
+                const badge = isOrphaned ? '<span class="ml-1 text-[10px] text-amber-300 bg-amber-950/80 px-1 py-0.5 rounded border border-amber-600/40" title="Danh mục này đã bị xóa ở Quản lý Thực đơn Admin">⚠️ Danh mục đã xóa</span>' : '';
+
+                return `
+                <button onclick="selectPage('${p.id}')" class="px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1 ${engine.activePageId === p.id ? 'bg-paca-navy text-paca-cream border border-paca-cream/30' : (isOrphaned ? 'bg-amber-950/30 text-amber-300 border border-amber-500/30 hover:border-amber-400' : 'bg-gray-800 text-gray-400 hover:text-white')}">
+                    <span>${idx + 1}. ${p.title || 'Trang ' + (idx + 1)}</span>
+                    ${badge}
                 </button>
-            `).join('');
+                `;
+            }).join('');
+
+            if (orphanedPages.length > 0) {
+                html += `
+                    <button onclick="cleanupOrphanedPages()" title="Xóa các trang Poster có danh mục đã bị xóa trong Admin" class="px-2.5 py-1 rounded-xl text-xs font-bold transition bg-red-500/20 text-red-300 border border-red-400/50 hover:bg-red-500 hover:text-white flex items-center gap-1 shadow">
+                        <span>🗑️ Dọn dẹp ${orphanedPages.length} trang đã xóa ở Admin</span>
+                    </button>
+                `;
+            }
 
             // Check if there are active categories from admin without a poster page
             const unpagedCats = getCategoriesWithoutPages();
@@ -733,6 +764,50 @@
             }
 
             container.innerHTML = html;
+        }
+
+        function cleanupOrphanedPages() {
+            if (!engine || !engine.design || !engine.design.pages) return;
+            const allCategories = window.paca?.getCategories ? window.paca.getCategories(true) : (window.paca?.menu?.categories || []);
+            const toRemove = engine.design.pages.filter(p => {
+                const isCatPage = p.id.startsWith('sec_cat_') || 
+                                  p.id.startsWith('page_cat_') || 
+                                  ['page_week', 'page_bites', 'page_cocktail', 'page_beer', 'page_wine_shots'].includes(p.id);
+                const catForPage = allCategories.find(c => 
+                    c.id === p.id ||
+                    c.pageId === p.id || 
+                    ('page_' + c.id) === p.id ||
+                    ('sec_cat_' + c.id) === p.id ||
+                    (p.id.startsWith('page_') && ('page_' + c.id) === p.id) ||
+                    (c.name_vi && (p.title || '').trim().toLowerCase() === c.name_vi.trim().toLowerCase()) ||
+                    (c.name && (p.title || '').trim().toLowerCase() === c.name.trim().toLowerCase())
+                );
+                return isCatPage && !catForPage;
+            });
+            if (toRemove.length === 0) return;
+
+            const pageNames = toRemove.map(p => `• ${p.title}`).join('\n');
+            if (!confirm(`🗑️ XÁC NHẬN DỌN DẸP TRANG THỪA:\n\nCác danh mục tương ứng đã bị xóa trong Admin:\n${pageNames}\n\nBạn có chắc chắn muốn xóa ${toRemove.length} trang này khỏi thiết kế Poster Studio không?`)) {
+                return;
+            }
+
+            engine.recordState();
+            toRemove.forEach(target => {
+                const idx = engine.design.pages.findIndex(p => p.id === target.id);
+                if (idx !== -1) {
+                    engine.design.pages.splice(idx, 1);
+                }
+            });
+            if (engine.design.pages.length > 0) {
+                engine.activePageId = engine.design.pages[0].id;
+            }
+            engine.selectedElementId = null;
+            updatePageTabs();
+            populateTargetPageSelect();
+            engine.render();
+            updateInspector(null);
+            engine.saveDraft();
+            alert(`✓ Đã dọn dẹp ${toRemove.length} trang thành công! Hãy bấm "Xuất bản Canvas" khi bạn muốn cập nhật ra ngoài trang khách.`);
         }
 
         function getCategoriesWithoutPages() {

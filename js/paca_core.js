@@ -188,6 +188,8 @@ class PacaService {
         this.inventoryLogs = [];
         this.dailyCloses = [];
         this.broadcastChannel = null;
+        this.cloudBroker = 'https://ntfy.envs.net';
+        this.cloudBrokerFallback = 'https://ntfy.sh';
         this.cloudSyncTopic = 'paca_orders_live_da_lat_2025';
         this.cloudOrdersSnapshotTopic = 'paca_orders_snapshot_dalat_2025';
         this.cloudMenuTopic = 'paca_menu_sync_dalat_2025';
@@ -196,6 +198,38 @@ class PacaService {
         this.onMenuCloudUpdateCallback = null;
         this._snapshotTimer = null;
         this.initBroadcast();
+    }
+
+    async cloudFetch(path, options = {}) {
+        const timeoutMs = options.timeout || 3500;
+        // 1. Try primary fast broker (reliable in Vietnam)
+        try {
+            const controller = new AbortController();
+            const tid = setTimeout(() => controller.abort(), timeoutMs);
+            const res = await fetch(`${this.cloudBroker}${path}`, {
+                ...options,
+                signal: controller.signal
+            });
+            clearTimeout(tid);
+            if (res.ok) return res;
+        } catch (e) {
+            console.warn(`PACA Cloud: Primary broker (${this.cloudBroker}) error, trying fallback...`, e);
+        }
+
+        // 2. Try fallback broker
+        try {
+            const controller = new AbortController();
+            const tid = setTimeout(() => controller.abort(), timeoutMs);
+            const res = await fetch(`${this.cloudBrokerFallback}${path}`, {
+                ...options,
+                signal: controller.signal
+            });
+            clearTimeout(tid);
+            return res;
+        } catch (err2) {
+            console.warn(`PACA Cloud: Fallback broker (${this.cloudBrokerFallback}) also failed:`, err2);
+            return null;
+        }
     }
 
     initBroadcast() {
@@ -674,7 +708,7 @@ class PacaService {
                 timestamp: Date.now(),
                 menu: m
             });
-            await fetch(`https://ntfy.sh/paca_menu_sync_dalat_2025`, {
+            const res = await this.cloudFetch(`/${this.cloudMenuTopic}`, {
                 method: 'PUT',
                 headers: {
                     'Filename': 'paca_menu.json',
@@ -682,8 +716,11 @@ class PacaService {
                 },
                 body: payload
             });
-            console.log("PACA: Menu pushed to Cloud Sync successfully!");
-            return true;
+            if (res && res.ok) {
+                console.log("PACA: Menu pushed to Cloud Sync successfully!");
+                return true;
+            }
+            return false;
         } catch (e) {
             console.warn("PACA: Failed to push menu to Cloud Sync", e);
             return false;
@@ -692,14 +729,10 @@ class PacaService {
 
     async pullMenuFromCloud() {
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
-            const res = await fetch(`https://ntfy.sh/paca_menu_sync_dalat_2025/json?poll=1&since=24h`, {
-                cache: 'no-store',
-                signal: controller.signal
+            const res = await this.cloudFetch(`/${this.cloudMenuTopic}/json?poll=1&since=24h`, {
+                cache: 'no-store'
             });
-            clearTimeout(timeoutId);
-            if (!res.ok) return null;
+            if (!res || !res.ok) return null;
             const text = await res.text();
             if (!text) return null;
             const lines = text.trim().split('\n');
@@ -1630,16 +1663,14 @@ class PacaService {
                 device: this.getCurrentUser()?.name || 'Device',
                 orders: activeOrders
             });
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
-            await fetch(`https://ntfy.sh/${this.cloudOrdersSnapshotTopic}`, {
+            const res = await this.cloudFetch(`/${this.cloudOrdersSnapshotTopic}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-                body: payload,
-                signal: controller.signal
+                body: payload
             });
-            clearTimeout(timeoutId);
-            console.log(`PACA: Pushed snapshot of ${activeOrders.length} orders to cloud.`);
+            if (res && res.ok) {
+                console.log(`PACA: Pushed snapshot of ${activeOrders.length} orders to cloud.`);
+            }
         } catch (e) {
             console.warn("PACA: pushOrdersSnapshotToCloud error:", e);
         }
@@ -1647,14 +1678,10 @@ class PacaService {
 
     async pullOrdersSnapshotFromCloud() {
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
-            const res = await fetch(`https://ntfy.sh/${this.cloudOrdersSnapshotTopic}/json?poll=1&since=48h`, {
-                cache: 'no-store',
-                signal: controller.signal
+            const res = await this.cloudFetch(`/${this.cloudOrdersSnapshotTopic}/json?poll=1&since=48h`, {
+                cache: 'no-store'
             });
-            clearTimeout(timeoutId);
-            if (!res.ok) return null;
+            if (!res || !res.ok) return null;
             const text = await res.text();
             if (!text) return null;
             const lines = text.trim().split('\n');
@@ -1683,16 +1710,12 @@ class PacaService {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
                 const payload = JSON.stringify({ action, order, timestamp: Date.now() });
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3500);
-                const res = await fetch(`https://ntfy.sh/${this.cloudSyncTopic}`, {
+                const res = await this.cloudFetch(`/${this.cloudSyncTopic}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-                    body: payload,
-                    signal: controller.signal
+                    body: payload
                 });
-                clearTimeout(timeoutId);
-                if (res.ok) {
+                if (res && res.ok) {
                     if (action === 'CREATE_ORDER' || action === 'UPDATE_ORDER' || action === 'DELETE_ORDER') {
                         this.debouncePushOrdersSnapshot();
                     }
@@ -1717,14 +1740,10 @@ class PacaService {
 
             // 1. Process recent live topic events
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 3500);
-                const res = await fetch(`https://ntfy.sh/${this.cloudSyncTopic}/json?poll=1&since=24h`, {
-                    cache: 'no-store',
-                    signal: controller.signal
+                const res = await this.cloudFetch(`/${this.cloudSyncTopic}/json?poll=1&since=24h`, {
+                    cache: 'no-store'
                 });
-                clearTimeout(timeoutId);
-                if (res.ok) {
+                if (res && res.ok) {
                     const text = await res.text();
                     if (text) {
                         const lines = text.trim().split('\n');
@@ -1837,7 +1856,7 @@ class PacaService {
             try { this.cloudEventSource.close(); } catch(e){}
         }
         try {
-            this.cloudEventSource = new EventSource(`https://ntfy.sh/${this.cloudSyncTopic}/sse`);
+            this.cloudEventSource = new EventSource(`${this.cloudBroker}/${this.cloudSyncTopic}/sse`);
             this.cloudEventSource.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
