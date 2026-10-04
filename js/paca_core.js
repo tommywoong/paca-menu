@@ -499,6 +499,10 @@ class PacaService {
                                     localIt.options = sIt.options;
                                     hasChanges = true;
                                 }
+                                if ((!localIt.image || localIt.image.trim() === '') && sIt.image) {
+                                    localIt.image = sIt.image;
+                                    hasChanges = true;
+                                }
                             }
                         });
                         if (hasChanges) {

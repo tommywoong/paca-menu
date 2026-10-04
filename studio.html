@@ -583,8 +583,8 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261003_2125"></script>
-    <script src="js/paca_canvas.js?v=20261003_2125"></script>
+    <script src="js/paca_core.js?v=20261004_1550"></script>
+    <script src="js/paca_canvas.js?v=20261004_1550"></script>
     <script>
         let engine = null;
         let canvaManifest = null;
@@ -1375,14 +1375,41 @@
             engine.addElement('image', { src: path, fit: 'contain' });
         }
 
-        function handleImageUpload(e) {
-            const file = e.target.files[0];
+        function compressImageFile(file, maxWidth = 800, quality = 0.8) {
+            return new Promise((resolve) => {
+                if (!file || !file.type.startsWith('image/')) return resolve(null);
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let w = img.width;
+                        let h = img.height;
+                        if (w > maxWidth) {
+                            h = Math.round((h * maxWidth) / w);
+                            w = maxWidth;
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = () => resolve(e.target.result);
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleImageUpload(e) {
+            const file = e.target.files?.[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                engine.addElement('image', { src: event.target.result, fit: 'contain' });
-            };
-            reader.readAsDataURL(file);
+            const dataUrl = await compressImageFile(file, 1000, 0.82) || '';
+            if (dataUrl) {
+                engine.addElement('image', { src: dataUrl, fit: 'contain' });
+            }
         }
 
         // --- ADD ELEMENTS ---
@@ -1904,17 +1931,15 @@
             updatePropCardImage('');
         }
 
-        function handleCardImageUpload(e) {
+        async function handleCardImageUpload(e) {
             const file = e.target.files?.[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const dataUrl = event.target.result;
+            const dataUrl = await compressImageFile(file, 800, 0.8) || '';
+            if (dataUrl) {
                 const input = document.getElementById('propCardImage');
                 if (input) input.value = dataUrl;
                 updatePropCardImage(dataUrl);
-            };
-            reader.readAsDataURL(file);
+            }
         }
 
         function updateBoundProductInfo(productId) {

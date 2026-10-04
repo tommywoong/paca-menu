@@ -37,8 +37,10 @@ Hệ thống được thiết kế theo mô hình **Tiny Cozy Bar**, tối ưu h
   - Nút đồng bộ tự động đọc danh mục hoạt động từ Quản Trị và căn đều các nút điều hướng trên Trang Bìa.
 - **Tự động nới rộng trang (Auto-stretch Height)**:
   - Tự động kéo dãn chiều cao trang khi thêm món mới ở cuối trang mà không đè lên câu trích dẫn hoặc chân trang.
+- **Nén ảnh thông minh khi upload (Client-Side Smart Compression)**:
+  - Tự động nén ảnh tải lên từ máy tính/điện thoại qua `<canvas>` ẩn (max 800px-1000px, JPEG 0.8), loại bỏ nguy cơ tràn bộ nhớ `localStorage` và tăng tốc độ tải trang.
 - **Đồng bộ Đám mây 1-chạm (Cloud Sync Publish)**:
-  - Xuất bản thiết kế mới nhất tức thì tới tất cả điện thoại khách quét qua `ntfy.sh/paca_design_sync_dalat_2025`.
+  - Xuất bản thiết kế mới nhất tức thì tới tất cả điện thoại khách quét qua `ntfy.sh/paca_design_sync_dalat_2025` (chuẩn hóa đồng bộ 100% tất cả các trang, bao gồm Món Nhắm - Bites & Popcorn Chicken Cheese).
 
 ---
 

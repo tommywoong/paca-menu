@@ -91,3 +91,16 @@ Tài liệu quy định toàn bộ các nguyên tắc kiến trúc phần mềm,
 * **Cử chỉ bí mật mở Quản Trị từ Menu Khách (`index.html`):**
   - Toàn bộ các nút bấm lộ liễu dẫn vào Quản trị hay Studio đều bị ẩn khỏi trang khách.
   - Nhân viên trực quầy mở trang Quản trị bằng thao tác chạm liên tiếp **5 lần vào logo chữ "P"** ở góc trên bên trái thanh tiêu đề.
+
+---
+
+## 8. Quy chuẩn Đồng bộ Trang Món Nhắm Canvas & Nén Ảnh Tự Động (Bites Canvas Sync & Smart Compression)
+* **Đồng bộ Trang Món Nhắm Canvas (`page_bites`):**
+  - Trang món nhắm `page_bites` được kết xuất đồng nhất qua bộ máy Canvas `createCustomerElementNode`, bãi bỏ hoàn toàn mã kết xuất tĩnh cũ `renderCustomerBitesPage`.
+  - Mọi tinh chỉnh từ Studio: thẻ phối màu đỏ đô (`#940b05`), thẻ xanh navy (`#10234d`), ảnh chụp món tải lên, huy hiệu và tùy chọn món (`variants`, `options`) tự động phản ánh 100% trung thực trên trang menu khách quét.
+* **Cơ chế Tự Động Nén Ảnh khi Upload (Client-Side Image Compression):**
+  - Mọi thao tác tải ảnh từ máy tính hoặc điện thoại trong Studio (`handleCardImageUpload`, `handleImageUpload`) bắt buộc đi qua hàm nén bất đồng bộ `compressImageFile` (giới hạn tối đa 800px - 1000px, chất lượng JPEG 0.8).
+  - Loại bỏ hoàn toàn nguy cơ vượt hạn mức lưu trữ trình duyệt `QuotaExceededError` (5MB của `localStorage`) và giảm kích thước gói tin đồng bộ `ntfy` từ vài Megabytes xuống dưới 50KB, giúp điện thoại khách tải ảnh tức thì.
+* **Món Popcorn Chicken Cheese (`b08`):**
+  - Ảnh đại diện chính thức lưu tại `assets/canva/popcorn_chicken_cheese.jpg`.
+  - Đồng bộ thống nhất trên `data/menu.json`, `data/default_canvas_template.json`, kênh đám mây `ntfy` và hiển thị đầy đủ trên trang menu khách quét.

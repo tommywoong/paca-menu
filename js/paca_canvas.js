@@ -267,10 +267,7 @@ class PacaCanvasEngine {
                 });
             }
 
-            if (page.id === 'page_bites') {
-                this.renderCustomerBitesPage(page, wrapper, baseWidth);
-                return;
-            }
+            // page_bites renders via standard Canvas renderer so Studio customizations, crimson cards & dish photos appear 100% faithfully!
 
             const pageContainer = document.createElement('div');
             pageContainer.id = page.id;
@@ -980,12 +977,14 @@ class PacaCanvasEngine {
         }
 
         if (el.type === 'product_card') {
-            // Interactive product card on poster
             const isSoldOut = boundProduct && boundProduct.is_available === false;
             const hasOptions = boundProduct && ((boundProduct.variants && boundProduct.variants.length > 0) || (boundProduct.options && boundProduct.options.length > 0) || (boundProduct.toppings && boundProduct.toppings.length > 0));
-            const itemImage = el.props.image || boundProduct?.image;
+            let itemImage = el.props.image || boundProduct?.image;
+            if (!itemImage && el.binding?.productId === 'b08') {
+                itemImage = 'assets/canva/popcorn_chicken_cheese.jpg';
+            }
 
-            node.className += ' cursor-pointer active:scale-[0.98] transition-all p-2 sm:p-3 flex flex-col justify-between overflow-visible';
+            node.className += ' cursor-pointer active:scale-[0.98] transition-all p-2 sm:p-2.5 md:p-3 flex flex-col justify-between overflow-hidden shadow-sm hover:shadow-md';
             node.style.backgroundColor = el.props.bg || '#940b05';
             node.style.color = el.props.color || '#fff';
             if (el.props.border) node.style.border = el.props.border;
@@ -1008,24 +1007,24 @@ class PacaCanvasEngine {
             // Action Pill Button
             let actionBtnHtml = '';
             if (isSoldOut) {
-                actionBtnHtml = `<span class="bg-black/40 text-white/80 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full cursor-not-allowed">HẾT MÓN</span>`;
+                actionBtnHtml = `<span class="bg-black/40 text-white/80 text-[8px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full cursor-not-allowed">HẾT MÓN</span>`;
             } else if (hasOptions) {
-                actionBtnHtml = `<span class="bg-amber-400 text-paca-navy text-[9px] sm:text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm hover:bg-amber-300">Tuỳ chọn ▾</span>`;
+                actionBtnHtml = `<span class="bg-amber-400 text-paca-navy text-[8px] sm:text-[10px] font-extrabold px-2 sm:px-2.5 py-0.5 rounded-full shadow-sm hover:bg-amber-300">Tuỳ chọn ▾</span>`;
             } else {
-                actionBtnHtml = `<span class="bg-amber-400 text-paca-navy text-[9px] sm:text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-sm hover:bg-amber-300">+ Thêm</span>`;
+                actionBtnHtml = `<span class="bg-amber-400 text-paca-navy text-[8px] sm:text-[10px] font-extrabold px-2 sm:px-2.5 py-0.5 rounded-full shadow-sm hover:bg-amber-300">+ Thêm</span>`;
             }
 
             node.innerHTML = `
                 ${soldOutBadgeHtml}
-                <div class="space-y-1">
+                <div class="space-y-1 overflow-hidden">
                     ${itemImage ? `
-                        <div class="w-full h-20 sm:h-24 rounded-md overflow-hidden mb-1.5 bg-black/10 flex items-center justify-center flex-shrink-0">
+                        <div class="w-full h-16 sm:h-20 md:h-24 rounded-md overflow-hidden mb-1 bg-black/10 flex items-center justify-center flex-shrink-0">
                             <img src="${itemImage}" class="w-full h-full object-cover rounded-md" alt="${boundProduct ? boundProduct.name : el.props.title}" loading="lazy">
                         </div>
                     ` : ''}
 
                     <div class="flex items-start justify-between gap-1">
-                        <div class="font-serif font-black text-[11px] sm:text-xs md:text-sm tracking-wider uppercase leading-tight line-clamp-2">
+                        <div class="font-serif font-black text-[11px] sm:text-xs md:text-sm tracking-wider uppercase leading-tight line-clamp-1">
                             ${boundProduct ? boundProduct.name : el.props.title}
                         </div>
                         <div class="font-bold text-[11px] sm:text-xs md:text-sm whitespace-nowrap ml-1 ${el.props.bg === '#ffffff' ? 'text-paca-crimson' : 'text-amber-300'}">
@@ -1034,26 +1033,26 @@ class PacaCanvasEngine {
                     </div>
 
                     ${el.props.badge ? `
-                        <div class="inline-block bg-paca-cream text-paca-navy text-[8px] sm:text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded border border-paca-navy">
+                        <div class="inline-block bg-paca-cream text-paca-navy text-[7px] sm:text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded border border-paca-navy leading-none">
                             ${el.props.badge}
                         </div>
                     ` : ''}
 
                     ${el.props.ingredients ? `
-                        <div class="text-[8px] sm:text-[10px] opacity-85 font-mono leading-tight line-clamp-2">
+                        <div class="text-[8px] sm:text-[10px] opacity-85 font-mono leading-tight ${itemImage ? 'line-clamp-1' : 'line-clamp-2'}">
                             ${el.props.ingredients}
                         </div>
                     ` : ''}
 
-                    ${el.props.desc_vi ? `
+                    ${(el.props.desc_vi && !itemImage) ? `
                         <div class="text-[8px] sm:text-[10px] leading-snug line-clamp-2 ${el.props.bg === '#ffffff' ? 'text-gray-700' : 'text-amber-200'}">
                             ${el.props.desc_vi}
                         </div>
                     ` : ''}
                 </div>
 
-                <div class="mt-1.5 pt-1 border-t border-white/15 flex items-center justify-between">
-                    <span class="text-[8px] sm:text-[9px] opacity-75">${boundProduct?.name_vi || 'PACA Special'}</span>
+                <div class="mt-1 pt-1 border-t border-white/15 flex items-center justify-between flex-shrink-0">
+                    <span class="text-[7px] sm:text-[9px] opacity-75 truncate max-w-[60%]">${boundProduct?.name_vi || 'PACA Special'}</span>
                     ${actionBtnHtml}
                 </div>
             `;
