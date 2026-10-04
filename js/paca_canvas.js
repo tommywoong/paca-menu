@@ -26,20 +26,41 @@ class PacaCanvasEngine {
         this.onDesignChange = options.onDesignChange || null;
     }
 
+    safeSetItem(key, val) {
+        try {
+            localStorage.setItem(key, val);
+        } catch (e) {
+            console.warn(`PACA Canvas: Storage write failed for ${key}:`, e);
+        }
+    }
+
+    safeGetItem(key, fallback = null) {
+        try {
+            const val = localStorage.getItem(key);
+            return val !== null ? val : fallback;
+        } catch (e) {
+            return fallback;
+        }
+    }
+
     // --- INITIALIZATION ---
     async init() {
-        await this.loadDesign();
-        if (this.design && this.design.pages && this.design.pages.length > 0) {
-            this.activePageId = this.design.pages[0].id;
-        }
-        if (this.container) {
-            this.render();
+        try {
+            await this.loadDesign();
+            if (this.design && this.design.pages && this.design.pages.length > 0) {
+                this.activePageId = this.design.pages[0].id;
+            }
+            if (this.container) {
+                this.render();
+            }
+        } catch (err) {
+            console.error("PacaCanvasEngine init error:", err);
         }
     }
 
     async loadDesign() {
         const storageKey = this.mode === 'edit' ? PACA_CANVAS_KEYS.DRAFT_DESIGN : PACA_CANVAS_KEYS.PUBLISHED_DESIGN;
-        const local = localStorage.getItem(storageKey);
+        const local = this.safeGetItem(storageKey);
         let currentDesign = null;
         if (local) {
             try {
@@ -64,7 +85,7 @@ class PacaCanvasEngine {
                 clearTimeout(timeoutId);
                 if (res.ok) {
                     this.design = await res.json();
-                    localStorage.setItem(storageKey, JSON.stringify(this.design));
+                    this.safeSetItem(storageKey, JSON.stringify(this.design));
                 }
             } catch (e) {
                 console.warn("Failed to load default template with cache-buster", e);
@@ -72,7 +93,7 @@ class PacaCanvasEngine {
                     const res = await fetch('data/default_canvas_template.json');
                     if (res.ok) {
                         this.design = await res.json();
-                        localStorage.setItem(storageKey, JSON.stringify(this.design));
+                        this.safeSetItem(storageKey, JSON.stringify(this.design));
                     }
                 } catch (err2) {
                     console.error("Failed to load fallback template", err2);
@@ -80,13 +101,18 @@ class PacaCanvasEngine {
             }
         }
 
-        if (!this.design) {
+        if (!this.design || !Array.isArray(this.design.pages) || this.design.pages.length === 0) {
             this.design = {
-                version: "1.0",
+                version: "2.0",
                 title: "PACA Canvas",
                 baseWidth: 800,
                 pages: [
-                    { id: "page_1", title: "Trang 1", width: 800, height: 1000, bg: "#f6dcaf", elements: [] }
+                    { id: "page_cover", title: "Trang Bìa", width: 800, height: 1000, bg: "#10234d", elements: [] },
+                    { id: "page_week", title: "Menu of the Week", width: 800, height: 1000, bg: "#f6dcaf", elements: [] },
+                    { id: "page_bites", title: "Món Nhắm", width: 800, height: 1000, bg: "#f6dcaf", elements: [] },
+                    { id: "page_cocktail", title: "Cocktails", width: 800, height: 1000, bg: "#f6dcaf", elements: [] },
+                    { id: "page_beer", title: "Craft Beer", width: 800, height: 1000, bg: "#f6dcaf", elements: [] },
+                    { id: "page_wine_shots", title: "Wine & Shots", width: 800, height: 1000, bg: "#f6dcaf", elements: [] }
                 ]
             };
         }
@@ -97,12 +123,12 @@ class PacaCanvasEngine {
                 try {
                     const cloudPayload = await this.pullFromCloudSync();
                     if (cloudPayload && cloudPayload.design && Array.isArray(cloudPayload.design.pages) && cloudPayload.design.pages.length > 0) {
-                        const localTs = parseInt(localStorage.getItem('paca_canvas_published_timestamp') || '0');
+                        const localTs = parseInt(this.safeGetItem('paca_canvas_published_timestamp', '0'));
                         if (cloudPayload.timestamp > localTs || !local) {
                             console.log("PACA: Newer design received from Cloud Sync! Updating view...");
                             this.design = cloudPayload.design;
-                            localStorage.setItem(PACA_CANVAS_KEYS.PUBLISHED_DESIGN, JSON.stringify(this.design));
-                            localStorage.setItem('paca_canvas_published_timestamp', cloudPayload.timestamp.toString());
+                            this.safeSetItem(PACA_CANVAS_KEYS.PUBLISHED_DESIGN, JSON.stringify(this.design));
+                            this.safeSetItem('paca_canvas_published_timestamp', cloudPayload.timestamp.toString());
                             if (this.container) {
                                 this.render();
                             }

@@ -2181,7 +2181,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261004_1815"></script>
+    <script src="js/paca_core.js?v=20261004_1830"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -2276,28 +2276,34 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             removeLegacyPinHint();
-            await window.paca.init();
+            try {
+                await window.paca.init();
+            } catch (err) {
+                console.error("Admin init error:", err);
+            }
             removeLegacyPinHint();
 
             // Populate banks select
             const bankSelect = document.getElementById('cfgBankSelect');
-            bankSelect.innerHTML = VIETQR_BANKS.map(b => 
-                `<option value="${b.code}">${b.name}</option>`
-            ).join('');
+            if (bankSelect && typeof VIETQR_BANKS !== 'undefined') {
+                bankSelect.innerHTML = VIETQR_BANKS.map(b => 
+                    `<option value="${b.code}">${b.name}</option>`
+                ).join('');
+            }
 
             // Load settings into inputs
-            loadSettingsToInputs();
+            try { loadSettingsToInputs(); } catch (e) { console.warn(e); }
 
             // Populate category selects
-            populateMenuCategories();
+            try { populateMenuCategories(); } catch (e) { console.warn(e); }
 
             // Render views & check security lock
-            renderOrders();
-            renderTablesAdmin();
-            renderAdminMenu();
-            renderInventoryTable();
-            renderRevenueStats();
-            renderStaffList();
+            try { renderOrders(); } catch (e) { console.warn("renderOrders error:", e); }
+            try { renderTablesAdmin(); } catch (e) { console.warn("renderTablesAdmin error:", e); }
+            try { renderAdminMenu(); } catch (e) { console.warn("renderAdminMenu error:", e); }
+            try { renderInventoryTable(); } catch (e) { console.warn("renderInventoryTable error:", e); }
+            try { renderRevenueStats(); } catch (e) { console.warn("renderRevenueStats error:", e); }
+            try { renderStaffList(); } catch (e) { console.warn("renderStaffList error:", e); }
 
             const curUser = window.paca.getCurrentUser();
             if (!curUser) {

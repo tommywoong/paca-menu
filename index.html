@@ -346,8 +346,8 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261004_1815"></script>
-    <script src="js/paca_canvas.js?v=20261004_1815"></script>
+    <script src="js/paca_core.js?v=20261004_1830"></script>
+    <script src="js/paca_canvas.js?v=20261004_1830"></script>
     <script>
         let isPosterMode = true;
         let canvasEngine = null;
@@ -411,16 +411,32 @@
             }
 
             // Init Canvas Engine in View Mode
-            canvasEngine = new PacaCanvasEngine({
-                mode: 'view',
-                container: document.getElementById('canvasMenuWrapper'),
-                onProductClick: (productId) => openDetailModal(productId)
-            });
-            await canvasEngine.init();
+            try {
+                canvasEngine = new PacaCanvasEngine({
+                    mode: 'view',
+                    container: document.getElementById('canvasMenuWrapper'),
+                    onProductClick: (productId) => openDetailModal(productId)
+                });
+                await canvasEngine.init();
+            } catch (canvasErr) {
+                console.error("Canvas engine error:", canvasErr);
+            }
 
-            renderCustomerNavBar();
-            renderStandardMenu();
-            updateCartUI();
+            try { renderCustomerNavBar(); } catch (e) { console.warn("renderCustomerNavBar error:", e); }
+            try { renderStandardMenu(); } catch (e) { console.warn("renderStandardMenu error:", e); }
+            try { updateCartUI(); } catch (e) { console.warn("updateCartUI error:", e); }
+
+            // Bulletproof self-healing fallback: If poster mode has no elements or failed, auto-switch to Classic Menu!
+            const canvasWrapper = document.getElementById('canvasMenuWrapper');
+            const hasRenderedPosters = canvasWrapper && canvasWrapper.children.length > 0 && canvasWrapper.offsetHeight > 500;
+            if (isPosterMode && !hasRenderedPosters) {
+                console.warn("PACA: Canvas poster not rendered or empty. Switching seamlessly to Classic Menu!");
+                isPosterMode = false;
+                canvasWrapper?.classList.add('hidden');
+                document.getElementById('standardMenuWrapper')?.classList.remove('hidden');
+                const toggleBtn = document.getElementById('viewModeToggleBtn');
+                if (toggleBtn) toggleBtn.innerHTML = `<span>🎨</span> <span>Xem Poster</span>`;
+            }
         });
 
         // Dynamic Customer Navigation Bar

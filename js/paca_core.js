@@ -204,45 +204,65 @@ class PacaService {
         }
     }
 
+    safeSetItem(key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {
+            console.warn(`PACA: localStorage.setItem("${key}") failed:`, e);
+        }
+    }
+
+    safeGetItem(key, fallback = null) {
+        try {
+            const val = localStorage.getItem(key);
+            return val !== null ? val : fallback;
+        } catch (e) {
+            console.warn(`PACA: localStorage.getItem("${key}") failed:`, e);
+            return fallback;
+        }
+    }
+
     // --- INITIALIZATION ---
     async init() {
-        const CURRENT_VERSION = '20261004_1815';
-        const savedVer = localStorage.getItem('paca_app_version');
+        const CURRENT_VERSION = '20261004_1830';
+        const savedVer = this.safeGetItem('paca_app_version');
         if (savedVer !== CURRENT_VERSION) {
             console.log(`PACA: Updating from version ${savedVer} to ${CURRENT_VERSION}.`);
-            localStorage.setItem('paca_app_version', CURRENT_VERSION);
+            this.safeSetItem('paca_app_version', CURRENT_VERSION);
             // If local menu was somehow empty or corrupted, clear it so fresh data/menu.json loads
             try {
-                const localM = JSON.parse(localStorage.getItem(PACA_STORAGE_KEYS.MENU) || 'null');
+                const localM = JSON.parse(this.safeGetItem(PACA_STORAGE_KEYS.MENU) || 'null');
                 if (!localM || !localM.items || localM.items.length === 0) {
-                    localStorage.removeItem(PACA_STORAGE_KEYS.MENU);
+                    try { localStorage.removeItem(PACA_STORAGE_KEYS.MENU); } catch (e) {}
                 }
             } catch (e) {
-                localStorage.removeItem(PACA_STORAGE_KEYS.MENU);
+                try { localStorage.removeItem(PACA_STORAGE_KEYS.MENU); } catch (e) {}
             }
-            localStorage.removeItem('paca_published_canvas_v2');
-            localStorage.removeItem('paca_canvas_published_timestamp');
         }
 
-        await this.loadConfig();
-        this.loadUsers();
-        await this.loadMenu();
-        await this.loadTables();
-        this.loadBillTemplates();
-        this.loadOrders();
-        this.loadInventoryLogs();
-        this.loadDailyCloses();
+        // Each component is isolated so failure in one never blocks others
+        try { await this.loadConfig(); } catch (e) { console.warn("PACA: loadConfig error:", e); }
+        try { this.loadUsers(); } catch (e) { console.warn("PACA: loadUsers error:", e); }
+        try { await this.loadMenu(); } catch (e) { console.warn("PACA: loadMenu error:", e); }
+        try { await this.loadTables(); } catch (e) { console.warn("PACA: loadTables error:", e); }
+        try { this.loadBillTemplates(); } catch (e) { console.warn("PACA: loadBillTemplates error:", e); }
+        try { this.loadOrders(); } catch (e) { console.warn("PACA: loadOrders error:", e); }
+        try { this.loadInventoryLogs(); } catch (e) { console.warn("PACA: loadInventoryLogs error:", e); }
+        try { this.loadDailyCloses(); } catch (e) { console.warn("PACA: loadDailyCloses error:", e); }
     }
 
     // --- CONFIG ---
     async loadConfig() {
         let serverConfig = null;
         try {
-            const res = await fetch('data/config.json?v=' + Date.now());
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2500);
+            const res = await fetch('data/config.json?v=' + Date.now(), { cache: 'no-store', signal: controller.signal });
+            clearTimeout(timeoutId);
             if (res.ok) serverConfig = await res.json();
         } catch (e) {}
 
-        const local = localStorage.getItem(PACA_STORAGE_KEYS.CONFIG);
+        const local = this.safeGetItem(PACA_STORAGE_KEYS.CONFIG);
         if (local) {
             try {
                 this.config = JSON.parse(local);
@@ -1059,25 +1079,38 @@ class PacaService {
 
     // --- TABLES ---
     async loadTables() {
-        const local = localStorage.getItem(PACA_STORAGE_KEYS.TABLES);
+        const local = this.safeGetItem(PACA_STORAGE_KEYS.TABLES);
         if (local) {
             try {
-                this.tables = JSON.parse(local);
-                return this.tables;
+                const parsed = JSON.parse(local);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    this.tables = parsed;
+                    return this.tables;
+                }
             } catch (e) {
                 console.warn("Invalid local tables", e);
             }
         }
         try {
-            const res = await fetch('data/tables.json');
-            this.tables = await res.json();
-            this.saveTables(this.tables);
-        } catch (e) {
-            this.tables = [
-                { id: "B01", name: "Bàn 01", zone: "Trong Nhà", active: true },
-                { id: "BAR01", name: "Quầy Bar 01", zone: "Quầy Bar", active: true }
-            ];
-        }
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2500);
+            const res = await fetch('data/tables.json?v=' + Date.now(), { cache: 'no-store', signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (res.ok) {
+                this.tables = await res.json();
+                this.saveTables(this.tables);
+                return this.tables;
+            }
+        } catch (e) {}
+
+        this.tables = [
+            { id: "B01", name: "Bàn 01", zone: "Trong Nhà", active: true },
+            { id: "B02", name: "Bàn 02", zone: "Trong Nhà", active: true },
+            { id: "B03", name: "Bàn 03", zone: "Trong Nhà", active: true },
+            { id: "BAR01", name: "Quầy Bar 01", zone: "Quầy Bar", active: true },
+            { id: "BAR02", name: "Quầy Bar 02", zone: "Quầy Bar", active: true }
+        ];
+        this.saveTables(this.tables);
         return this.tables;
     }
 
@@ -1722,17 +1755,23 @@ class PacaService {
                     }
                 } catch (err) {}
             };
+            this.cloudEventSource.onerror = (err) => {
+                // EventSource auto-reconnects natively; log silently without throwing
+            };
         } catch (e) {
             console.warn("Cloud EventSource init error", e);
         }
 
-        // 3. Fallback poll interval every 4 seconds
+        // 3. Fallback poll interval every 15 seconds (only when SSE is not actively open)
         if (!this.cloudSyncTimer) {
             this.cloudSyncTimer = setInterval(() => {
+                if (this.cloudEventSource && this.cloudEventSource.readyState === EventSource.OPEN) {
+                    return; // Skip poll when SSE stream is healthy and active!
+                }
                 this.syncCloudOrders(() => {
                     if (onUpdateCallback) onUpdateCallback();
                 });
-            }, 4000);
+            }, 15000);
         }
     }
 

@@ -583,14 +583,14 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261004_1815"></script>
-    <script src="js/paca_canvas.js?v=20261004_1815"></script>
+    <script src="js/paca_core.js?v=20261004_1830"></script>
+    <script src="js/paca_canvas.js?v=20261004_1830"></script>
     <script>
         let engine = null;
         let canvaManifest = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
-            await window.paca.init();
+            try { await window.paca.init(); } catch (e) { console.error("Studio paca.init error:", e); }
 
             // Load Canva manifest
             try {
@@ -614,7 +614,7 @@
                 },
                 onDesignChange: () => updatePageTabs()
             });
-            await engine.init();
+            try { await engine.init(); } catch (e) { console.error("Studio engine.init error:", e); }
 
             updatePageTabs();
             populateTargetPageSelect();
