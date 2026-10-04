@@ -625,7 +625,7 @@
             });
 
             window.addEventListener('storage', (e) => {
-                if (e.key === 'paca_menu_data') {
+                if (e.key === 'paca_menu_data_v1' || e.key === 'paca_menu_data' || (window.PACA_STORAGE_KEYS && e.key === window.PACA_STORAGE_KEYS.MENU)) {
                     syncStudioMenuData();
                 }
             });
@@ -651,9 +651,11 @@
                 if (window.paca && window.paca.reloadMenu) {
                     await window.paca.reloadMenu();
                 } else {
-                    const local = localStorage.getItem('paca_menu_data');
+                    const localKey = (window.PACA_STORAGE_KEYS && window.PACA_STORAGE_KEYS.MENU) || 'paca_menu_data_v1';
+                    const local = localStorage.getItem(localKey) || localStorage.getItem('paca_menu_data');
                     if (local) {
                         window.paca.menu = JSON.parse(local);
+                        if (window.paca.filterDeletedTombstones) window.paca.menu = window.paca.filterDeletedTombstones(window.paca.menu);
                         if (window.paca.normalizeCategories) window.paca.normalizeCategories();
                     }
                 }
@@ -2049,6 +2051,11 @@
             if (btn) btn.innerHTML = `<span>⏳</span><span>Đang đồng bộ...</span>`;
 
             try {
+                // Ensure studio has freshest menu from storage / tombstones before publishing
+                if (window.paca && window.paca.reloadMenu) {
+                    await window.paca.reloadMenu();
+                }
+
                 // 1. Publish Canvas design & push to cloud
                 await engine.publish(true);
 

@@ -499,7 +499,8 @@ class PacaCanvasEngine {
     // --- DYNAMIC CATEGORY SECTION (For new/custom categories created in Admin) ---
     renderDynamicCategorySection(cat, wrapper, baseWidth) {
         if (!cat || cat.is_active === false) return;
-        const dishes = (window.paca?.menu?.items || []).filter(i => i.category === cat.id);
+        const deletedDishIds = new Set(window.paca?.getDeletedDishIds ? window.paca.getDeletedDishIds() : []);
+        const dishes = (window.paca?.menu?.items || []).filter(i => i.category === cat.id && !deletedDishIds.has(i.id));
         const pageContainer = document.createElement('div');
         pageContainer.id = cat.pageId || ('sec_cat_' + cat.id);
         pageContainer.className = 'paca-page-container w-full max-w-[800px] overflow-visible bg-[#f9f2e7] pt-8 pb-16 px-4 sm:px-8 border-b-4 border-paca-navy shadow-sm relative transition-all';
@@ -685,12 +686,16 @@ class PacaCanvasEngine {
             { id: 'b08', defaultTitle: 'POPCORN CHICKEN CHEESE', defaultPrice: 95000, defaultBadge: 'M/L Options', image: '', desc: 'Gà chiên giòn rụm áo sốt cay ngọt Hàn Quốc phủ ngập phô mai kéo sợi thơm phức.' }
         ];
 
+        const deletedDishIds = new Set(window.paca?.getDeletedDishIds ? window.paca.getDeletedDishIds() : []);
+        // Only keep bites that are NOT deleted and still exist in menu
+        const activeBitesItems = bitesItems.filter(b => !deletedDishIds.has(b.id) && (window.paca?.menu?.items || []).some(it => it.id === b.id));
+
         // Include any custom new dishes added to Bites in Admin (e.g. t4ss)
         const customBites = (window.paca?.menu?.items || []).filter(i => 
-            i.category === 'bites' && !bitesItems.some(b => b.id === i.id)
+            i.category === 'bites' && !activeBitesItems.some(b => b.id === i.id) && !deletedDishIds.has(i.id)
         );
         customBites.forEach(cItem => {
-            bitesItems.push({
+            activeBitesItems.push({
                 id: cItem.id,
                 defaultTitle: cItem.name,
                 defaultPrice: cItem.price,
@@ -700,8 +705,10 @@ class PacaCanvasEngine {
             });
         });
 
-        bitesItems.forEach(itemDef => {
+        activeBitesItems.forEach(itemDef => {
+            if (deletedDishIds.has(itemDef.id)) return;
             const boundProduct = window.paca?.menu?.items?.find(i => i.id === itemDef.id);
+            if (!boundProduct) return;
             const isSoldOut = boundProduct && boundProduct.is_available === false;
             const hasOptions = boundProduct && ((boundProduct.variants && boundProduct.variants.length > 0) || (boundProduct.options && boundProduct.options.length > 0) || (boundProduct.toppings && boundProduct.toppings.length > 0));
             
@@ -859,13 +866,19 @@ class PacaCanvasEngine {
 
         // Product Binding info
         let boundProduct = null;
-        if (el.binding && el.binding.productId && window.paca?.menu?.items) {
-            boundProduct = window.paca.menu.items.find(i => i.id === el.binding.productId);
-            if (boundProduct) {
-                const allCats = window.paca?.getCategories ? window.paca.getCategories(true) : [];
-                const prodCat = allCats.find(c => c.id === boundProduct.category);
-                if (prodCat && prodCat.is_active === false) {
-                    return null; // Omit dishes of hidden/inactive category!
+        if (el.binding && el.binding.productId) {
+            const deletedDishIds = new Set(window.paca?.getDeletedDishIds ? window.paca.getDeletedDishIds() : []);
+            if (deletedDishIds.has(el.binding.productId)) {
+                return null; // Omit dishes that were deleted!
+            }
+            if (window.paca?.menu?.items) {
+                boundProduct = window.paca.menu.items.find(i => i.id === el.binding.productId);
+                if (boundProduct) {
+                    const allCats = window.paca?.getCategories ? window.paca.getCategories(true) : [];
+                    const prodCat = allCats.find(c => c.id === boundProduct.category);
+                    if (prodCat && prodCat.is_active === false) {
+                        return null; // Omit dishes of hidden/inactive category!
+                    }
                 }
             }
         }

@@ -477,6 +477,89 @@ class PacaService {
         localStorage.setItem(PACA_STORAGE_KEYS.BILL_TEMPLATES, JSON.stringify(this.billTemplates));
     }
 
+    // --- TOMBSTONE / DELETED ITEMS & CATEGORIES TRACKING ---
+    getDeletedDishIds() {
+        let list = [];
+        try {
+            const raw = localStorage.getItem('paca_deleted_dishes_v1');
+            if (raw) list = JSON.parse(raw);
+        } catch (e) {}
+        if (!Array.isArray(list)) list = [];
+        if (Array.isArray(this.menu?.deleted_item_ids)) {
+            this.menu.deleted_item_ids.forEach(id => {
+                if (id && !list.includes(id)) list.push(id);
+            });
+        }
+        return list;
+    }
+
+    getDeletedCategoryIds() {
+        let list = [];
+        try {
+            const raw = localStorage.getItem('paca_deleted_categories_v1');
+            if (raw) list = JSON.parse(raw);
+        } catch (e) {}
+        if (!Array.isArray(list)) list = [];
+        if (Array.isArray(this.menu?.deleted_category_ids)) {
+            this.menu.deleted_category_ids.forEach(id => {
+                if (id && !list.includes(id)) list.push(id);
+            });
+        }
+        return list;
+    }
+
+    recordDeletedDish(itemId) {
+        if (!itemId) return;
+        const list = this.getDeletedDishIds();
+        if (!list.includes(itemId)) {
+            list.push(itemId);
+            try { localStorage.setItem('paca_deleted_dishes_v1', JSON.stringify(list)); } catch (e) {}
+        }
+        if (this.menu) {
+            if (!Array.isArray(this.menu.deleted_item_ids)) this.menu.deleted_item_ids = [];
+            if (!this.menu.deleted_item_ids.includes(itemId)) this.menu.deleted_item_ids.push(itemId);
+        }
+    }
+
+    recordDeletedCategory(catId) {
+        if (!catId) return;
+        const list = this.getDeletedCategoryIds();
+        if (!list.includes(catId)) {
+            list.push(catId);
+            try { localStorage.setItem('paca_deleted_categories_v1', JSON.stringify(list)); } catch (e) {}
+        }
+        if (this.menu) {
+            if (!Array.isArray(this.menu.deleted_category_ids)) this.menu.deleted_category_ids = [];
+            if (!this.menu.deleted_category_ids.includes(catId)) this.menu.deleted_category_ids.push(catId);
+        }
+    }
+
+    filterDeletedTombstones(menuObj) {
+        if (!menuObj) return menuObj;
+        const deletedDishIds = new Set(this.getDeletedDishIds());
+        const deletedCatIds = new Set(this.getDeletedCategoryIds());
+
+        if (Array.isArray(menuObj.deleted_item_ids)) {
+            menuObj.deleted_item_ids.forEach(id => { if (id) deletedDishIds.add(id); });
+            try { localStorage.setItem('paca_deleted_dishes_v1', JSON.stringify(Array.from(deletedDishIds))); } catch (e) {}
+        }
+        if (Array.isArray(menuObj.deleted_category_ids)) {
+            menuObj.deleted_category_ids.forEach(id => { if (id) deletedCatIds.add(id); });
+            try { localStorage.setItem('paca_deleted_categories_v1', JSON.stringify(Array.from(deletedCatIds))); } catch (e) {}
+        }
+
+        if (Array.isArray(menuObj.items)) {
+            menuObj.items = menuObj.items.filter(it => it && !deletedDishIds.has(it.id));
+        }
+        if (Array.isArray(menuObj.categories)) {
+            menuObj.categories = menuObj.categories.filter(c => c && !deletedCatIds.has(c.id));
+        }
+
+        menuObj.deleted_item_ids = Array.from(deletedDishIds);
+        menuObj.deleted_category_ids = Array.from(deletedCatIds);
+        return menuObj;
+    }
+
     // --- MENU ---
     async loadMenu() {
         let loaded = false;
@@ -487,7 +570,7 @@ class PacaService {
             try {
                 const parsed = JSON.parse(local);
                 if (parsed && Array.isArray(parsed.categories) && parsed.categories.length > 0 && Array.isArray(parsed.items) && parsed.items.length > 0) {
-                    this.menu = parsed;
+                    this.menu = this.filterDeletedTombstones(parsed);
                     this.normalizeCategories();
                     loaded = true;
                 }
@@ -504,7 +587,8 @@ class PacaService {
                 const res = await fetch('data/menu.json?v=' + Date.now(), { cache: 'no-store', signal: controller.signal });
                 clearTimeout(timeoutId);
                 if (res.ok) {
-                    this.menu = await res.json();
+                    const fetchedMenu = await res.json();
+                    this.menu = this.filterDeletedTombstones(fetchedMenu);
                     this.normalizeCategories();
                     localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
                     loaded = true;
@@ -522,7 +606,8 @@ class PacaService {
                 const res = await fetch('data/menu.json', { signal: controller.signal });
                 clearTimeout(timeoutId);
                 if (res.ok) {
-                    this.menu = await res.json();
+                    const fetchedMenu = await res.json();
+                    this.menu = this.filterDeletedTombstones(fetchedMenu);
                     this.normalizeCategories();
                     localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
                     loaded = true;
@@ -569,7 +654,8 @@ class PacaService {
         const local = localStorage.getItem(PACA_STORAGE_KEYS.MENU);
         if (local) {
             try {
-                this.menu = JSON.parse(local);
+                const parsed = JSON.parse(local);
+                this.menu = this.filterDeletedTombstones(parsed);
                 this.normalizeCategories();
                 return this.menu;
             } catch (e) {
@@ -583,6 +669,7 @@ class PacaService {
         const m = menu || this.menu;
         if (!m) return false;
         try {
+            this.filterDeletedTombstones(m);
             const payload = JSON.stringify({
                 timestamp: Date.now(),
                 menu: m
@@ -635,6 +722,7 @@ class PacaService {
                 if (!fileRes.ok) return null;
                 const fileData = await fileRes.json();
                 if (fileData && fileData.menu && Array.isArray(fileData.menu.categories)) {
+                    fileData.menu = this.filterDeletedTombstones(fileData.menu);
                     return fileData;
                 }
             }
@@ -652,6 +740,7 @@ class PacaService {
         try {
             const cloudMenuPayload = await this.pullMenuFromCloud();
             if (cloudMenuPayload && cloudMenuPayload.menu && cloudMenuPayload.timestamp) {
+                this.filterDeletedTombstones(cloudMenuPayload.menu);
                 const localTs = parseInt(localStorage.getItem('paca_menu_saved_timestamp') || '0');
                 const localCount = (this.menu?.items || []).length;
                 const cloudCount = (cloudMenuPayload.menu.items || []).length;
@@ -664,7 +753,7 @@ class PacaService {
 
                 if ((isNewer || isLocalEmpty) && Array.isArray(cloudMenuPayload.menu.categories)) {
                     console.log("PACA: Newer menu detected from Cloud Sync! Updating local menu...");
-                    this.menu = cloudMenuPayload.menu;
+                    this.menu = this.filterDeletedTombstones(cloudMenuPayload.menu);
                     this.normalizeCategories();
                     localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
                     localStorage.setItem('paca_menu_saved_timestamp', Math.max(cloudMenuPayload.timestamp, localTs).toString());
@@ -686,16 +775,17 @@ class PacaService {
     }
 
     saveMenu(menuData, pushToCloud = true) {
-        this.menu = menuData;
+        this.menu = this.filterDeletedTombstones(menuData);
         localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
         localStorage.setItem('paca_menu_saved_timestamp', Date.now().toString());
         if (this.broadcastChannel) {
             this.broadcastChannel.postMessage({ type: 'MENU_SAVED', timestamp: Date.now() });
         }
         if (pushToCloud) {
-            this.pushMenuToCloud(this.menu);
             this.pushOrderToCloud({ timestamp: Date.now() }, 'MENU_UPDATED');
+            return this.pushMenuToCloud(this.menu);
         }
+        return Promise.resolve(true);
     }
 
     toggleItemAvailability(itemId, isAvailable) {
@@ -712,6 +802,16 @@ class PacaService {
 
     saveMenuItem(itemData) {
         if (!this.menu) return;
+        if (itemData && itemData.id) {
+            let list = this.getDeletedDishIds();
+            if (list.includes(itemData.id)) {
+                list = list.filter(id => id !== itemData.id);
+                try { localStorage.setItem('paca_deleted_dishes_v1', JSON.stringify(list)); } catch (e) {}
+                if (this.menu && this.menu.deleted_item_ids) {
+                    this.menu.deleted_item_ids = this.menu.deleted_item_ids.filter(id => id !== itemData.id);
+                }
+            }
+        }
         const idx = this.menu.items.findIndex(i => i.id === itemData.id);
         if (idx >= 0) {
             this.menu.items[idx] = { ...this.menu.items[idx], ...itemData };
@@ -757,16 +857,18 @@ class PacaService {
     }
 
     deleteMenuItem(itemId) {
-        if (!this.menu || !this.menu.items) return;
+        if (!this.menu || !this.menu.items) return null;
+        this.recordDeletedDish(itemId);
         const idx = this.menu.items.findIndex(i => i.id === itemId);
+        let removed = null;
         if (idx >= 0) {
-            const removed = this.menu.items.splice(idx, 1)[0];
-            this.saveMenu(this.menu);
-            if (this.broadcastChannel) {
-                this.broadcastChannel.postMessage({ type: 'MENU_ITEM_DELETED', itemId });
-            }
-            return removed;
+            removed = this.menu.items.splice(idx, 1)[0];
         }
+        this.saveMenu(this.menu);
+        if (this.broadcastChannel) {
+            this.broadcastChannel.postMessage({ type: 'MENU_ITEM_DELETED', itemId });
+        }
+        return removed;
     }
 
     // --- INVENTORY MANAGEMENT & UNITS ---
@@ -997,6 +1099,17 @@ class PacaService {
             id = (cleanSlug ? cleanSlug : 'cat') + '_' + Date.now().toString(36).substr(-4);
         }
 
+        if (id) {
+            let list = this.getDeletedCategoryIds();
+            if (list.includes(id)) {
+                list = list.filter(cid => cid !== id);
+                try { localStorage.setItem('paca_deleted_categories_v1', JSON.stringify(list)); } catch (e) {}
+                if (this.menu && this.menu.deleted_category_ids) {
+                    this.menu.deleted_category_ids = this.menu.deleted_category_ids.filter(cid => cid !== id);
+                }
+            }
+        }
+
         const existingIdx = this.menu.categories.findIndex(c => c.id === id);
         
         let targetPageId = catData.pageId;
@@ -1065,6 +1178,7 @@ class PacaService {
             });
         }
 
+        this.recordDeletedCategory(catId);
         const removed = this.menu.categories.splice(catIdx, 1)[0];
         this.normalizeCategories();
         this.saveMenu(this.menu);

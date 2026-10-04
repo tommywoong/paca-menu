@@ -545,7 +545,7 @@
 
         // Live synchronizer across browser tabs / storage events
         window.addEventListener('storage', (e) => {
-            if (e.key === 'paca_menu_v2' || e.key === 'paca_published_canvas_v2') {
+            if (e.key === 'paca_menu_data_v1' || e.key === 'paca_menu_v2' || e.key === 'paca_published_canvas_v2' || e.key === 'paca_deleted_dishes_v1' || e.key === 'paca_deleted_categories_v1') {
                 window.paca.init().then(() => {
                     renderCustomerNavBar();
                     if (canvasEngine) canvasEngine.init();
@@ -556,7 +556,7 @@
         });
         if (window.paca?.broadcastChannel) {
             window.paca.broadcastChannel.addEventListener('message', (ev) => {
-                if (ev.data?.type === 'CATEGORIES_CHANGED' || ev.data?.type === 'MENU_UPDATED' || ev.data?.type === 'CANVAS_PUBLISHED') {
+                if (['CATEGORIES_CHANGED', 'MENU_UPDATED', 'CANVAS_PUBLISHED', 'MENU_SAVED', 'MENU_ITEM_DELETED', 'MENU_ITEM_SAVED'].includes(ev.data?.type)) {
                     window.paca.init().then(() => {
                         renderCustomerNavBar();
                         if (canvasEngine) canvasEngine.init();

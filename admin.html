@@ -3887,14 +3887,19 @@
             renderAdminMenu();
         }
 
-        function deleteDishPrompt(itemId) {
+        async function deleteDishPrompt(itemId) {
             const item = window.paca.menu?.items.find(i => i.id === itemId);
             if (!item) return;
             if (confirm(`Bạn có chắc muốn xóa món "${item.name}" khỏi thực đơn không?`)) {
+                showAdminToast(`⏳ Đang xóa món "${item.name}"...`, true);
                 window.paca.deleteMenuItem(itemId);
                 renderAdminMenu();
                 populateMenuCategories();
                 renderAdminCategories();
+                try {
+                    await window.paca.pushMenuToCloud();
+                } catch (e) {}
+                showAdminToast(`✓ Đã xóa vĩnh viễn món "${item.name}" khỏi thực đơn!`, true);
             }
         }
 
@@ -4177,7 +4182,7 @@
             document.getElementById('categoryDeleteModal').classList.add('hidden');
         }
 
-        function confirmDeleteCategory() {
+        async function confirmDeleteCategory() {
             const catId = document.getElementById('delCatTargetId').value;
             const transferBox = document.getElementById('delCatTransferBox');
             let transferTarget = null;
@@ -4185,13 +4190,17 @@
                 transferTarget = document.getElementById('delCatTransferSelect').value;
             }
 
+            showAdminToast("⏳ Đang xóa danh mục...", true);
             const res = window.paca.deleteCategory(catId, transferTarget);
             if (res.success) {
                 closeCategoryDeleteModal();
                 populateMenuCategories();
                 renderAdminCategories();
                 renderAdminMenu();
-                alert(`Đã xóa danh mục thành công!${res.transferredCount ? ` (${res.transferredCount} món đã được chuyển sang danh mục mới)` : ''}`);
+                try {
+                    await window.paca.pushMenuToCloud();
+                } catch (e) {}
+                showAdminToast(`✓ Đã xóa danh mục thành công!${res.transferredCount ? ` (${res.transferredCount} món đã được chuyển sang danh mục mới)` : ''}`, true);
             } else {
                 alert(res.message);
             }
