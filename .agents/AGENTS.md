@@ -104,3 +104,21 @@ Tài liệu quy định toàn bộ các nguyên tắc kiến trúc phần mềm,
 * **Món Popcorn Chicken Cheese (`b08`):**
   - Ảnh đại diện chính thức lưu tại `assets/canva/popcorn_chicken_cheese.jpg`.
   - Đồng bộ thống nhất trên `data/menu.json`, `data/default_canvas_template.json`, kênh đám mây `ntfy` và hiển thị đầy đủ trên trang menu khách quét.
+
+---
+
+## 9. Quy định Đồng bộ Đơn Hàng 2 Chiều & Phân Quyền Xóa Đơn (2-Way Cloud Order Sync & Admin-Only Deletion)
+* **Cơ chế Đồng bộ Đám mây 2 Chiều (Bidirectional Cloud Order Reconciliation):**
+  - Mọi đơn hàng tạo từ bất kỳ thiết bị nào (Thu Ngân, Khách Quét QR, hoặc Quản Lý) đều được đồng bộ thời gian thực qua kênh SSE `paca_orders_live_da_lat_2025` và sao lưu ảnh chụp đầy đủ tại kênh `paca_orders_snapshot_dalat_2025`.
+  - Có cơ chế thử lại tự động 3 lần (Exponential backoff) khi gửi đơn lên Cloud, loại bỏ rủi ro rớt đơn do mạng Wi-Fi chập chờn.
+  - Bộ máy đồng bộ `syncCloudOrders` tự động đối soát hai chiều: nếu thiết bị có đơn hàng cục bộ chưa có trên Cloud Snapshot (hoặc ngược lại), hệ thống sẽ tự động ghép nối và tải snapshot hoàn chỉnh lên Cloud.
+  - Trang Quản trị trang bị nút bấm chủ động **`🔄 Đồng bộ`** trên thanh tiêu đề giúp nhân viên hoặc quản lý kích hoạt đồng bộ tức thì bất kỳ lúc nào với thông báo phản hồi trực quan.
+* **Quy định Tuyệt đối về Quyền Xóa Đơn Hàng (Strict Admin-Only Order Deletion):**
+  - **Chỉ duy nhất tài khoản Quản Lý (`role: admin`)** mới có quyền xóa đơn hàng khỏi hệ thống.
+  - Tài khoản Thu Ngân / Nhân viên (`role: staff`) **hoàn toàn không hiển thị nút `🗑 Xóa`** trên danh sách đơn hàng cũng như bảng thống kê doanh thu.
+  - Mã nguồn Backend/Service `deleteOrder(orderId)` bắt buộc chặn cứng các lệnh xóa phát sinh từ tài khoản không phải Admin (`if (!this.isAdmin()) return null;`).
+  - Danh sách mã đơn đã xóa được lưu vết vĩnh viễn trong `paca_deleted_orders_v1` để ngăn chặn việc đơn bị khôi phục lại từ lịch sử Cloud.
+* **Đồng bộ Thực Đơn Tức thì trên Toàn Bộ Tài Khoản (Realtime Cross-Screen Menu Sync):**
+  - Khi Quản Lý cập nhật thực đơn hoặc ấn xuất bản từ Studio, hệ thống tự động phát thông điệp `MENU_UPDATED` tới toàn bộ thiết bị đang kết nối (Admin, Thu Ngân, Studio, Khách Quét QR).
+  - Tất cả các màn hình tự động tải thực đơn mới nhất và kết xuất lại giao diện mà người dùng không cần phải tải lại trang thủ công.
+
