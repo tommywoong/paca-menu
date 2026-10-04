@@ -258,20 +258,16 @@ class PacaService {
 
     // --- INITIALIZATION ---
     async init() {
-        const CURRENT_VERSION = '20261004_1830';
+        const CURRENT_VERSION = '20261004_2030';
         const savedVer = this.safeGetItem('paca_app_version');
         if (savedVer !== CURRENT_VERSION) {
             console.log(`PACA: Updating from version ${savedVer} to ${CURRENT_VERSION}.`);
             this.safeSetItem('paca_app_version', CURRENT_VERSION);
-            // If local menu was somehow empty or corrupted, clear it so fresh data/menu.json loads
-            try {
-                const localM = JSON.parse(this.safeGetItem(PACA_STORAGE_KEYS.MENU) || 'null');
-                if (!localM || !localM.items || localM.items.length === 0) {
-                    try { localStorage.removeItem(PACA_STORAGE_KEYS.MENU); } catch (e) {}
-                }
-            } catch (e) {
-                try { localStorage.removeItem(PACA_STORAGE_KEYS.MENU); } catch (e) {}
-            }
+            // Invalidate outdated local menu and draft canvas so updated 3-category menu and template load
+            try { localStorage.removeItem(PACA_STORAGE_KEYS.MENU); } catch (e) {}
+            try { localStorage.removeItem('paca_menu_saved_timestamp'); } catch (e) {}
+            try { localStorage.removeItem('paca_draft_canvas_v2'); } catch (e) {}
+            try { localStorage.removeItem('paca_published_canvas_v2'); } catch (e) {}
         }
 
         // Each component is isolated so failure in one never blocks others

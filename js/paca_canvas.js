@@ -109,15 +109,17 @@ class PacaCanvasEngine {
                 title: "PACA Canvas",
                 baseWidth: 800,
                 pages: [
-                    { id: "page_cover", title: "Trang Bìa", width: 800, height: 1000, bg: "#10234d", elements: [] },
-                    { id: "page_week", title: "Menu of the Week", width: 800, height: 1000, bg: "#f6dcaf", elements: [] },
-                    { id: "page_bites", title: "Món Nhắm", width: 800, height: 1000, bg: "#f6dcaf", elements: [] },
-                    { id: "page_cocktail", title: "Cocktails", width: 800, height: 1000, bg: "#f6dcaf", elements: [] },
-                    { id: "page_beer", title: "Craft Beer", width: 800, height: 1000, bg: "#f6dcaf", elements: [] },
-                    { id: "page_wine_shots", title: "Wine & Shots", width: 800, height: 1000, bg: "#f6dcaf", elements: [] }
+                    { id: "page_cover", title: "Trang Mở Đầu", width: 800, height: 1000, bg: "#10234d", elements: [] },
+                    { id: "page_intro", title: "Lời Chào & Giới Thiệu", width: 800, height: 1000, bg: "#10234d", elements: [] },
+                    { id: "page_bites", title: "Món Nhắm (Bites)", width: 800, height: 1000, bg: "#f6dcaf", elements: [] },
+                    { id: "page_beer", title: "Bia & Đồ Uống Lên Men (Beer & Cider)", width: 800, height: 1000, bg: "#f6dcaf", elements: [] },
+                    { id: "page_wine_shots", title: "Rượu Vang, Shots & Thông Tin Quán", width: 800, height: 1000, bg: "#f6dcaf", elements: [] }
                 ]
             };
         }
+
+        // Auto-prune pages belonging to categories deleted from Admin
+        this.pruneDeletedCategoryPages();
 
         // Priority 3: In view mode, check Cloud Sync in background (NON-BLOCKING)
         if (this.mode === 'view') {
@@ -129,6 +131,7 @@ class PacaCanvasEngine {
                         if (cloudPayload.timestamp > localTs || !local) {
                             console.log("PACA: Newer design received from Cloud Sync! Updating view...");
                             this.design = cloudPayload.design;
+                            this.pruneDeletedCategoryPages();
                             this.safeSetItem(PACA_CANVAS_KEYS.PUBLISHED_DESIGN, JSON.stringify(this.design));
                             this.safeSetItem('paca_canvas_published_timestamp', Math.max(cloudPayload.timestamp, localTs).toString());
                             if (this.container) {
@@ -146,6 +149,61 @@ class PacaCanvasEngine {
         }
 
         return this.design;
+    }
+
+    pruneDeletedCategoryPages() {
+        if (!this.design || !Array.isArray(this.design.pages)) return false;
+        const activeCats = window.paca?.getCategories ? window.paca.getCategories(true) : (window.paca?.menu?.categories || []);
+        const deletedCatIds = new Set(window.paca?.getDeletedCategoryIds ? window.paca.getDeletedCategoryIds() : []);
+        ['week', 'cocktail', 'mocktail'].forEach(id => deletedCatIds.add(id));
+
+        const initialCount = this.design.pages.length;
+        this.design.pages = this.design.pages.filter(page => {
+            // Keep intro/cover info pages
+            if (page.id === 'page_cover' || page.id === 'page_intro' || page.id === 'sec_cover') return true;
+
+            // Check if page corresponds to a known active category
+            const matchesActive = activeCats.some(c => 
+                c.id === page.id ||
+                c.pageId === page.id ||
+                ('page_' + c.id) === page.id ||
+                ('sec_cat_' + c.id) === page.id ||
+                (c.name_vi && (page.title || '').trim().toLowerCase() === c.name_vi.trim().toLowerCase()) ||
+                (c.name && (page.title || '').trim().toLowerCase() === c.name.trim().toLowerCase())
+            );
+
+            // Explicitly deleted category IDs
+            const isExplicitDeleted = deletedCatIds.has(page.id) || 
+                                     (page.id.startsWith('page_') && deletedCatIds.has(page.id.replace('page_', ''))) ||
+                                     (page.id.startsWith('sec_cat_') && deletedCatIds.has(page.id.replace('sec_cat_', '')));
+
+            if (isExplicitDeleted) {
+                console.log(`PACA Studio: Pruning explicitly deleted category page: ${page.id} (${page.title})`);
+                return false;
+            }
+
+            // Check if page represents a category section
+            const isCatPage = page.id.startsWith('sec_cat_') || 
+                              page.id.startsWith('page_cat_') || 
+                              ['page_week', 'page_bites', 'page_cocktail', 'page_beer', 'page_wine_shots'].includes(page.id);
+            
+            if (isCatPage && !matchesActive) {
+                console.log(`PACA Studio: Pruning orphaned category page: ${page.id} (${page.title})`);
+                return false;
+            }
+
+            return true;
+        });
+
+        if (this.design.pages.length !== initialCount) {
+            if (!this.design.pages.some(p => p.id === this.activePageId)) {
+                this.activePageId = this.design.pages[0]?.id || null;
+            }
+            const storageKey = this.mode === 'edit' ? PACA_CANVAS_KEYS.DRAFT_DESIGN : PACA_CANVAS_KEYS.PUBLISHED_DESIGN;
+            this.safeSetItem(storageKey, JSON.stringify(this.design));
+            return true;
+        }
+        return false;
     }
 
     // --- SAVE & PUBLISH ---
