@@ -263,6 +263,11 @@ class PacaService {
         if (savedVer !== CURRENT_VERSION) {
             console.log(`PACA: Updating from version ${savedVer} to ${CURRENT_VERSION}.`);
             this.safeSetItem('paca_app_version', CURRENT_VERSION);
+            // Invalidate stale cached canvas poster so devices immediately pull the latest published design
+            try {
+                localStorage.removeItem('paca_published_canvas_v2');
+                localStorage.removeItem('paca_canvas_published_timestamp');
+            } catch (e) {}
         }
 
         // Each component is isolated so failure in one never blocks others
