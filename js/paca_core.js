@@ -188,7 +188,6 @@ class PacaService {
         this.inventoryLogs = [];
         this.dailyCloses = [];
         this.broadcastChannel = null;
-        this.cloudServer = 'https://baocaoqr.mdhnas.io.vn'; // Server chuyen dung tai Viet Nam (NAS Dalat + Cloudflare)
         this.cloudBroker = 'https://ntfy.envs.net';
         this.cloudBrokerFallback = 'https://ntfy.sh';
         this.cloudSyncTopic = 'paca_orders_live_da_lat_2025';
@@ -631,45 +630,7 @@ class PacaService {
             }
         }
 
-        // 2. Fetch directly from Vietnam Dedicated Server (baocaoqr.mdhnas.io.vn)
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), loaded ? 3000 : 5000);
-            const res = await fetch(`${this.cloudServer}/menu_paca.json?v=` + Date.now(), { cache: 'no-store', signal: controller.signal });
-            clearTimeout(timeoutId);
-            if (res.ok) {
-                const fetchedMenu = await res.json();
-                if (fetchedMenu && Array.isArray(fetchedMenu.items) && fetchedMenu.items.length > 0) {
-                    const cleaned = this.filterDeletedTombstones(fetchedMenu);
-                    const localCount = (this.menu?.items || []).length;
-                    const serverCount = cleaned.items.length;
-                    let hasDiff = serverCount !== localCount;
-                    if (!hasDiff && this.menu?.items) {
-                        for (const sItem of cleaned.items) {
-                            const lItem = this.menu.items.find(i => i.id === sItem.id);
-                            if (!lItem || lItem.name !== sItem.name || lItem.price !== sItem.price || lItem.is_available !== sItem.is_available) {
-                                hasDiff = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!loaded || hasDiff) {
-                        this.menu = cleaned;
-                        this.normalizeCategories();
-                        localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
-                        localStorage.setItem('paca_menu_saved_timestamp', (fetchedMenu.timestamp || Date.now()).toString());
-                        loaded = true;
-                        if (this.onMenuCloudUpdateCallback) {
-                            try { this.onMenuCloudUpdateCallback(this.menu); } catch (e) {}
-                        }
-                    }
-                }
-            }
-        } catch (e) {
-            console.warn("PACA: Fast fetch from Vietnam server failed or timed out", e);
-        }
-
-        // 3. Fallback to bundled data/menu.json if still not loaded
+        // 2. Fallback to bundled data/menu.json if still not loaded
         if (!loaded) {
             try {
                 const controller = new AbortController();
@@ -692,7 +653,7 @@ class PacaService {
             this.menu = { categories: [], items: [] };
         }
 
-        // 4. Background non-blocking check for newer Cloud menu updates
+        // 3. Background non-blocking check for newer Cloud menu updates
         setTimeout(() => {
             this.checkMenuCloudUpdate().catch(e => console.warn("Background menu cloud check error", e));
         }, 100);
@@ -742,50 +703,25 @@ class PacaService {
         try {
             this.filterDeletedTombstones(m);
             const ts = Date.now();
-            const payload = {
+            const payload = JSON.stringify({
                 timestamp: ts,
-                categories: m.categories || [],
-                items: m.items || [],
-                deleted_category_ids: m.deleted_category_ids || [],
-                deleted_item_ids: m.deleted_item_ids || []
-            };
+                menu: m
+            });
 
-            // 1. Primary: Save directly to Vietnam Dedicated Server (baocaoqr.mdhnas.io.vn)
-            let serverSuccess = false;
-            try {
-                const ctrl = new AbortController();
-                const tid = setTimeout(() => ctrl.abort(), 6000);
-                const res = await fetch(`${this.cloudServer}/save_menu.php?type=paca`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-                    body: JSON.stringify(payload),
-                    signal: ctrl.signal
-                });
-                clearTimeout(tid);
-                if (res.ok) {
-                    const resJson = await res.json();
-                    if (resJson && resJson.status === 'success') {
-                        console.log("PACA: Menu synced to Vietnam Server (baocaoqr.mdhnas.io.vn) successfully!");
-                        serverSuccess = true;
-                    }
-                }
-            } catch (errServer) {
-                console.warn("PACA: Vietnam Server sync failed:", errServer);
+            const res = await this.cloudFetch(`/${this.cloudMenuTopic}`, {
+                method: 'PUT',
+                headers: {
+                    'Filename': 'paca_menu.json',
+                    'Title': 'PACA Menu Saved'
+                },
+                body: payload
+            });
+            if (res && res.ok) {
+                console.log(`PACA: Pushed ${m.items?.length || 0} items to Cloud Sync successfully!`);
+                this.pushOrderToCloud({ timestamp: ts }, 'MENU_UPDATED');
+                return true;
             }
-
-            // 2. Secondary publish to ntfy pub-sub for instant peer push
-            try {
-                await this.cloudFetch(`/${this.cloudMenuTopic}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Filename': 'paca_menu.json',
-                        'Title': 'PACA Menu Saved'
-                    },
-                    body: JSON.stringify({ timestamp: ts, menu: m })
-                });
-            } catch (e) {}
-
-            return serverSuccess;
+            return false;
         } catch (e) {
             console.warn("PACA: Failed to push menu to Cloud Sync", e);
             return false;
@@ -793,69 +729,54 @@ class PacaService {
     }
 
     async pullMenuFromCloud() {
-        // 1. Primary: Direct fetch from Vietnam Dedicated Server (baocaoqr.mdhnas.io.vn)
-        try {
-            const ctrl = new AbortController();
-            const tid = setTimeout(() => ctrl.abort(), 5000);
-            const res = await fetch(`${this.cloudServer}/menu_paca.json?v=` + Date.now(), {
-                cache: 'no-store',
-                signal: ctrl.signal
-            });
-            clearTimeout(tid);
-            if (res.ok) {
-                const data = await res.json();
-                if (data && Array.isArray(data.categories) && Array.isArray(data.items) && data.items.length > 0) {
-                    const cleanedMenu = this.filterDeletedTombstones(data);
-                    return {
-                        timestamp: data.timestamp || Date.now(),
-                        menu: cleanedMenu
-                    };
-                }
-            }
-        } catch (errServer) {
-            console.warn("PACA: Fetch from Vietnam Server failed, checking fallback broker...", errServer);
-        }
-
-        // 2. Secondary Fallback: ntfy attachment
         try {
             const res = await this.cloudFetch(`/${this.cloudMenuTopic}/json?poll=1&since=24h`, {
                 cache: 'no-store'
             });
-            if (res && res.ok) {
-                const text = await res.text();
-                if (text) {
-                    const lines = text.trim().split('\n');
-                    let latestAttachmentUrl = null;
-                    let latestTime = 0;
-                    for (let i = 0; i < lines.length; i++) {
-                        try {
-                            const item = JSON.parse(lines[i]);
-                            if (item.attachment && item.attachment.url) {
-                                const itemTime = item.time || (i + 1);
-                                if (itemTime >= latestTime) {
-                                    latestAttachmentUrl = item.attachment.url;
-                                    latestTime = itemTime;
-                                }
-                            }
-                        } catch (e) {}
-                    }
-                    if (latestAttachmentUrl) {
-                        const attController = new AbortController();
-                        const attTimeout = setTimeout(() => attController.abort(), 6000);
-                        let fileRes = await fetch(latestAttachmentUrl, { signal: attController.signal }).catch(() => null);
-                        clearTimeout(attTimeout);
-                        if (fileRes && fileRes.ok) {
-                            const fileData = await fileRes.json();
-                            if (fileData && fileData.menu && Array.isArray(fileData.menu.categories)) {
-                                fileData.menu = this.filterDeletedTombstones(fileData.menu);
-                                return fileData;
-                            }
+            if (!res || !res.ok) return null;
+            const text = await res.text();
+            if (!text) return null;
+            const lines = text.trim().split('\n');
+            let latestAttachmentUrl = null;
+            let latestTime = 0;
+            for (let i = 0; i < lines.length; i++) {
+                try {
+                    const item = JSON.parse(lines[i]);
+                    if (item.attachment && item.attachment.url) {
+                        const itemTime = item.time || (i + 1);
+                        if (itemTime >= latestTime) {
+                            latestAttachmentUrl = item.attachment.url;
+                            latestTime = itemTime;
                         }
+                    }
+                } catch (e) {}
+            }
+            if (latestAttachmentUrl) {
+                const attController = new AbortController();
+                const attTimeout = setTimeout(() => attController.abort(), 6000);
+                let fileRes = null;
+                try {
+                    fileRes = await fetch(latestAttachmentUrl, { signal: attController.signal });
+                } catch (e) {
+                    try {
+                        const parsedUrl = new URL(latestAttachmentUrl);
+                        if (parsedUrl.pathname.startsWith('/file/')) {
+                            const fallbackUrl = `${this.cloudBroker}${parsedUrl.pathname}`;
+                            fileRes = await fetch(fallbackUrl);
+                        }
+                    } catch (e2) {}
+                }
+                clearTimeout(attTimeout);
+                if (fileRes && fileRes.ok) {
+                    const fileData = await fileRes.json();
+                    if (fileData && fileData.menu && Array.isArray(fileData.menu.categories)) {
+                        fileData.menu = this.filterDeletedTombstones(fileData.menu);
+                        return fileData;
                     }
                 }
             }
         } catch (e) {
-            console.warn("PACA: Fallback pull error:", e);
+            console.warn("PACA: Failed to pull menu from Cloud Sync", e);
         }
         return null;
     }
@@ -896,16 +817,16 @@ class PacaService {
                 const isNewer = (cloudMenuPayload.timestamp || 0) > localTs;
                 const isCountDifferent = cloudCount !== localCount;
 
-                // If local on PC has MORE dishes than server (e.g. 19 dishes on PC vs 14 on server)
+                // CRITICAL: If local on PC has MORE dishes than cloud (e.g. 43 dishes on PC vs 14 on Cloud)
                 if (!force && localCount > cloudCount && localCount > 0) {
-                    console.log(`PACA: Local has ${localCount} items vs Cloud ${cloudCount} items. Pushing local to Vietnam server...`);
-                    this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Push local to server error", e));
+                    console.log(`PACA: Local has ${localCount} items vs Cloud ${cloudCount} items. Pushing local menu to Cloud...`);
+                    this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Push local to cloud error", e));
                     return;
                 }
 
-                // If server is newer OR force OR item count/details differ
+                // If cloud has newer items OR force OR count differs OR dish details differ
                 if ((isNewer || force || isCountDifferent || hasDishChanges) && Array.isArray(cloudMenuPayload.menu.categories)) {
-                    console.log("PACA: Server menu update detected! Syncing local menu...");
+                    console.log(`PACA: Cloud menu update received! Syncing to ${cloudCount} items...`);
                     
                     const newlyCreatedOfflineItems = localExtraItems.filter(i => i.created_at && (!cloudMenuPayload.timestamp || i.created_at > cloudMenuPayload.timestamp));
                     const mergedMenu = this.filterDeletedTombstones(cloudMenuPayload.menu);
@@ -2087,6 +2008,9 @@ class PacaService {
 
     async forceFullCloudSync() {
         console.log("PACA: Forcing full cloud sync...");
+        if (this.menu && this.menu.items && this.menu.items.length > 0) {
+            await this.pushMenuToCloud(this.menu);
+        }
         await this.checkMenuCloudUpdate(true);
         await this.syncCloudOrders();
         await this.pushOrdersSnapshotToCloud();

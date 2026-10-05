@@ -2186,7 +2186,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261005_1915"></script>
+    <script src="js/paca_core.js?v=20261005_1925"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -2517,7 +2517,7 @@
                     renderAdminMenu();
                     renderAdminCategories();
                     renderInventoryTable();
-                    showAdminToast(`✅ Đồng bộ thành công! Hiện có ${res?.orderCount || window.paca.orders.length} đơn hàng.`, true);
+                    showAdminToast(`✅ Đồng bộ thành công ${window.paca.menu?.items?.length || 0} món & ${res?.orderCount || window.paca.orders.length} đơn hàng!`, true);
                 }
             } catch (e) {
                 console.error("Manual cloud sync error", e);
