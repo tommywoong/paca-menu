@@ -1059,8 +1059,8 @@
             </div>
 
             <!-- QR Container -->
-            <div id="qrCodeCanvasBox" class="p-3 bg-paca-warmBg border border-gray-200 rounded-xl inline-block mx-auto">
-                <div id="tableQrCodeDiv"></div>
+            <div id="qrCodeCanvasBox" class="p-3 bg-paca-warmBg border border-gray-200 rounded-xl inline-block mx-auto" style="-webkit-user-select: auto; user-select: auto;">
+                <div id="tableQrCodeDiv" style="-webkit-user-select: auto; user-select: auto;"></div>
             </div>
 
             <div class="text-xs text-gray-600 space-y-1.5 pt-1">
@@ -1073,15 +1073,20 @@
                         <span>📋</span> <span id="copyLinkBtnText">Sao chép liên kết</span>
                     </button>
                 </div>
+                <div class="pt-1">
+                    <p class="text-[10px] text-amber-800 bg-amber-50/90 border border-amber-200/60 rounded-lg py-1 px-2 font-medium text-center">
+                        📱 <b>Trên iPhone / Lối tắt:</b> Nhấn <b>"Tải ảnh PNG"</b> để lưu/chia sẻ, hoặc <b>chạm giữ 1 giây vào mã QR</b> rồi chọn <i>"Lưu vào Ảnh"</i>.
+                    </p>
+                </div>
             </div>
 
             <!-- Action buttons -->
             <div class="grid grid-cols-2 gap-2 pt-2">
-                <button onclick="downloadTableQrPng()" class="bg-paca-navy text-white text-xs font-bold py-2.5 rounded-xl hover:bg-paca-dark">
-                    💾 Tải ảnh PNG
+                <button onclick="downloadTableQrPng()" id="btnDownloadQr" class="bg-paca-navy text-white text-xs font-bold py-2.5 rounded-xl hover:bg-paca-dark active:scale-95 transition flex items-center justify-center gap-1.5 shadow-sm">
+                    <span>💾</span> <span>Tải ảnh PNG</span>
                 </button>
-                <button onclick="printTableQrThermal()" class="bg-paca-crimson text-white text-xs font-bold py-2.5 rounded-xl hover:bg-paca-red">
-                    🖨️ In tem dán bàn
+                <button onclick="printTableQrThermal()" class="bg-paca-crimson text-white text-xs font-bold py-2.5 rounded-xl hover:bg-paca-red active:scale-95 transition flex items-center justify-center gap-1.5 shadow-sm">
+                    <span>🖨️</span> <span>In tem dán bàn</span>
                 </button>
             </div>
         </div>
@@ -2181,7 +2186,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261005_1530"></script>
+    <script src="js/paca_core.js?v=20261005_1605"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -3624,6 +3629,21 @@
                 correctLevel: QRCode.CorrectLevel.H
             });
 
+            // Set touch-callout and accessibility attributes on generated QR image for iOS
+            setTimeout(() => {
+                const qrImg = qrDiv.querySelector('img');
+                if (qrImg) {
+                    qrImg.style.webkitTouchCallout = 'default';
+                    qrImg.style.webkitUserSelect = 'auto';
+                    qrImg.style.userSelect = 'auto';
+                    qrImg.style.pointerEvents = 'auto';
+                    qrImg.style.touchAction = 'auto';
+                    qrImg.style.display = 'block';
+                    qrImg.style.margin = '0 auto';
+                    qrImg.setAttribute('alt', `Mã QR ${table.name}`);
+                }
+            }, 100);
+
             document.getElementById('tableQrModal').classList.remove('hidden');
         }
 
@@ -3632,15 +3652,91 @@
             activeQrTable = null;
         }
 
-        function downloadTableQrPng() {
+        function dataURLtoBlob(dataurl) {
+            try {
+                const arr = dataurl.split(',');
+                const mime = (arr[0].match(/:(.*?);/) || ['', 'image/png'])[1];
+                const bstr = atob(arr[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                return new Blob([u8arr], { type: mime });
+            } catch (e) {
+                console.warn("dataURLtoBlob error", e);
+                return null;
+            }
+        }
+
+        async function downloadTableQrPng() {
             if (!activeQrTable) return;
             const img = document.querySelector('#tableQrCodeDiv img');
-            if (img && img.src) {
-                const link = document.createElement('a');
-                link.download = `QR_PACA_${activeQrTable.id}.png`;
-                link.href = img.src;
-                link.click();
+            const canvas = document.querySelector('#tableQrCodeDiv canvas');
+            let dataUrl = '';
+            if (img && img.src && img.src.startsWith('data:image')) {
+                dataUrl = img.src;
+            } else if (canvas) {
+                try {
+                    dataUrl = canvas.toDataURL('image/png');
+                } catch (e) {
+                    console.warn("Canvas toDataURL failed", e);
+                }
             }
+
+            if (!dataUrl) {
+                showAdminToast("⚠️ Đang khởi tạo mã QR, vui lòng thử lại sau 1 giây!", false);
+                return;
+            }
+
+            const fileName = `QR_PACA_${activeQrTable.id}.png`;
+
+            // 1. Mobile Native Web Share: Hỗ trợ tối ưu trên iOS Safari & iOS Lối tắt màn hình (PWA)
+            const blob = dataURLtoBlob(dataUrl);
+            if (blob && navigator.canShare) {
+                try {
+                    const file = new File([blob], fileName, { type: 'image/png' });
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: `Mã QR: ${activeQrTable.name}`,
+                            text: `Mã QR đặt món bàn ${activeQrTable.name} - PACA Bar`
+                        });
+                        showAdminToast("✓ Đã mở menu chia sẻ / lưu ảnh!", true);
+                        return;
+                    }
+                } catch (shareErr) {
+                    if (shareErr.name === 'AbortError') {
+                        // Người dùng tự bấm huỷ bỏ
+                        return;
+                    }
+                    console.warn("Web Share API failed, falling back...", shareErr);
+                }
+            }
+
+            // 2. Trình duyệt chuẩn (PC / Laptop / Android Chrome): Tải trực tiếp qua thẻ link
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isStandalone = window.navigator.standalone === true || 
+                                 window.matchMedia('(display-mode: standalone)').matches;
+
+            if (!isIOS && !isStandalone) {
+                try {
+                    const link = document.createElement('a');
+                    link.download = fileName;
+                    link.href = dataUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showAdminToast("✓ Đã tải ảnh QR về máy!", true);
+                    return;
+                } catch (e) {
+                    console.warn("Link download failed", e);
+                }
+            }
+
+            // 3. Fallback cho iOS khi Web Share bị chặn hoặc không khả dụng
+            showAdminToast("📱 Trên iPhone: Hãy chạm giữ 1 giây vào mã QR ở trên rồi chọn 'Lưu vào Ảnh'!", true);
         }
 
         function copyTableQrLink() {
