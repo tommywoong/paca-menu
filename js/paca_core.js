@@ -258,16 +258,11 @@ class PacaService {
 
     // --- INITIALIZATION ---
     async init() {
-        const CURRENT_VERSION = '20261004_2030';
+        const CURRENT_VERSION = '20261005_1330';
         const savedVer = this.safeGetItem('paca_app_version');
         if (savedVer !== CURRENT_VERSION) {
             console.log(`PACA: Updating from version ${savedVer} to ${CURRENT_VERSION}.`);
             this.safeSetItem('paca_app_version', CURRENT_VERSION);
-            // Invalidate outdated local menu and draft canvas so updated 3-category menu and template load
-            try { localStorage.removeItem(PACA_STORAGE_KEYS.MENU); } catch (e) {}
-            try { localStorage.removeItem('paca_menu_saved_timestamp'); } catch (e) {}
-            try { localStorage.removeItem('paca_draft_canvas_v2'); } catch (e) {}
-            try { localStorage.removeItem('paca_published_canvas_v2'); } catch (e) {}
         }
 
         // Each component is isolated so failure in one never blocks others
@@ -774,26 +769,45 @@ class PacaService {
                 const localCount = (this.menu?.items || []).length;
                 const cloudCount = (cloudMenuPayload.menu.items || []).length;
                 
-                // Only overwrite local menu if:
-                // 1) Cloud payload is strictly newer than local timestamp AND has valid categories
-                // 2) Or local menu was completely empty while cloud has items
+                const deletedDishIds = new Set(this.getDeletedDishIds());
+                const deletedCatIds = new Set(this.getDeletedCategoryIds());
+
+                // Identify local items that are NOT in cloud (e.g. newly created on this device)
+                const cloudDishIds = new Set((cloudMenuPayload.menu.items || []).map(i => i.id));
+                const localExtraItems = (this.menu?.items || []).filter(localItem => 
+                    localItem && localItem.id && !cloudDishIds.has(localItem.id) && !deletedDishIds.has(localItem.id)
+                );
+
                 const isNewer = cloudMenuPayload.timestamp > localTs;
                 const isLocalEmpty = localCount === 0 && cloudCount > 0;
 
                 if ((isNewer || isLocalEmpty) && Array.isArray(cloudMenuPayload.menu.categories)) {
-                    console.log("PACA: Newer menu detected from Cloud Sync! Updating local menu...");
-                    this.menu = this.filterDeletedTombstones(cloudMenuPayload.menu);
+                    console.log("PACA: Cloud menu update received! Merging with local items...");
+                    const mergedMenu = this.filterDeletedTombstones(cloudMenuPayload.menu);
+                    
+                    // CRITICAL: NEVER wipe out locally added dishes!
+                    if (localExtraItems.length > 0) {
+                        console.log(`PACA: Preserving ${localExtraItems.length} locally created items during Cloud Sync!`);
+                        mergedMenu.items = [...(mergedMenu.items || []), ...localExtraItems];
+                    }
+
+                    this.menu = mergedMenu;
                     this.normalizeCategories();
                     localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
-                    localStorage.setItem('paca_menu_saved_timestamp', Math.max(cloudMenuPayload.timestamp, localTs).toString());
+                    const newTs = Math.max(cloudMenuPayload.timestamp, localTs, Date.now());
+                    localStorage.setItem('paca_menu_saved_timestamp', newTs.toString());
                     if (this.onMenuCloudUpdateCallback) {
                         this.onMenuCloudUpdateCallback(this.menu);
                     }
                     if (this.broadcastChannel) {
-                        this.broadcastChannel.postMessage({ type: 'MENU_SAVED', timestamp: cloudMenuPayload.timestamp });
+                        this.broadcastChannel.postMessage({ type: 'MENU_SAVED', timestamp: newTs });
+                    }
+
+                    // If local had extra items, re-push unified menu back to Cloud so Cloud has them too!
+                    if (localExtraItems.length > 0) {
+                        this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Push merged menu error", e));
                     }
                 } else if (localTs > cloudMenuPayload.timestamp && localCount > 0) {
-                    // Local changes are NEWER than Cloud -> push local changes to Cloud to ensure cloud is up to date!
                     console.log("PACA: Local menu is newer than Cloud Sync. Updating Cloud with local edits...");
                     this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Background pushMenuToCloud skipped", e));
                 }
@@ -803,7 +817,7 @@ class PacaService {
         }
     }
 
-    saveMenu(menuData, pushToCloud = true) {
+    async saveMenu(menuData, pushToCloud = true) {
         this.menu = this.filterDeletedTombstones(menuData);
         localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
         localStorage.setItem('paca_menu_saved_timestamp', Date.now().toString());
@@ -812,9 +826,9 @@ class PacaService {
         }
         if (pushToCloud) {
             this.pushOrderToCloud({ timestamp: Date.now() }, 'MENU_UPDATED');
-            return this.pushMenuToCloud(this.menu);
+            return await this.pushMenuToCloud(this.menu);
         }
-        return Promise.resolve(true);
+        return true;
     }
 
     toggleItemAvailability(itemId, isAvailable) {
@@ -829,7 +843,7 @@ class PacaService {
         }
     }
 
-    saveMenuItem(itemData) {
+    async saveMenuItem(itemData) {
         if (!this.menu) return;
         if (itemData && itemData.id) {
             let list = this.getDeletedDishIds();
@@ -848,7 +862,7 @@ class PacaService {
             if (!itemData.id) itemData.id = 'paca_' + Date.now().toString(36);
             this.menu.items.push(itemData);
         }
-        this.saveMenu(this.menu);
+        await this.saveMenu(this.menu, true);
         if (this.broadcastChannel) {
             this.broadcastChannel.postMessage({ type: 'MENU_ITEM_SAVED', item: itemData });
         }

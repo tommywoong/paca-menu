@@ -2181,7 +2181,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261004_2030"></script>
+    <script src="js/paca_core.js?v=20261005_1330"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -5011,7 +5011,7 @@
             document.getElementById('dishEditorModal').classList.add('hidden');
         }
 
-        function saveDishItem() {
+        async function saveDishItem() {
             const id = document.getElementById('dishEditId').value;
             const name = document.getElementById('dishEditName').value.trim();
             const name_vi = document.getElementById('dishEditNameVi').value.trim();
@@ -5055,7 +5055,8 @@
             const existingItem = id ? window.paca.menu?.items?.find(i => i.id === id) : null;
             const image = document.getElementById('dishEditImage')?.value.trim() || existingItem?.image || '';
 
-            window.paca.saveMenuItem({
+            showAdminToast("⏳ Đang lưu thông tin món ăn và đồng bộ...", true);
+            await window.paca.saveMenuItem({
                 id: id || undefined,
                 name,
                 name_vi: name_vi || name,
@@ -5084,7 +5085,7 @@
             renderAdminCategories();
             renderInventoryTable();
             renderRevenueStats();
-            alert("Đã lưu thông tin hàng hóa, hình ảnh, giá vốn và tồn kho thành công!");
+            showAdminToast("✅ Đã lưu món ăn thành công và đồng bộ dữ liệu!", true);
         }
 
         // ==================== BATCH COST MODAL LOGIC ====================

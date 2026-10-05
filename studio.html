@@ -583,11 +583,26 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261004_2030"></script>
-    <script src="js/paca_canvas.js?v=20261004_2030"></script>
+    <script src="js/paca_core.js?v=20261005_1330"></script>
+    <script src="js/paca_canvas.js?v=20261005_1330"></script>
     <script>
         let engine = null;
         let canvaManifest = null;
+
+        function showStudioToast(msg) {
+            let toast = document.getElementById('studioGlobalToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'studioGlobalToast';
+                toast.className = 'fixed bottom-5 right-5 z-50 bg-gray-900 text-amber-300 border border-amber-400/60 shadow-2xl px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-300 flex items-center gap-2 transform translate-y-10 opacity-0 pointer-events-none';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `<span>✨</span><span>${msg}</span>`;
+            toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
+            }, 3500);
+        }
 
         document.addEventListener('DOMContentLoaded', async () => {
             try { await window.paca.init(); } catch (e) { console.error("Studio paca.init error:", e); }
@@ -634,6 +649,9 @@
                 window.paca.broadcastChannel.addEventListener('message', (e) => {
                     if (['MENU_SAVED', 'MENU_ITEM_SAVED', 'CATEGORIES_CHANGED', 'MENU_BATCH_COST_SAVED'].includes(e.data?.type)) {
                         syncStudioMenuData();
+                        if (e.data?.type === 'MENU_ITEM_SAVED' && e.data?.item) {
+                            showStudioToast(`Đã đồng bộ món mới: ${e.data.item.name || ''}!`);
+                        }
                     }
                 });
             }
