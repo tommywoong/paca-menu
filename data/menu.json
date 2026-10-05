@@ -4,104 +4,46 @@
       "id": "bites",
       "name": "Nhâm nhi",
       "name_vi": "Nhâm nhi",
-      "icon": "🍟",
-      "station": "kitchen",
-      "default_station": "kitchen",
+      "name_en": "Bites & Snacks",
+      "icon": "🍳",
       "order": 1,
       "is_active": true,
       "show_on_cover": true,
       "show_on_nav": true,
+      "default_station": "kitchen",
       "display_layout": "grid",
-      "pageId": "page_bites",
-      "description": "Bites & Snacks • Các món ăn nhẹ, khoai tây chiên giòn...",
-      "image": "",
-      "parent_id": null
+      "pageId": "page_bites"
     },
     {
       "id": "beer",
       "name": "Bia Thủ Công & Nước trái cây lên men",
       "name_vi": "Bia Thủ Công & Nước trái cây lên men",
+      "name_en": "Craft Beer & Cider",
       "icon": "🍺",
-      "station": "bar",
-      "default_station": "bar",
       "order": 2,
       "is_active": true,
       "show_on_cover": true,
       "show_on_nav": true,
+      "default_station": "bar",
       "display_layout": "grid",
-      "pageId": "page_beer",
-      "description": "Craft Beer & Cider • Bia thủ công rót vòi, bia chai tuyển chọn..."
+      "pageId": "page_beer"
     },
     {
       "id": "wine_shot",
       "name": "Rượu Vang & Shots",
       "name_vi": "Rượu Vang & Shots",
+      "name_en": "Wine & Shots",
       "icon": "🍷",
-      "station": "bar",
-      "default_station": "bar",
       "order": 3,
       "is_active": true,
       "show_on_cover": true,
       "show_on_nav": true,
+      "default_station": "bar",
       "display_layout": "grid",
-      "pageId": "page_wine_shots",
-      "description": "Wine & Shots • Vang ly hảo hạng và các shot rượu mạnh..."
+      "pageId": "page_wine_shots"
     }
   ],
   "items": [
-    {
-      "id": "be_mix_craft",
-      "name": "MIXED BEER",
-      "name_vi": "BIA TRÁI CÂY",
-      "category": "beer",
-      "station": "bar",
-      "price": 75000,
-      "cost_price": 15000,
-      "unit": "Ly",
-      "stock_quantity": 20,
-      "low_stock_threshold": 5,
-      "track_stock": true,
-      "item_type": "standard",
-      "sku": "PACA-BEER-MIX",
-      "badge": "Signature Mix",
-      "description_vi": "Bia thủ công lên men tươi mát kết hợp siro trái cây tươi tự chọn: Xoài, Vải, Cherry, Đào, Dưa Lưới, Chanh Dây...",
-      "description_en": "Artisanal craft beer infused with your choice of premium fruit purees and flavors.",
-      "ingredients": "Craft Pilsner / Ale, Fresh Fruit Puree, Ice",
-      "is_available": true,
-      "options": [
-        {
-          "id": "opt_mango",
-          "name": "Vị Xoài (Mango)",
-          "price": 0
-        },
-        {
-          "id": "opt_lychee",
-          "name": "Vị Vải (Lychee)",
-          "price": 0
-        },
-        {
-          "id": "opt_cherry",
-          "name": "Vị Cherry (Anh Đào)",
-          "price": 10000
-        },
-        {
-          "id": "opt_melon",
-          "name": "Vị Dưa Lưới (Melon)",
-          "price": 0
-        },
-        {
-          "id": "opt_peach",
-          "name": "Vị Đào (Peach)",
-          "price": 0
-        },
-        {
-          "id": "opt_passion",
-          "name": "Vị Chanh Dây (Passion)",
-          "price": 0
-        }
-      ],
-      "costPrice": 15000
-    },
     {
       "id": "b01",
       "name": "FRENCH FRIES WITH GARLIC FISH SAUCE",
@@ -320,6 +262,78 @@
       "sku": "PACA-B08"
     },
     {
+      "id": "b09",
+      "name": "CRISPY CHICKEN SKIN WITH FISH SAUCE",
+      "name_vi": "Da gà chiên giòn mắm tỏi",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 65000,
+      "image": "assets/canva/0e6ad945841bfc9bde3aefe8930e6839.png",
+      "description_vi": "Da gà chiên giòn rụm tẩm sốt nước mắm tỏi ớt cay ngọt đậm đà.",
+      "description_en": "Crispy chicken skin tossed in savory garlic sweet fish sauce glaze.",
+      "badge": "Món Nhắm",
+      "is_available": true,
+      "cost_price": 20000,
+      "unit": "Phần",
+      "stock_quantity": 25,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-B09"
+    },
+    {
+      "id": "be_mix_craft",
+      "name": "MIXED BEER",
+      "name_vi": "BIA TRÁI CÂY",
+      "category": "beer",
+      "station": "bar",
+      "price": 75000,
+      "cost_price": 15000,
+      "unit": "Ly",
+      "stock_quantity": 20,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-BEER-MIX",
+      "badge": "Signature Mix",
+      "description_vi": "Bia thủ công lên men tươi mát kết hợp siro trái cây tươi tự chọn: Xoài, Vải, Cherry, Đào, Dưa Lưới, Chanh Dây...",
+      "description_en": "Artisanal craft beer infused with your choice of premium fruit purees and flavors.",
+      "ingredients": "Craft Pilsner / Ale, Fresh Fruit Puree, Ice",
+      "is_available": true,
+      "options": [
+        {
+          "id": "opt_mango",
+          "name": "Vị Xoài (Mango)",
+          "price": 0
+        },
+        {
+          "id": "opt_lychee",
+          "name": "Vị Vải (Lychee)",
+          "price": 0
+        },
+        {
+          "id": "opt_cherry",
+          "name": "Vị Cherry (Anh Đào)",
+          "price": 10000
+        },
+        {
+          "id": "opt_melon",
+          "name": "Vị Dưa Lưới (Melon)",
+          "price": 0
+        },
+        {
+          "id": "opt_passion",
+          "name": "Vị Chanh Dây (Passion Fruit)",
+          "price": 0
+        },
+        {
+          "id": "opt_peach",
+          "name": "Vị Đào (Peach)",
+          "price": 0
+        }
+      ]
+    },
+    {
       "id": "br01",
       "name": "SUNNY PINT (HOPPY PILSNER ON TAP)",
       "name_vi": "Bia Thủ Công Sunny Pint (Rót Vòi)",
@@ -388,6 +402,54 @@
       "sku": "PACA-BR02"
     },
     {
+      "id": "br03",
+      "name": "KISO - TEPACHE DỨA LÊN MEN THỦ CÔNG",
+      "name_vi": "Kiso - Tepache Dứa Lên Men",
+      "category": "beer",
+      "station": "bar",
+      "price": 65000,
+      "image": "assets/canva/30423de40428a91247022ecb792313f8.png",
+      "description_vi": "Đồ uống truyền thống từ Mexico ủ từ vỏ dứa chín, đường thốt nốt và quế. Vị chua thanh, sủi tăm tự nhiên, cực kỳ giải nhiệt. (330ml/ly).",
+      "description_en": "Traditional Mexican fermented pineapple beverage crafted with ripe pineapple peel, piloncillo palm sugar, and cinnamon. Naturally effervescent.",
+      "ingredients": [
+        "Dứa tươi lên men thủ công",
+        "Đường thốt nốt",
+        "Quế thơm"
+      ],
+      "badge": "Special Ferment",
+      "is_available": true,
+      "cost_price": 26000,
+      "unit": "Ly",
+      "stock_quantity": 30,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-BR03"
+    },
+    {
+      "id": "br04",
+      "name": "HOEGAARDEN WITBIER",
+      "name_vi": "Bia Bỉ Hoegaarden Trắng",
+      "category": "beer",
+      "station": "bar",
+      "price": 65000,
+      "image": "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
+      "description_vi": "Bia lúa mì trứ danh của Bỉ với hương vỏ cam cay nhẹ và hạt ngò rí thơm dịu. (250ml - AVB 4.9%).",
+      "description_en": "Famous Belgian wheat beer with subtle notes of orange peel and coriander seed.",
+      "ingredients": [
+        "Chai 250ml"
+      ],
+      "badge": "Imported",
+      "is_available": true,
+      "cost_price": 26000,
+      "unit": "Chai",
+      "stock_quantity": 30,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-BR04"
+    },
+    {
       "id": "br05",
       "name": "CORONA EXTRA",
       "name_vi": "Bia Chai Corona Extra",
@@ -409,6 +471,29 @@
       "track_stock": true,
       "item_type": "standard",
       "sku": "PACA-BR05"
+    },
+    {
+      "id": "br06",
+      "name": "MICHELOB ULTRA LIGHT",
+      "name_vi": "Bia Michelob Ultra Light",
+      "category": "beer",
+      "station": "bar",
+      "price": 45000,
+      "image": "assets/canva/05940b5838075c36f20a1c039855c485.png",
+      "description_vi": "Bia nhẹ ít calo, êm dịu sảng khoái không lo nặng bụng. (250ml - AVB 4.2%).",
+      "description_en": "Low-carb, light and refreshing American beer.",
+      "ingredients": [
+        "Lon 250ml"
+      ],
+      "badge": "Low Carb",
+      "is_available": true,
+      "cost_price": 18000,
+      "unit": "Chai",
+      "stock_quantity": 30,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-BR06"
     },
     {
       "id": "br07",
@@ -434,16 +519,39 @@
       "sku": "PACA-BR07"
     },
     {
-      "id": "w_merlot",
-      "name": "CHATEAU DALAT MERLOT",
-      "name_vi": "Vang đỏ Chateau Dalat Merlot",
+      "id": "br08",
+      "name": "PASSION FRUIT CRAFT CIDER",
+      "name_vi": "Cider Chanh Dây Lên Men",
+      "category": "beer",
+      "station": "bar",
+      "price": 75000,
+      "image": "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
+      "description_vi": "Cider chanh dây tươi lên men tự nhiên, chua ngọt thanh mát sảng khoái.",
+      "description_en": "Naturally fermented sparkling passion fruit craft cider.",
+      "badge": "Fruity Cider",
+      "is_available": true,
+      "cost_price": 28000,
+      "unit": "Ly",
+      "stock_quantity": 30,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-BR08"
+    },
+    {
+      "id": "wn01",
+      "name": "CHATEAU DALAT TRADITION MERLOT",
+      "name_vi": "Vang Đỏ Chateau Dalat Merlot",
       "category": "wine_shot",
       "station": "bar",
       "price": 85000,
-      "badge": "150ml Glass",
-      "image": "assets/canva/b39e83bcd3e781d72ac36b3fee710acb.png",
-      "description_vi": "Vang đỏ Đà Lạt êm dịu, hương dâu tằm chín và gỗ sồi phảng phất.",
-      "description_en": "Smooth Dalat red wine by the glass, notes of ripe berries and oak.",
+      "image": "assets/canva/89828c89d73528a34181b9d45f25f8a2.png",
+      "description_vi": "Vang đỏ đượm đà vị nho Merlot lên men gỗ sồi, nồng nàn quyến rũ giữa cái se lạnh Đà Lạt. (150ml/Ly).",
+      "description_en": "Oak-aged Dalat red wine made from Merlot grapes, smooth and rich (150ml glass).",
+      "ingredients": [
+        "Ly 150ml"
+      ],
+      "badge": "By The Glass",
       "is_available": true,
       "cost_price": 26000,
       "unit": "Ly",
@@ -451,7 +559,7 @@
       "low_stock_threshold": 5,
       "track_stock": true,
       "item_type": "standard",
-      "sku": "PACA-W_MERLOT"
+      "sku": "PACA-WN01"
     }
   ],
   "deleted_category_ids": [
@@ -459,39 +567,5 @@
     "cocktail",
     "mocktail"
   ],
-  "deleted_item_ids": [
-    "w02",
-    "w03",
-    "w04",
-    "w05",
-    "w01",
-    "w06",
-    "w07",
-    "w08",
-    "w09",
-    "w10",
-    "s02",
-    "s01",
-    "sh03",
-    "sh02",
-    "wn01",
-    "sh01",
-    "br04",
-    "br03",
-    "m05",
-    "m04",
-    "m03",
-    "m02",
-    "m01",
-    "c09",
-    "c08",
-    "c07",
-    "c06",
-    "c05",
-    "c04",
-    "c03",
-    "c02",
-    "c01",
-    "br06"
-  ]
+  "deleted_item_ids": []
 }

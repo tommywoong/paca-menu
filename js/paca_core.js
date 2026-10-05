@@ -258,13 +258,16 @@ class PacaService {
 
     // --- INITIALIZATION ---
     async init() {
-        const CURRENT_VERSION = '20261005_1515';
+        const CURRENT_VERSION = '20261005_2030';
         const savedVer = this.safeGetItem('paca_app_version');
         if (savedVer !== CURRENT_VERSION) {
             console.log(`PACA: Updating from version ${savedVer} to ${CURRENT_VERSION}.`);
             this.safeSetItem('paca_app_version', CURRENT_VERSION);
-            // Invalidate stale cached canvas poster so devices immediately pull the latest published design
+            // Invalidate stale cached menu and tombstones so all devices load the canonical 19 items
             try {
+                localStorage.removeItem('paca_deleted_dishes_v1');
+                localStorage.removeItem('paca_menu_data_v1');
+                localStorage.removeItem('paca_menu_saved_timestamp');
                 localStorage.removeItem('paca_published_canvas_v2');
                 localStorage.removeItem('paca_canvas_published_timestamp');
             } catch (e) {}
@@ -1714,20 +1717,6 @@ class PacaService {
                 orders: activeOrders
             });
 
-            // 1. Primary: Save snapshot to Vietnam Dedicated Server
-            try {
-                const ctrl = new AbortController();
-                const tid = setTimeout(() => ctrl.abort(), 5000);
-                await fetch(`${this.cloudServer}/save_menu.php?type=paca_orders`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-                    body: JSON.stringify(activeOrders),
-                    signal: ctrl.signal
-                });
-                clearTimeout(tid);
-            } catch (err) {}
-
-            // 2. Secondary: ntfy
             const res = await this.cloudFetch(`/${this.cloudOrdersSnapshotTopic}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain; charset=utf-8' },
@@ -1742,28 +1731,6 @@ class PacaService {
     }
 
     async pullOrdersSnapshotFromCloud() {
-        // 1. Primary: Pull snapshot from Vietnam Dedicated Server
-        try {
-            const ctrl = new AbortController();
-            const tid = setTimeout(() => ctrl.abort(), 4000);
-            const res = await fetch(`${this.cloudServer}/menu_paca_orders.json?v=` + Date.now(), {
-                cache: 'no-store',
-                signal: ctrl.signal
-            });
-            clearTimeout(tid);
-            if (res.ok) {
-                const ordersList = await res.json();
-                if (Array.isArray(ordersList)) {
-                    return {
-                        type: 'ORDERS_SNAPSHOT',
-                        timestamp: Date.now(),
-                        orders: ordersList
-                    };
-                }
-            }
-        } catch (err) {}
-
-        // 2. Fallback: ntfy
         try {
             const res = await this.cloudFetch(`/${this.cloudOrdersSnapshotTopic}/json?poll=1&since=48h`, {
                 cache: 'no-store'
