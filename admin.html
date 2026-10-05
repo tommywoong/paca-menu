@@ -2186,7 +2186,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261005_1605"></script>
+    <script src="js/paca_core.js?v=20261005_1850"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -4544,6 +4544,8 @@
             if (matchedUser) {
                 window.paca.saveCurrentUser(matchedUser);
                 applyUserPermissions();
+                renderOrders();
+                renderTablesAdmin();
                 document.getElementById('pinAuthModal').classList.add('hidden');
                 enteredPin = '';
                 updatePinDotsDisplay();

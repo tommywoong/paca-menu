@@ -188,8 +188,8 @@ class PacaService {
         this.inventoryLogs = [];
         this.dailyCloses = [];
         this.broadcastChannel = null;
-        this.cloudBroker = 'https://ntfy.sh';
-        this.cloudBrokerFallback = 'https://ntfy.envs.net';
+        this.cloudBroker = 'https://ntfy.envs.net';
+        this.cloudBrokerFallback = 'https://ntfy.sh';
         this.cloudSyncTopic = 'paca_orders_live_da_lat_2025';
         this.cloudOrdersSnapshotTopic = 'paca_orders_snapshot_dalat_2025';
         this.cloudMenuTopic = 'paca_menu_sync_dalat_2025';
@@ -201,8 +201,8 @@ class PacaService {
     }
 
     async cloudFetch(path, options = {}) {
-        const timeoutMs = options.timeout || 4500;
-        // 1. Try primary fast broker (ntfy.sh)
+        const timeoutMs = options.timeout || 8000;
+        // 1. Try primary fast broker (ntfy.envs.net)
         try {
             const controller = new AbortController();
             const tid = setTimeout(() => controller.abort(), timeoutMs);
@@ -569,12 +569,33 @@ class PacaService {
         const deletedDishIds = new Set(this.getDeletedDishIds());
         const deletedCatIds = new Set(this.getDeletedCategoryIds());
 
+        // CRITICAL: Any dish or category explicitly active in menuObj MUST NOT be tombstoned!
+        if (Array.isArray(menuObj.items)) {
+            menuObj.items.forEach(it => {
+                if (it && it.id) deletedDishIds.delete(it.id);
+            });
+        }
+        if (Array.isArray(menuObj.categories)) {
+            menuObj.categories.forEach(c => {
+                if (c && c.id) deletedCatIds.delete(c.id);
+            });
+        }
+
         if (Array.isArray(menuObj.deleted_item_ids)) {
-            menuObj.deleted_item_ids.forEach(id => { if (id) deletedDishIds.add(id); });
+            menuObj.deleted_item_ids.forEach(id => {
+                // Only tombstone if NOT active in current menu items
+                if (id && (!menuObj.items || !menuObj.items.some(i => i && i.id === id))) {
+                    deletedDishIds.add(id);
+                }
+            });
             try { localStorage.setItem('paca_deleted_dishes_v1', JSON.stringify(Array.from(deletedDishIds))); } catch (e) {}
         }
         if (Array.isArray(menuObj.deleted_category_ids)) {
-            menuObj.deleted_category_ids.forEach(id => { if (id) deletedCatIds.add(id); });
+            menuObj.deleted_category_ids.forEach(id => {
+                if (id && (!menuObj.categories || !menuObj.categories.some(c => c && c.id === id))) {
+                    deletedCatIds.add(id);
+                }
+            });
             try { localStorage.setItem('paca_deleted_categories_v1', JSON.stringify(Array.from(deletedCatIds))); } catch (e) {}
         }
 
@@ -747,24 +768,20 @@ class PacaService {
                 } catch (e) {}
             }
             if (latestAttachmentUrl) {
-                // If attachment URL host is broken or down, replace host with active cloudBroker
-                let fetchUrl = latestAttachmentUrl;
-                try {
-                    const parsedUrl = new URL(latestAttachmentUrl);
-                    if (parsedUrl.pathname.startsWith('/file/')) {
-                        fetchUrl = `${this.cloudBroker}${parsedUrl.pathname}`;
-                    }
-                } catch (e) {}
-
                 const attController = new AbortController();
-                const attTimeout = setTimeout(() => attController.abort(), 4500);
+                const attTimeout = setTimeout(() => attController.abort(), 8000);
                 let fileRes = null;
                 try {
-                    fileRes = await fetch(fetchUrl, { signal: attController.signal });
+                    fileRes = await fetch(latestAttachmentUrl, { signal: attController.signal });
                 } catch (e) {
-                    if (fetchUrl !== latestAttachmentUrl) {
-                        fileRes = await fetch(latestAttachmentUrl, { signal: attController.signal });
-                    }
+                    console.warn("Direct fetch of attachment failed, trying with active broker...", e);
+                    try {
+                        const parsedUrl = new URL(latestAttachmentUrl);
+                        if (parsedUrl.pathname.startsWith('/file/')) {
+                            const fallbackUrl = `${this.cloudBroker}${parsedUrl.pathname}`;
+                            fileRes = await fetch(fallbackUrl);
+                        }
+                    } catch (e2) {}
                 }
                 clearTimeout(attTimeout);
                 if (fileRes && fileRes.ok) {
@@ -837,8 +854,9 @@ class PacaService {
                         this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Push merged menu error", e));
                     }
                 } else if (!force && localTs > cloudMenuPayload.timestamp && localCount > 0) {
-                    console.log("PACA: Local menu is newer than Cloud Sync. Updating Cloud with local edits...");
-                    this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Background pushMenuToCloud skipped", e));
+                    // Do NOT auto push old local menu back to Cloud in background check!
+                    // Auto pushing here creates race condition ping-pong loops between devices.
+                    // Only explicit user actions (Save dish, Edit category, Force sync) should push.
                 }
             }
         } catch (e) {

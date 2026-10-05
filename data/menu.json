@@ -1,496 +1,497 @@
 {
-    "categories":  [
-                       {
-                           "id":  "bites",
-                           "name":  "Bites \u0026 Snacks",
-                           "name_vi":  "Nhâm nhi",
-                           "icon":  "🍟",
-                           "station":  "kitchen",
-                           "default_station":  "kitchen",
-                           "order":  1,
-                           "is_active":  true,
-                           "show_on_cover":  true,
-                           "show_on_nav":  true,
-                           "display_layout":  "grid",
-                           "pageId":  "page_bites",
-                           "description":  "Bites \u0026 Snacks • Các món ăn nhẹ, khoai tây chiên giòn...",
-                           "image":  "",
-                           "parent_id":  null
-                       },
-                       {
-                           "id":  "beer",
-                           "name":  "Craft Beer \u0026 Cider",
-                           "name_vi":  "Bia Thủ Công \u0026 Tepache",
-                           "icon":  "🍺",
-                           "station":  "bar",
-                           "default_station":  "bar",
-                           "order":  2,
-                           "is_active":  true,
-                           "show_on_cover":  true,
-                           "show_on_nav":  true,
-                           "display_layout":  "grid",
-                           "pageId":  "page_beer",
-                           "description":  "Craft Beer \u0026 Cider • Bia thủ công rót vòi, bia chai tuyển chọn..."
-                       },
-                       {
-                           "id":  "wine_shot",
-                           "name":  "Wine \u0026 Shots",
-                           "name_vi":  "Rượu Vang \u0026 Shots",
-                           "icon":  "🍷",
-                           "station":  "bar",
-                           "default_station":  "bar",
-                           "order":  3,
-                           "is_active":  true,
-                           "show_on_cover":  true,
-                           "show_on_nav":  true,
-                           "display_layout":  "grid",
-                           "pageId":  "page_wine_shots",
-                           "description":  "Wine \u0026 Shots • Vang ly hảo hạng và các shot rượu mạnh..."
-                       }
-                   ],
-    "items":  [
-                  {
-                      "id":  "be_mix_craft",
-                      "name":  "CRAFT BEER MIX FLAVORS",
-                      "name_vi":  "Bia Thủ Công Tùy Chọn Vị (Xoài, Vải, Cherry...)",
-                      "category":  "beer",
-                      "station":  "bar",
-                      "price":  85000,
-                      "cost_price":  26000,
-                      "unit":  "Ly",
-                      "stock_quantity":  45,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-BEER-MIX",
-                      "badge":  "Signature Mix",
-                      "description_vi":  "Bia thủ công lên men tươi mát kết hợp siro trái cây tươi tự chọn: Xoài, Vải, Cherry, Đào, Dưa Lưới, Chanh Dây...",
-                      "description_en":  "Artisanal craft beer infused with your choice of premium fruit purees and flavors.",
-                      "ingredients":  "Craft Pilsner / Ale, Fresh Fruit Puree, Ice",
-                      "is_available":  true,
-                      "options":  [
-                                      {
-                                          "id":  "opt_mango",
-                                          "name":  "Vị Xoài (Mango)",
-                                          "price":  0
-                                      },
-                                      {
-                                          "id":  "opt_lychee",
-                                          "name":  "Vị Vải (Lychee)",
-                                          "price":  0
-                                      },
-                                      {
-                                          "id":  "opt_cherry",
-                                          "name":  "Vị Cherry (Anh Đào)",
-                                          "price":  10000
-                                      },
-                                      {
-                                          "id":  "opt_melon",
-                                          "name":  "Vị Dưa Lưới (Melon)",
-                                          "price":  0
-                                      },
-                                      {
-                                          "id":  "opt_peach",
-                                          "name":  "Vị Đào (Peach)",
-                                          "price":  0
-                                      },
-                                      {
-                                          "id":  "opt_passion",
-                                          "name":  "Vị Chanh Dây (Passion)",
-                                          "price":  0
-                                      }
-                                  ]
-                  },
-                  {
-                      "id":  "b01",
-                      "name":  "FRENCH FRIES WITH GARLIC FISH SAUCE",
-                      "name_vi":  "Khoai tây chiên mắm tỏi",
-                      "category":  "bites",
-                      "station":  "kitchen",
-                      "price":  70000,
-                      "image":  "assets/canva/0e6ad945841bfc9bde3aefe8930e6839.png",
-                      "description_vi":  "Khoai tây chiên giòn rụm xốc sốt nước mắm tỏi ớt đậm đà thơm lừng.",
-                      "description_en":  "Crispy golden french fries tossed in aromatic savory garlic fish sauce glaze.",
-                      "ingredients":  [
-                                          "Khoai tây tươi chiên",
-                                          "Tỏi phi giòn",
-                                          "Sốt mắm rim đường"
-                                      ],
-                      "badge":  "Best Seller",
-                      "is_available":  true,
-                      "cost_price":  25000,
-                      "unit":  "Phần",
-                      "stock_quantity":  20,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-B01"
-                  },
-                  {
-                      "id":  "b02",
-                      "name":  "FRENCH FRIES WITH BACON \u0026 CHEESE",
-                      "name_vi":  "Khoai tây chiên sốt phô mai \u0026 thịt xông khói",
-                      "category":  "bites",
-                      "station":  "kitchen",
-                      "price":  95000,
-                      "image":  "assets/canva/c243f99dc58032a0f023c28ba843eac2.png",
-                      "description_vi":  "Khoai tây chiên phủ ngập xốt phô mai béo ngậy và thịt xông khói giòn tan.",
-                      "description_en":  "Crispy fries loaded with melted cheese sauce and crispy savory bacon bits.",
-                      "ingredients":  [
-                                          "Khoai tây chiên",
-                                          "Bacon giòn",
-                                          "Sốt phô mai tan chảy"
-                                      ],
-                      "badge":  "Must Try",
-                      "is_available":  true,
-                      "cost_price":  33000,
-                      "unit":  "Phần",
-                      "stock_quantity":  20,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-B02"
-                  },
-                  {
-                      "id":  "b03",
-                      "name":  "FRENCH FRIES WITH CHEESE",
-                      "name_vi":  "Khoai tây chiên sốt phô mai",
-                      "category":  "bites",
-                      "station":  "kitchen",
-                      "price":  70000,
-                      "image":  "assets/canva/2478f97ef54304ee79763d99641719e0.png",
-                      "description_vi":  "Khoai tây chiên vàng giòn rưới đẫm xốt phô mai cheddar tan chảy béo ngậy.",
-                      "description_en":  "Golden fries drizzled with warm, velvety melted cheese.",
-                      "ingredients":  [
-                                          "Khoai tây chiên",
-                                          "Sốt phô mai béo"
-                                      ],
-                      "badge":  "Cheesy",
-                      "is_available":  true,
-                      "cost_price":  25000,
-                      "unit":  "Phần",
-                      "stock_quantity":  20,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-B03"
-                  },
-                  {
-                      "id":  "b04",
-                      "name":  "CLASSIC FRENCH FRIES",
-                      "name_vi":  "Khoai tây chiên truyền thống",
-                      "category":  "bites",
-                      "station":  "kitchen",
-                      "price":  55000,
-                      "image":  "assets/canva/0e6ad945841bfc9bde3aefe8930e6839.png",
-                      "description_vi":  "Khoai tây cọng truyền thống chiên ráo dầu, giòn lâu ăn kèm sốt cà chua/tương ớt.",
-                      "description_en":  "Classic straight-cut french fries, salted and fried to golden perfection.",
-                      "ingredients":  [
-                                          "Khoai tây giòn",
-                                          "Muối tiêu",
-                                          "Tương ớt / Sốt chấm"
-                                      ],
-                      "badge":  "Classic",
-                      "is_available":  true,
-                      "cost_price":  19000,
-                      "unit":  "Phần",
-                      "stock_quantity":  20,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-B04"
-                  },
-                  {
-                      "id":  "b05",
-                      "name":  "FRIES WITH CREAMY ONION SAUCE",
-                      "name_vi":  "Khoai tây chiên sốt kem hành tây",
-                      "category":  "bites",
-                      "station":  "kitchen",
-                      "price":  70000,
-                      "image":  "assets/canva/5dc4519f512c639864a5c59fcd450574.jpg",
-                      "description_vi":  "Khoai tây chiên giòn phủ sốt kem chua hành tây thơm béo mịn màng đặc trưng.",
-                      "description_en":  "Crisp fries paired with a luscious homemade sour cream and onion sauce.",
-                      "ingredients":  [
-                                          "Khoai tây chiên",
-                                          "Sốt kem hành chua béo"
-                                      ],
-                      "badge":  "New",
-                      "is_available":  true,
-                      "cost_price":  25000,
-                      "unit":  "Phần",
-                      "stock_quantity":  20,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-B05"
-                  },
-                  {
-                      "id":  "b06",
-                      "name":  "FRIED WONTON CHIPS",
-                      "name_vi":  "Lá hoành thánh chiên giòn",
-                      "category":  "bites",
-                      "station":  "kitchen",
-                      "price":  55000,
-                      "image":  "assets/canva/192a266e9d811dc75d8647348854481c.jpg",
-                      "description_vi":  "Lá hoành thánh chiên phồng giòn tan chấm tương ớt chua ngọt vui miệng.",
-                      "description_en":  "Golden crispy wonton crackers served with sweet-chili dipping sauce.",
-                      "ingredients":  [
-                                          "Lá hoành thánh tươi",
-                                          "Gia vị thảo mộc"
-                                      ],
-                      "badge":  "Snack",
-                      "is_available":  true,
-                      "cost_price":  19000,
-                      "unit":  "Phần",
-                      "stock_quantity":  20,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-B06"
-                  },
-                  {
-                      "id":  "b07",
-                      "name":  "CRISPY FRIED MACARONI \u0026 CHEESE",
-                      "name_vi":  "Nui chiên giòn lắc phô mai",
-                      "category":  "bites",
-                      "station":  "kitchen",
-                      "price":  55000,
-                      "image":  "",
-                      "description_vi":  "Nui chiên phồng giòn rụm lắc bột phô mai mặn ngọt đậm đà, món nhắm lai rai cực dính.",
-                      "description_en":  "Crispy crunchy fried macaroni tossed in rich aromatic cheddar cheese powder.",
-                      "ingredients":  [
-                                          "Nui giòn rụm",
-                                          "Bột phô mai mặn béo"
-                                      ],
-                      "badge":  "Popular",
-                      "is_available":  true,
-                      "cost_price":  19000,
-                      "unit":  "Phần",
-                      "stock_quantity":  20,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-B07"
-                  },
-                  {
-                      "id":  "b08",
-                      "name":  "POPCORN CHICKEN CHEESE",
-                      "name_vi":  "Gà viên sốt cay phủ phô mai",
-                      "category":  "bites",
-                      "station":  "kitchen",
-                      "price":  95000,
-                      "image":  "assets/canva/popcorn_chicken_cheese.jpg",
-                      "description_vi":  "Gà chiên giòn rụm áo sốt cay ngọt Hàn Quốc phủ ngập phô mai kéo sợi thơm phức.",
-                      "description_en":  "Bite-sized crispy popcorn chicken glazed in sweet \u0026 spicy sauce, topped with melted cheese.",
-                      "ingredients":  [
-                                          "Gà viên tươi",
-                                          "Sốt cay ngọt",
-                                          "Phô mai Mozzarella kéo sợi"
-                                      ],
-                      "badge":  "M/L Options",
-                      "variants":  [
-                                       {
-                                           "id":  "v_m",
-                                           "name":  "Size M",
-                                           "price":  95000,
-                                           "is_default":  true
-                                       },
-                                       {
-                                           "id":  "v_l",
-                                           "name":  "Size L",
-                                           "price":  125000,
-                                           "is_default":  false
-                                       }
-                                   ],
-                      "options":  [
-                                      {
-                                          "id":  "extra_cheese",
-                                          "name":  "Thêm phô mai tan chảy (+Extra Cheese)",
-                                          "price":  30000
-                                      }
-                                  ],
-                      "is_available":  true,
-                      "cost_price":  33000,
-                      "unit":  "Phần",
-                      "stock_quantity":  20,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-B08"
-                  },
-                  {
-                      "id":  "br01",
-                      "name":  "SUNNY PINT (HOPPY PILSNER ON TAP)",
-                      "name_vi":  "Bia Thủ Công Sunny Pint (Rót Vòi)",
-                      "category":  "beer",
-                      "station":  "bar",
-                      "price":  65000,
-                      "image":  "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
-                      "description_vi":  "Pilsner thiên về hoa bia thơm nức mũi, đậm mùi hoa bia hơn. AVB 5.2% - IBU 16.",
-                      "description_en":  "Hoppy pilsner on tap, intensely aromatic hop character with crisp finish. AVB 5.2 - IBU 16.",
-                      "ingredients":  [
-                                          "Craft Beer on tap 330ml"
-                                      ],
-                      "badge":  "Craft On-Tap -10k",
-                      "is_available":  true,
-                      "cost_price":  26000,
-                      "unit":  "Ly",
-                      "stock_quantity":  30,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-BR01",
-                      "options":  [
-                                      {
-                                          "id":  "br01_mango",
-                                          "name":  "Thêm Vị Xoài (Mango)",
-                                          "price":  0
-                                      },
-                                      {
-                                          "id":  "br01_lychee",
-                                          "name":  "Thêm Vị Vải (Lychee)",
-                                          "price":  0
-                                      },
-                                      {
-                                          "id":  "br01_cherry",
-                                          "name":  "Thêm Vị Cherry (+10k)",
-                                          "price":  10000
-                                      },
-                                      {
-                                          "id":  "br01_peach",
-                                          "name":  "Thêm Vị Đào (Peach)",
-                                          "price":  0
-                                      }
-                                  ]
-                  },
-                  {
-                      "id":  "br02",
-                      "name":  "CRISPY BOI (CLASSIC PILSNER ON TAP)",
-                      "name_vi":  "Bia Thủ Công Crispy Boi (Rót Vòi)",
-                      "category":  "beer",
-                      "station":  "bar",
-                      "price":  65000,
-                      "image":  "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
-                      "description_vi":  "Pilsner truyền thống, malt cân bằng mượt mà, giòn rụm cực kỳ dễ uống.",
-                      "description_en":  "Classic traditional pilsner on tap, balanced malt body, ultra crisp drinkability.",
-                      "ingredients":  [
-                                          "Craft Beer on tap 330ml"
-                                      ],
-                      "badge":  "Craft On-Tap -10k",
-                      "is_available":  true,
-                      "cost_price":  26000,
-                      "unit":  "Ly",
-                      "stock_quantity":  30,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-BR02"
-                  },
-                  {
-                      "id":  "br05",
-                      "name":  "CORONA EXTRA",
-                      "name_vi":  "Bia Chai Corona Extra",
-                      "category":  "beer",
-                      "station":  "bar",
-                      "price":  85000,
-                      "image":  "assets/canva/e454dbd7c1f9f1ee1b8b8214133a4f4b.png",
-                      "description_vi":  "Bia chai nhập khẩu Mexico kinh điển, phục vụ kèm lát chanh vàng tươi mát lạnh. (300ml - AVB 4.6%).",
-                      "description_en":  "Classic Mexican lager served chilled with a fresh lime wedge.",
-                      "ingredients":  [
-                                          "Chai 300ml"
-                                      ],
-                      "badge":  "Imported",
-                      "is_available":  true,
-                      "cost_price":  34000,
-                      "unit":  "Chai",
-                      "stock_quantity":  30,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-BR05"
-                  },
-                  {
-                      "id":  "br07",
-                      "name":  "CRAFT CIDER (APPLE / BLACKBERRY)",
-                      "name_vi":  "Cider Táo / Mâm Xôi Đen",
-                      "category":  "beer",
-                      "station":  "bar",
-                      "price":  75000,
-                      "image":  "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
-                      "description_vi":  "Nước táo và dâu mâm xôi đen lên men tự nhiên, chua ngọt sủi bọt thơm lừng mát rượi. (330ml/ly).",
-                      "description_en":  "Naturally fermented sparkling apple \u0026 blackberry craft cider.",
-                      "ingredients":  [
-                                          "Ly 330ml"
-                                      ],
-                      "badge":  "Fruity Cider",
-                      "is_available":  true,
-                      "cost_price":  30000,
-                      "unit":  "Ly",
-                      "stock_quantity":  30,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-BR07"
-                  },
-                  {
-                      "id":  "w_merlot",
-                      "name":  "CHATEAU DALAT MERLOT",
-                      "name_vi":  "Vang đỏ Chateau Dalat Merlot",
-                      "category":  "wine_shot",
-                      "station":  "bar",
-                      "price":  85000,
-                      "badge":  "150ml Glass",
-                      "image":  "assets/canva/b39e83bcd3e781d72ac36b3fee710acb.png",
-                      "description_vi":  "Vang đỏ Đà Lạt êm dịu, hương dâu tằm chín và gỗ sồi phảng phất.",
-                      "description_en":  "Smooth Dalat red wine by the glass, notes of ripe berries and oak.",
-                      "is_available":  true,
-                      "cost_price":  26000,
-                      "unit":  "Ly",
-                      "stock_quantity":  50,
-                      "low_stock_threshold":  5,
-                      "track_stock":  true,
-                      "item_type":  "standard",
-                      "sku":  "PACA-W_MERLOT"
-                  }
-              ],
-    "deleted_category_ids":  [
-                                 "week",
-                                 "cocktail",
-                                 "mocktail"
-                             ],
-    "deleted_item_ids":  [
-                             "w02",
-                             "w03",
-                             "w04",
-                             "w05",
-                             "w01",
-                             "w06",
-                             "w07",
-                             "w08",
-                             "w09",
-                             "w10",
-                             "s02",
-                             "s01",
-                             "sh03",
-                             "sh02",
-                             "wn01",
-                             "sh01",
-                             "br04",
-                             "br03",
-                             "m05",
-                             "m04",
-                             "m03",
-                             "m02",
-                             "m01",
-                             "c09",
-                             "c08",
-                             "c07",
-                             "c06",
-                             "c05",
-                             "c04",
-                             "c03",
-                             "c02",
-                             "c01",
-                             "br06"
-                         ]
+  "categories": [
+    {
+      "id": "bites",
+      "name": "Nhâm nhi",
+      "name_vi": "Nhâm nhi",
+      "icon": "🍟",
+      "station": "kitchen",
+      "default_station": "kitchen",
+      "order": 1,
+      "is_active": true,
+      "show_on_cover": true,
+      "show_on_nav": true,
+      "display_layout": "grid",
+      "pageId": "page_bites",
+      "description": "Bites & Snacks • Các món ăn nhẹ, khoai tây chiên giòn...",
+      "image": "",
+      "parent_id": null
+    },
+    {
+      "id": "beer",
+      "name": "Bia Thủ Công & Nước trái cây lên men",
+      "name_vi": "Bia Thủ Công & Nước trái cây lên men",
+      "icon": "🍺",
+      "station": "bar",
+      "default_station": "bar",
+      "order": 2,
+      "is_active": true,
+      "show_on_cover": true,
+      "show_on_nav": true,
+      "display_layout": "grid",
+      "pageId": "page_beer",
+      "description": "Craft Beer & Cider • Bia thủ công rót vòi, bia chai tuyển chọn..."
+    },
+    {
+      "id": "wine_shot",
+      "name": "Rượu Vang & Shots",
+      "name_vi": "Rượu Vang & Shots",
+      "icon": "🍷",
+      "station": "bar",
+      "default_station": "bar",
+      "order": 3,
+      "is_active": true,
+      "show_on_cover": true,
+      "show_on_nav": true,
+      "display_layout": "grid",
+      "pageId": "page_wine_shots",
+      "description": "Wine & Shots • Vang ly hảo hạng và các shot rượu mạnh..."
+    }
+  ],
+  "items": [
+    {
+      "id": "be_mix_craft",
+      "name": "MIXED BEER",
+      "name_vi": "BIA TRÁI CÂY",
+      "category": "beer",
+      "station": "bar",
+      "price": 75000,
+      "cost_price": 15000,
+      "unit": "Ly",
+      "stock_quantity": 20,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-BEER-MIX",
+      "badge": "Signature Mix",
+      "description_vi": "Bia thủ công lên men tươi mát kết hợp siro trái cây tươi tự chọn: Xoài, Vải, Cherry, Đào, Dưa Lưới, Chanh Dây...",
+      "description_en": "Artisanal craft beer infused with your choice of premium fruit purees and flavors.",
+      "ingredients": "Craft Pilsner / Ale, Fresh Fruit Puree, Ice",
+      "is_available": true,
+      "options": [
+        {
+          "id": "opt_mango",
+          "name": "Vị Xoài (Mango)",
+          "price": 0
+        },
+        {
+          "id": "opt_lychee",
+          "name": "Vị Vải (Lychee)",
+          "price": 0
+        },
+        {
+          "id": "opt_cherry",
+          "name": "Vị Cherry (Anh Đào)",
+          "price": 10000
+        },
+        {
+          "id": "opt_melon",
+          "name": "Vị Dưa Lưới (Melon)",
+          "price": 0
+        },
+        {
+          "id": "opt_peach",
+          "name": "Vị Đào (Peach)",
+          "price": 0
+        },
+        {
+          "id": "opt_passion",
+          "name": "Vị Chanh Dây (Passion)",
+          "price": 0
+        }
+      ],
+      "costPrice": 15000
+    },
+    {
+      "id": "b01",
+      "name": "FRENCH FRIES WITH GARLIC FISH SAUCE",
+      "name_vi": "Khoai tây chiên mắm tỏi",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 70000,
+      "image": "assets/canva/0e6ad945841bfc9bde3aefe8930e6839.png",
+      "description_vi": "Khoai tây chiên giòn rụm xốc sốt nước mắm tỏi ớt đậm đà thơm lừng.",
+      "description_en": "Crispy golden french fries tossed in aromatic savory garlic fish sauce glaze.",
+      "ingredients": [
+        "Khoai tây tươi chiên",
+        "Tỏi phi giòn",
+        "Sốt mắm rim đường"
+      ],
+      "badge": "Best Seller",
+      "is_available": true,
+      "cost_price": 25000,
+      "unit": "Phần",
+      "stock_quantity": 20,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-B01"
+    },
+    {
+      "id": "b02",
+      "name": "FRENCH FRIES WITH BACON & CHEESE",
+      "name_vi": "Khoai tây chiên sốt phô mai & thịt xông khói",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 95000,
+      "image": "assets/canva/c243f99dc58032a0f023c28ba843eac2.png",
+      "description_vi": "Khoai tây chiên phủ ngập xốt phô mai béo ngậy và thịt xông khói giòn tan.",
+      "description_en": "Crispy fries loaded with melted cheese sauce and crispy savory bacon bits.",
+      "ingredients": [
+        "Khoai tây chiên",
+        "Bacon giòn",
+        "Sốt phô mai tan chảy"
+      ],
+      "badge": "Must Try",
+      "is_available": true,
+      "cost_price": 33000,
+      "unit": "Phần",
+      "stock_quantity": 20,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-B02"
+    },
+    {
+      "id": "b03",
+      "name": "FRENCH FRIES WITH CHEESE",
+      "name_vi": "Khoai tây chiên sốt phô mai",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 70000,
+      "image": "assets/canva/2478f97ef54304ee79763d99641719e0.png",
+      "description_vi": "Khoai tây chiên vàng giòn rưới đẫm xốt phô mai cheddar tan chảy béo ngậy.",
+      "description_en": "Golden fries drizzled with warm, velvety melted cheese.",
+      "ingredients": [
+        "Khoai tây chiên",
+        "Sốt phô mai béo"
+      ],
+      "badge": "Cheesy",
+      "is_available": true,
+      "cost_price": 25000,
+      "unit": "Phần",
+      "stock_quantity": 20,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-B03"
+    },
+    {
+      "id": "b04",
+      "name": "CLASSIC FRENCH FRIES",
+      "name_vi": "Khoai tây chiên truyền thống",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 55000,
+      "image": "assets/canva/0e6ad945841bfc9bde3aefe8930e6839.png",
+      "description_vi": "Khoai tây cọng truyền thống chiên ráo dầu, giòn lâu ăn kèm sốt cà chua/tương ớt.",
+      "description_en": "Classic straight-cut french fries, salted and fried to golden perfection.",
+      "ingredients": [
+        "Khoai tây giòn",
+        "Muối tiêu",
+        "Tương ớt / Sốt chấm"
+      ],
+      "badge": "Classic",
+      "is_available": true,
+      "cost_price": 19000,
+      "unit": "Phần",
+      "stock_quantity": 20,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-B04"
+    },
+    {
+      "id": "b05",
+      "name": "FRIES WITH CREAMY ONION SAUCE",
+      "name_vi": "Khoai tây chiên sốt kem hành tây",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 70000,
+      "image": "assets/canva/5dc4519f512c639864a5c59fcd450574.jpg",
+      "description_vi": "Khoai tây chiên giòn phủ sốt kem chua hành tây thơm béo mịn màng đặc trưng.",
+      "description_en": "Crisp fries paired with a luscious homemade sour cream and onion sauce.",
+      "ingredients": [
+        "Khoai tây chiên",
+        "Sốt kem hành chua béo"
+      ],
+      "badge": "New",
+      "is_available": true,
+      "cost_price": 25000,
+      "unit": "Phần",
+      "stock_quantity": 20,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-B05"
+    },
+    {
+      "id": "b06",
+      "name": "FRIED WONTON CHIPS",
+      "name_vi": "Lá hoành thánh chiên giòn",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 55000,
+      "image": "assets/canva/192a266e9d811dc75d8647348854481c.jpg",
+      "description_vi": "Lá hoành thánh chiên phồng giòn tan chấm tương ớt chua ngọt vui miệng.",
+      "description_en": "Golden crispy wonton crackers served with sweet-chili dipping sauce.",
+      "ingredients": [
+        "Lá hoành thánh tươi",
+        "Gia vị thảo mộc"
+      ],
+      "badge": "Snack",
+      "is_available": true,
+      "cost_price": 19000,
+      "unit": "Phần",
+      "stock_quantity": 20,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-B06"
+    },
+    {
+      "id": "b07",
+      "name": "CRISPY FRIED MACARONI & CHEESE",
+      "name_vi": "Nui chiên giòn lắc phô mai",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 55000,
+      "image": "",
+      "description_vi": "Nui chiên phồng giòn rụm lắc bột phô mai mặn ngọt đậm đà, món nhắm lai rai cực dính.",
+      "description_en": "Crispy crunchy fried macaroni tossed in rich aromatic cheddar cheese powder.",
+      "ingredients": [
+        "Nui giòn rụm",
+        "Bột phô mai mặn béo"
+      ],
+      "badge": "Popular",
+      "is_available": true,
+      "cost_price": 19000,
+      "unit": "Phần",
+      "stock_quantity": 20,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-B07"
+    },
+    {
+      "id": "b08",
+      "name": "POPCORN CHICKEN CHEESE",
+      "name_vi": "Gà viên sốt cay phủ phô mai",
+      "category": "bites",
+      "station": "kitchen",
+      "price": 95000,
+      "image": "assets/canva/popcorn_chicken_cheese.jpg",
+      "description_vi": "Gà chiên giòn rụm áo sốt cay ngọt Hàn Quốc phủ ngập phô mai kéo sợi thơm phức.",
+      "description_en": "Bite-sized crispy popcorn chicken glazed in sweet & spicy sauce, topped with melted cheese.",
+      "ingredients": [
+        "Gà viên tươi",
+        "Sốt cay ngọt",
+        "Phô mai Mozzarella kéo sợi"
+      ],
+      "badge": "M/L Options",
+      "variants": [
+        {
+          "id": "v_m",
+          "name": "Size M",
+          "price": 95000,
+          "is_default": true
+        },
+        {
+          "id": "v_l",
+          "name": "Size L",
+          "price": 125000,
+          "is_default": false
+        }
+      ],
+      "options": [
+        {
+          "id": "extra_cheese",
+          "name": "Thêm phô mai tan chảy (+Extra Cheese)",
+          "price": 30000
+        }
+      ],
+      "is_available": true,
+      "cost_price": 33000,
+      "unit": "Phần",
+      "stock_quantity": 20,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-B08"
+    },
+    {
+      "id": "br01",
+      "name": "SUNNY PINT (HOPPY PILSNER ON TAP)",
+      "name_vi": "Bia Thủ Công Sunny Pint (Rót Vòi)",
+      "category": "beer",
+      "station": "bar",
+      "price": 65000,
+      "image": "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
+      "description_vi": "Pilsner thiên về hoa bia thơm nức mũi, đậm mùi hoa bia hơn. AVB 5.2% - IBU 16.",
+      "description_en": "Hoppy pilsner on tap, intensely aromatic hop character with crisp finish. AVB 5.2 - IBU 16.",
+      "ingredients": [
+        "Craft Beer on tap 330ml"
+      ],
+      "badge": "Craft On-Tap -10k",
+      "is_available": true,
+      "cost_price": 26000,
+      "unit": "Ly",
+      "stock_quantity": 30,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-BR01",
+      "options": [
+        {
+          "id": "br01_mango",
+          "name": "Thêm Vị Xoài (Mango)",
+          "price": 0
+        },
+        {
+          "id": "br01_lychee",
+          "name": "Thêm Vị Vải (Lychee)",
+          "price": 0
+        },
+        {
+          "id": "br01_cherry",
+          "name": "Thêm Vị Cherry (+10k)",
+          "price": 10000
+        },
+        {
+          "id": "br01_peach",
+          "name": "Thêm Vị Đào (Peach)",
+          "price": 0
+        }
+      ]
+    },
+    {
+      "id": "br02",
+      "name": "CRISPY BOI (CLASSIC PILSNER ON TAP)",
+      "name_vi": "Bia Thủ Công Crispy Boi (Rót Vòi)",
+      "category": "beer",
+      "station": "bar",
+      "price": 65000,
+      "image": "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
+      "description_vi": "Pilsner truyền thống, malt cân bằng mượt mà, giòn rụm cực kỳ dễ uống.",
+      "description_en": "Classic traditional pilsner on tap, balanced malt body, ultra crisp drinkability.",
+      "ingredients": [
+        "Craft Beer on tap 330ml"
+      ],
+      "badge": "Craft On-Tap -10k",
+      "is_available": true,
+      "cost_price": 26000,
+      "unit": "Ly",
+      "stock_quantity": 30,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-BR02"
+    },
+    {
+      "id": "br05",
+      "name": "CORONA EXTRA",
+      "name_vi": "Bia Chai Corona Extra",
+      "category": "beer",
+      "station": "bar",
+      "price": 85000,
+      "image": "assets/canva/e454dbd7c1f9f1ee1b8b8214133a4f4b.png",
+      "description_vi": "Bia chai nhập khẩu Mexico kinh điển, phục vụ kèm lát chanh vàng tươi mát lạnh. (300ml - AVB 4.6%).",
+      "description_en": "Classic Mexican lager served chilled with a fresh lime wedge.",
+      "ingredients": [
+        "Chai 300ml"
+      ],
+      "badge": "Imported",
+      "is_available": true,
+      "cost_price": 34000,
+      "unit": "Chai",
+      "stock_quantity": 30,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-BR05"
+    },
+    {
+      "id": "br07",
+      "name": "CRAFT CIDER (APPLE / BLACKBERRY)",
+      "name_vi": "Cider Táo / Mâm Xôi Đen",
+      "category": "beer",
+      "station": "bar",
+      "price": 75000,
+      "image": "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
+      "description_vi": "Nước táo và dâu mâm xôi đen lên men tự nhiên, chua ngọt sủi bọt thơm lừng mát rượi. (330ml/ly).",
+      "description_en": "Naturally fermented sparkling apple & blackberry craft cider.",
+      "ingredients": [
+        "Ly 330ml"
+      ],
+      "badge": "Fruity Cider",
+      "is_available": true,
+      "cost_price": 30000,
+      "unit": "Ly",
+      "stock_quantity": 30,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-BR07"
+    },
+    {
+      "id": "w_merlot",
+      "name": "CHATEAU DALAT MERLOT",
+      "name_vi": "Vang đỏ Chateau Dalat Merlot",
+      "category": "wine_shot",
+      "station": "bar",
+      "price": 85000,
+      "badge": "150ml Glass",
+      "image": "assets/canva/b39e83bcd3e781d72ac36b3fee710acb.png",
+      "description_vi": "Vang đỏ Đà Lạt êm dịu, hương dâu tằm chín và gỗ sồi phảng phất.",
+      "description_en": "Smooth Dalat red wine by the glass, notes of ripe berries and oak.",
+      "is_available": true,
+      "cost_price": 26000,
+      "unit": "Ly",
+      "stock_quantity": 50,
+      "low_stock_threshold": 5,
+      "track_stock": true,
+      "item_type": "standard",
+      "sku": "PACA-W_MERLOT"
+    }
+  ],
+  "deleted_category_ids": [
+    "week",
+    "cocktail",
+    "mocktail"
+  ],
+  "deleted_item_ids": [
+    "w02",
+    "w03",
+    "w04",
+    "w05",
+    "w01",
+    "w06",
+    "w07",
+    "w08",
+    "w09",
+    "w10",
+    "s02",
+    "s01",
+    "sh03",
+    "sh02",
+    "wn01",
+    "sh01",
+    "br04",
+    "br03",
+    "m05",
+    "m04",
+    "m03",
+    "m02",
+    "m01",
+    "c09",
+    "c08",
+    "c07",
+    "c06",
+    "c05",
+    "c04",
+    "c03",
+    "c02",
+    "c01",
+    "br06"
+  ]
 }
