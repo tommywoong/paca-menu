@@ -2671,10 +2671,40 @@ ${topItemsText}
             finalHtml = this.convertHtmlToUnaccented(htmlContent);
         }
 
-        const printWindow = window.open('', '_blank', 'width=450,height=650');
+        let printWindow = null;
+        try {
+            printWindow = window.open('', '_blank', 'width=450,height=650');
+        } catch (e) {}
+
         if (!printWindow) {
-            alert("Trình duyệt đã chặn cửa sổ in pop-up. Vui lòng bật quyền cho phép pop-up.");
-            return false;
+            // Fallback for iOS Standalone PWA / blocked popups: use hidden iframe
+            try {
+                let printIframe = document.getElementById('paca_print_iframe');
+                if (!printIframe) {
+                    printIframe = document.createElement('iframe');
+                    printIframe.id = 'paca_print_iframe';
+                    printIframe.style.position = 'fixed';
+                    printIframe.style.right = '0';
+                    printIframe.style.bottom = '0';
+                    printIframe.style.width = '0';
+                    printIframe.style.height = '0';
+                    printIframe.style.border = '0';
+                    document.body.appendChild(printIframe);
+                }
+                const doc = printIframe.contentWindow.document;
+                doc.open();
+                doc.write(finalHtml);
+                doc.close();
+                setTimeout(() => {
+                    printIframe.contentWindow.focus();
+                    printIframe.contentWindow.print();
+                }, 350);
+                return true;
+            } catch (err) {
+                console.warn("Iframe print fallback failed", err);
+                alert("Không thể mở lệnh in trên thiết bị này. Vui lòng cho phép quyền in hoặc mở trong trình duyệt Safari.");
+                return false;
+            }
         }
         printWindow.document.open();
         printWindow.document.write(finalHtml);
