@@ -579,7 +579,7 @@ class PacaService {
         }
 
         if (Array.isArray(menuObj.items)) {
-            menuObj.items = menuObj.items.filter(it => it && !deletedDishIds.has(it.id));
+            menuObj.items = menuObj.items.filter(it => it && !deletedDishIds.has(it.id) && !deletedCatIds.has(it.category || it.cat_id));
         }
         if (Array.isArray(menuObj.categories)) {
             menuObj.categories = menuObj.categories.filter(c => c && !deletedCatIds.has(c.id));
@@ -785,7 +785,7 @@ class PacaService {
         this.onMenuCloudUpdateCallback = cb;
     }
 
-    async checkMenuCloudUpdate() {
+    async checkMenuCloudUpdate(force = false) {
         try {
             const cloudMenuPayload = await this.pullMenuFromCloud();
             if (cloudMenuPayload && cloudMenuPayload.menu && cloudMenuPayload.timestamp) {
@@ -800,20 +800,24 @@ class PacaService {
                 // Identify local items that are NOT in cloud (e.g. newly created on this device)
                 const cloudDishIds = new Set((cloudMenuPayload.menu.items || []).map(i => i.id));
                 const localExtraItems = (this.menu?.items || []).filter(localItem => 
-                    localItem && localItem.id && !cloudDishIds.has(localItem.id) && !deletedDishIds.has(localItem.id)
+                    localItem && localItem.id && !cloudDishIds.has(localItem.id) && !deletedDishIds.has(localItem.id) && !deletedCatIds.has(localItem.category || localItem.cat_id)
                 );
 
                 const isNewer = cloudMenuPayload.timestamp > localTs;
                 const isLocalEmpty = localCount === 0 && cloudCount > 0;
 
-                if ((isNewer || isLocalEmpty) && Array.isArray(cloudMenuPayload.menu.categories)) {
-                    console.log("PACA: Cloud menu update received! Merging with local items...");
+                if ((isNewer || isLocalEmpty || force) && Array.isArray(cloudMenuPayload.menu.categories)) {
+                    console.log("PACA: Cloud menu update received! Syncing with local items...");
                     const mergedMenu = this.filterDeletedTombstones(cloudMenuPayload.menu);
                     
-                    // CRITICAL: NEVER wipe out locally added dishes!
-                    if (localExtraItems.length > 0) {
-                        console.log(`PACA: Preserving ${localExtraItems.length} locally created items during Cloud Sync!`);
-                        mergedMenu.items = [...(mergedMenu.items || []), ...localExtraItems];
+                    // Only preserve truly newly created local items that were created AFTER cloudMenuPayload.timestamp
+                    const newlyCreatedOfflineItems = (!force && localTs > cloudMenuPayload.timestamp)
+                        ? localExtraItems.filter(i => i.created_at && i.created_at > cloudMenuPayload.timestamp)
+                        : [];
+
+                    if (newlyCreatedOfflineItems.length > 0) {
+                        console.log(`PACA: Preserving ${newlyCreatedOfflineItems.length} locally created items during Cloud Sync!`);
+                        mergedMenu.items = [...(mergedMenu.items || []), ...newlyCreatedOfflineItems];
                     }
 
                     this.menu = mergedMenu;
@@ -829,10 +833,10 @@ class PacaService {
                     }
 
                     // If local had extra items, re-push unified menu back to Cloud so Cloud has them too!
-                    if (localExtraItems.length > 0) {
+                    if (newlyCreatedOfflineItems.length > 0) {
                         this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Push merged menu error", e));
                     }
-                } else if (localTs > cloudMenuPayload.timestamp && localCount > 0) {
+                } else if (!force && localTs > cloudMenuPayload.timestamp && localCount > 0) {
                     console.log("PACA: Local menu is newer than Cloud Sync. Updating Cloud with local edits...");
                     this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Background pushMenuToCloud skipped", e));
                 }
@@ -1956,7 +1960,7 @@ class PacaService {
 
     async forceFullCloudSync() {
         console.log("PACA: Forcing full cloud sync...");
-        await this.checkMenuCloudUpdate();
+        await this.checkMenuCloudUpdate(true);
         await this.syncCloudOrders();
         await this.pushOrdersSnapshotToCloud();
         return { orderCount: this.orders.length, menu: this.menu };
