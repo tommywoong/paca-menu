@@ -188,8 +188,8 @@ class PacaService {
         this.inventoryLogs = [];
         this.dailyCloses = [];
         this.broadcastChannel = null;
-        this.cloudBroker = 'https://ntfy.envs.net';
-        this.cloudBrokerFallback = 'https://ntfy.sh';
+        this.cloudBroker = 'https://ntfy.sh';
+        this.cloudBrokerFallback = 'https://ntfy.envs.net';
         this.cloudSyncTopic = 'paca_orders_live_da_lat_2025';
         this.cloudOrdersSnapshotTopic = 'paca_orders_snapshot_dalat_2025';
         this.cloudMenuTopic = 'paca_menu_sync_dalat_2025';
@@ -201,8 +201,8 @@ class PacaService {
     }
 
     async cloudFetch(path, options = {}) {
-        const timeoutMs = options.timeout || 3500;
-        // 1. Try primary fast broker (reliable in Vietnam)
+        const timeoutMs = options.timeout || 4500;
+        // 1. Try primary fast broker (ntfy.sh)
         try {
             const controller = new AbortController();
             const tid = setTimeout(() => controller.abort(), timeoutMs);
@@ -216,7 +216,7 @@ class PacaService {
             console.warn(`PACA Cloud: Primary broker (${this.cloudBroker}) error, trying fallback...`, e);
         }
 
-        // 2. Try fallback broker
+        // 2. Try fallback broker (ntfy.envs.net)
         try {
             const controller = new AbortController();
             const tid = setTimeout(() => controller.abort(), timeoutMs);
@@ -729,25 +729,45 @@ class PacaService {
             const lines = text.trim().split('\n');
             let latestAttachmentUrl = null;
             let latestTime = 0;
-            for (const line of lines) {
+            for (let i = 0; i < lines.length; i++) {
                 try {
-                    const item = JSON.parse(line);
-                    if (item.attachment && item.attachment.url && item.time > latestTime) {
-                        latestAttachmentUrl = item.attachment.url;
-                        latestTime = item.time;
+                    const item = JSON.parse(lines[i]);
+                    if (item.attachment && item.attachment.url) {
+                        const itemTime = item.time || (i + 1);
+                        if (itemTime >= latestTime) {
+                            latestAttachmentUrl = item.attachment.url;
+                            latestTime = itemTime;
+                        }
                     }
                 } catch (e) {}
             }
             if (latestAttachmentUrl) {
+                // If attachment URL host is broken or down, replace host with active cloudBroker
+                let fetchUrl = latestAttachmentUrl;
+                try {
+                    const parsedUrl = new URL(latestAttachmentUrl);
+                    if (parsedUrl.pathname.startsWith('/file/')) {
+                        fetchUrl = `${this.cloudBroker}${parsedUrl.pathname}`;
+                    }
+                } catch (e) {}
+
                 const attController = new AbortController();
-                const attTimeout = setTimeout(() => attController.abort(), 3500);
-                const fileRes = await fetch(latestAttachmentUrl, { signal: attController.signal });
+                const attTimeout = setTimeout(() => attController.abort(), 4500);
+                let fileRes = null;
+                try {
+                    fileRes = await fetch(fetchUrl, { signal: attController.signal });
+                } catch (e) {
+                    if (fetchUrl !== latestAttachmentUrl) {
+                        fileRes = await fetch(latestAttachmentUrl, { signal: attController.signal });
+                    }
+                }
                 clearTimeout(attTimeout);
-                if (!fileRes.ok) return null;
-                const fileData = await fileRes.json();
-                if (fileData && fileData.menu && Array.isArray(fileData.menu.categories)) {
-                    fileData.menu = this.filterDeletedTombstones(fileData.menu);
-                    return fileData;
+                if (fileRes && fileRes.ok) {
+                    const fileData = await fileRes.json();
+                    if (fileData && fileData.menu && Array.isArray(fileData.menu.categories)) {
+                        fileData.menu = this.filterDeletedTombstones(fileData.menu);
+                        return fileData;
+                    }
                 }
             }
         } catch (e) {

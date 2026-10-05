@@ -663,11 +663,14 @@
             }
         });
 
-        // --- SYNC MENU FROM ADMIN / LOCALSTORAGE ---
+        // --- SYNC MENU FROM ADMIN / LOCALSTORAGE / CLOUD ---
         async function syncStudioMenuData(showToast = false) {
             try {
                 if (window.paca && window.paca.reloadMenu) {
                     await window.paca.reloadMenu();
+                    if (window.paca.checkMenuCloudUpdate) {
+                        await window.paca.checkMenuCloudUpdate();
+                    }
                 } else {
                     const localKey = (window.PACA_STORAGE_KEYS && window.PACA_STORAGE_KEYS.MENU) || 'paca_menu_data_v1';
                     const local = localStorage.getItem(localKey) || localStorage.getItem('paca_menu_data');
