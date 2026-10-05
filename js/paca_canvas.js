@@ -9,8 +9,8 @@ const PACA_CANVAS_KEYS = {
     DRAFT_DESIGN: 'paca_draft_canvas_v2',
     SETTINGS: 'paca_canvas_settings_v2',
     CLOUD_TOPIC: 'paca_design_sync_dalat_2025',
-    CLOUD_BROKER: 'https://ntfy.envs.net',
-    CLOUD_BROKER_FALLBACK: 'https://ntfy.sh'
+    CLOUD_BROKER: 'https://ntfy.sh',
+    CLOUD_BROKER_FALLBACK: 'https://ntfy.envs.net'
 };
 
 class PacaCanvasEngine {
@@ -194,6 +194,29 @@ class PacaCanvasEngine {
 
             return true;
         });
+
+        // Also sanitize Cover page link_nav elements pointing to deleted categories
+        const coverPage = this.design.pages.find(p => p.id === 'page_cover');
+        if (coverPage && Array.isArray(coverPage.elements)) {
+            const initialElementsCount = coverPage.elements.length;
+            coverPage.elements = coverPage.elements.filter(el => {
+                if (el.type !== 'link_nav') return true;
+                const target = el.props?.targetPageId || '';
+                const text = (el.props?.text || '').toLowerCase();
+                // Check if target or text mentions deleted categories
+                const isTargetDeleted = deletedCatIds.has(target) ||
+                    (target.startsWith('page_') && deletedCatIds.has(target.replace('page_', ''))) ||
+                    (target.startsWith('sec_cat_') && deletedCatIds.has(target.replace('sec_cat_', '')));
+                const isTextDeleted = (text.includes('menu of the week') && deletedCatIds.has('week')) ||
+                    (text.includes('cocktail') && deletedCatIds.has('cocktail')) ||
+                    (text.includes('mocktail') && deletedCatIds.has('mocktail'));
+                return !isTargetDeleted && !isTextDeleted;
+            });
+            if (coverPage.elements.length !== initialElementsCount) {
+                const storageKey = this.mode === 'edit' ? PACA_CANVAS_KEYS.DRAFT_DESIGN : PACA_CANVAS_KEYS.PUBLISHED_DESIGN;
+                this.safeSetItem(storageKey, JSON.stringify(this.design));
+            }
+        }
 
         if (this.design.pages.length !== initialCount) {
             if (!this.design.pages.some(p => p.id === this.activePageId)) {
