@@ -2186,7 +2186,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261005_1850"></script>
+    <script src="js/paca_core.js?v=20261005_1915"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -2486,6 +2486,18 @@
                     renderOrders();
                 });
             }
+
+            // Realtime sync on focus or app unminimize
+            window.addEventListener('focus', () => {
+                if (window.paca?.checkMenuCloudUpdate) {
+                    window.paca.checkMenuCloudUpdate();
+                }
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && window.paca?.checkMenuCloudUpdate) {
+                    window.paca.checkMenuCloudUpdate();
+                }
+            });
 
             // Init all horizontal drag and scroll listeners on PC/Desktop
             setTimeout(initAllHorizontalScrolls, 100);
