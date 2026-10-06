@@ -197,6 +197,7 @@ class PacaService {
         this.cloudSyncTimer = null;
         this.onMenuCloudUpdateCallback = null;
         this._snapshotTimer = null;
+        this.clientId = 'client_' + Math.random().toString(36).slice(2, 10) + '_' + Date.now().toString(36);
         this.initBroadcast();
     }
 
@@ -258,19 +259,21 @@ class PacaService {
 
     // --- INITIALIZATION ---
     async init() {
-        const CURRENT_VERSION = '20261005_2030';
+        const CURRENT_VERSION = '20261006_1450';
         const savedVer = this.safeGetItem('paca_app_version');
         if (savedVer !== CURRENT_VERSION) {
             console.log(`PACA: Updating from version ${savedVer} to ${CURRENT_VERSION}.`);
             this.safeSetItem('paca_app_version', CURRENT_VERSION);
-            // Invalidate stale cached menu and tombstones so all devices load the canonical 19 items
-            try {
-                localStorage.removeItem('paca_deleted_dishes_v1');
-                localStorage.removeItem('paca_menu_data_v1');
-                localStorage.removeItem('paca_menu_saved_timestamp');
-                localStorage.removeItem('paca_published_canvas_v2');
-                localStorage.removeItem('paca_canvas_published_timestamp');
-            } catch (e) {}
+            // Only clean legacy stale tombstones if upgrading from pre-20261005_2030
+            if (!savedVer || savedVer < '20261005_2030') {
+                try {
+                    localStorage.removeItem('paca_deleted_dishes_v1');
+                    localStorage.removeItem('paca_menu_data_v1');
+                    localStorage.removeItem('paca_menu_saved_timestamp');
+                    localStorage.removeItem('paca_published_canvas_v2');
+                    localStorage.removeItem('paca_canvas_published_timestamp');
+                } catch (e) {}
+            }
         }
 
         // Each component is isolated so failure in one never blocks others
@@ -572,36 +575,23 @@ class PacaService {
         const deletedDishIds = new Set(this.getDeletedDishIds());
         const deletedCatIds = new Set(this.getDeletedCategoryIds());
 
-        // CRITICAL: Any dish or category explicitly active in menuObj MUST NOT be tombstoned!
-        if (Array.isArray(menuObj.items)) {
-            menuObj.items.forEach(it => {
-                if (it && it.id) deletedDishIds.delete(it.id);
-            });
-        }
-        if (Array.isArray(menuObj.categories)) {
-            menuObj.categories.forEach(c => {
-                if (c && c.id) deletedCatIds.delete(c.id);
-            });
-        }
-
+        // Incorporate any tombstones listed in the menu object itself
         if (Array.isArray(menuObj.deleted_item_ids)) {
             menuObj.deleted_item_ids.forEach(id => {
-                // Only tombstone if NOT active in current menu items
-                if (id && (!menuObj.items || !menuObj.items.some(i => i && i.id === id))) {
-                    deletedDishIds.add(id);
-                }
+                if (id) deletedDishIds.add(id);
             });
-            try { localStorage.setItem('paca_deleted_dishes_v1', JSON.stringify(Array.from(deletedDishIds))); } catch (e) {}
         }
         if (Array.isArray(menuObj.deleted_category_ids)) {
             menuObj.deleted_category_ids.forEach(id => {
-                if (id && (!menuObj.categories || !menuObj.categories.some(c => c && c.id === id))) {
-                    deletedCatIds.add(id);
-                }
+                if (id) deletedCatIds.add(id);
             });
-            try { localStorage.setItem('paca_deleted_categories_v1', JSON.stringify(Array.from(deletedCatIds))); } catch (e) {}
         }
 
+        // Persist accumulated tombstones to localStorage
+        try { localStorage.setItem('paca_deleted_dishes_v1', JSON.stringify(Array.from(deletedDishIds))); } catch (e) {}
+        try { localStorage.setItem('paca_deleted_categories_v1', JSON.stringify(Array.from(deletedCatIds))); } catch (e) {}
+
+        // Filter out any dishes or categories matching the tombstones
         if (Array.isArray(menuObj.items)) {
             menuObj.items = menuObj.items.filter(it => it && !deletedDishIds.has(it.id) && !deletedCatIds.has(it.category || it.cat_id));
         }
@@ -721,7 +711,7 @@ class PacaService {
             });
             if (res && res.ok) {
                 console.log(`PACA: Pushed ${m.items?.length || 0} items to Cloud Sync successfully!`);
-                this.pushOrderToCloud({ timestamp: ts }, 'MENU_UPDATED');
+                await this.pushOrderToCloud({ timestamp: ts }, 'MENU_UPDATED');
                 return true;
             }
             return false;
@@ -792,66 +782,39 @@ class PacaService {
         try {
             const cloudMenuPayload = await this.pullMenuFromCloud();
             if (cloudMenuPayload && cloudMenuPayload.menu) {
+                // Apply all recorded tombstones to cloud menu object
                 this.filterDeletedTombstones(cloudMenuPayload.menu);
                 const localTs = parseInt(localStorage.getItem('paca_menu_saved_timestamp') || '0');
+                const cloudTs = cloudMenuPayload.timestamp || 0;
+                const isNewer = cloudTs > localTs;
+
                 const localCount = (this.menu?.items || []).length;
                 const cloudCount = (cloudMenuPayload.menu.items || []).length;
-                
-                const deletedDishIds = new Set(this.getDeletedDishIds());
-                const deletedCatIds = new Set(this.getDeletedCategoryIds());
 
-                const cloudDishIds = new Set((cloudMenuPayload.menu.items || []).map(i => i.id));
-                const localExtraItems = (this.menu?.items || []).filter(localItem => 
-                    localItem && localItem.id && !cloudDishIds.has(localItem.id) && !deletedDishIds.has(localItem.id) && !deletedCatIds.has(localItem.category || localItem.cat_id)
-                );
-
-                // Check dish content differences (e.g. name or price changed, like MIXED BEER)
-                let hasDishChanges = false;
-                if (this.menu && Array.isArray(this.menu.items)) {
-                    for (const cloudItem of cloudMenuPayload.menu.items) {
-                        const localItem = this.menu.items.find(i => i.id === cloudItem.id);
-                        if (!localItem || localItem.name !== cloudItem.name || localItem.price !== cloudItem.price || localItem.is_available !== cloudItem.is_available) {
-                            hasDishChanges = true;
-                            break;
-                        }
-                    }
-                }
-
-                const isNewer = (cloudMenuPayload.timestamp || 0) > localTs;
-                const isCountDifferent = cloudCount !== localCount;
-
-                // CRITICAL: If local on PC has MORE dishes than cloud (e.g. 43 dishes on PC vs 14 on Cloud)
-                if (!force && localCount > cloudCount && localCount > 0) {
-                    console.log(`PACA: Local has ${localCount} items vs Cloud ${cloudCount} items. Pushing local menu to Cloud...`);
+                // If local menu was saved more recently than cloud, NEVER let stale cloud overwrite local!
+                // Instead, push local to cloud so cloud catches up.
+                if (!force && !isNewer && localTs > cloudTs) {
+                    console.log(`PACA: Local menu is newer than Cloud (localTs=${localTs} > cloudTs=${cloudTs}). Pushing local to cloud...`);
                     this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Push local to cloud error", e));
                     return;
                 }
 
-                // If cloud has newer items OR force OR count differs OR dish details differ
-                if ((isNewer || force || isCountDifferent || hasDishChanges) && Array.isArray(cloudMenuPayload.menu.categories)) {
-                    console.log(`PACA: Cloud menu update received! Syncing to ${cloudCount} items...`);
-                    
-                    const newlyCreatedOfflineItems = localExtraItems.filter(i => i.created_at && (!cloudMenuPayload.timestamp || i.created_at > cloudMenuPayload.timestamp));
-                    const mergedMenu = this.filterDeletedTombstones(cloudMenuPayload.menu);
-                    if (newlyCreatedOfflineItems.length > 0) {
-                        mergedMenu.items = [...(mergedMenu.items || []), ...newlyCreatedOfflineItems];
-                    }
+                // If cloud is genuinely newer or forced
+                if ((isNewer || force) && Array.isArray(cloudMenuPayload.menu.categories)) {
+                    console.log(`PACA: Cloud menu update received (newer)! Syncing to ${cloudCount} items...`);
 
+                    const mergedMenu = this.filterDeletedTombstones(cloudMenuPayload.menu);
                     this.menu = mergedMenu;
                     this.normalizeCategories();
                     localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
-                    const newTs = Math.max(cloudMenuPayload.timestamp || 0, localTs, Date.now());
+                    const newTs = Math.max(cloudTs, localTs, Date.now());
                     localStorage.setItem('paca_menu_saved_timestamp', newTs.toString());
-                    
+
                     if (this.onMenuCloudUpdateCallback) {
                         this.onMenuCloudUpdateCallback(this.menu);
                     }
                     if (this.broadcastChannel) {
                         this.broadcastChannel.postMessage({ type: 'MENU_SAVED', timestamp: newTs });
-                    }
-
-                    if (newlyCreatedOfflineItems.length > 0) {
-                        this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Push merged menu error", e));
                     }
                 }
             }
@@ -868,7 +831,6 @@ class PacaService {
             this.broadcastChannel.postMessage({ type: 'MENU_SAVED', timestamp: Date.now() });
         }
         if (pushToCloud) {
-            this.pushOrderToCloud({ timestamp: Date.now() }, 'MENU_UPDATED');
             return await this.pushMenuToCloud(this.menu);
         }
         return true;
@@ -942,7 +904,7 @@ class PacaService {
         return changeCount;
     }
 
-    deleteMenuItem(itemId) {
+    async deleteMenuItem(itemId) {
         if (!this.menu || !this.menu.items) return null;
         this.recordDeletedDish(itemId);
         const idx = this.menu.items.findIndex(i => i.id === itemId);
@@ -950,7 +912,7 @@ class PacaService {
         if (idx >= 0) {
             removed = this.menu.items.splice(idx, 1)[0];
         }
-        this.saveMenu(this.menu);
+        await this.saveMenu(this.menu, true);
         if (this.broadcastChannel) {
             this.broadcastChannel.postMessage({ type: 'MENU_ITEM_DELETED', itemId });
         }
@@ -1240,7 +1202,7 @@ class PacaService {
         return categoryRecord;
     }
 
-    deleteCategory(catId, transferToCatId = null) {
+    async deleteCategory(catId, transferToCatId = null) {
         if (!this.menu || !this.menu.categories) return { success: false, message: 'Dữ liệu menu chưa tải' };
 
         const catIdx = this.menu.categories.findIndex(c => c.id === catId);
@@ -1267,7 +1229,7 @@ class PacaService {
         this.recordDeletedCategory(catId);
         const removed = this.menu.categories.splice(catIdx, 1)[0];
         this.normalizeCategories();
-        this.saveMenu(this.menu);
+        await this.saveMenu(this.menu, true);
 
         if (this.broadcastChannel) {
             this.broadcastChannel.postMessage({ type: 'CATEGORIES_CHANGED', deletedCatId: catId, transferToCatId });
@@ -1763,7 +1725,7 @@ class PacaService {
     async pushOrderToCloud(order, action = 'CREATE_ORDER', retries = 3) {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
-                const payload = JSON.stringify({ action, order, timestamp: Date.now() });
+                const payload = JSON.stringify({ action, order, senderId: this.clientId, timestamp: Date.now() });
                 const res = await this.cloudFetch(`/${this.cloudSyncTopic}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain; charset=utf-8' },
@@ -1807,7 +1769,9 @@ class PacaService {
                                 if (item.event === 'message' && item.message) {
                                     const payload = JSON.parse(item.message);
                                     if (payload.action === 'MENU_UPDATED') {
-                                        this.checkMenuCloudUpdate();
+                                        if (!payload.senderId || payload.senderId !== this.clientId) {
+                                            this.checkMenuCloudUpdate();
+                                        }
                                     } else if (payload.action === 'CREATE_ORDER' && payload.order) {
                                         if (this.isOrderDeleted(payload.order.id)) continue;
                                         const existingIdx = this.orders.findIndex(o => o.id === payload.order.id);
@@ -1917,7 +1881,9 @@ class PacaService {
                     if (data.event === 'message' && data.message) {
                         const payload = JSON.parse(data.message);
                         if (payload.action === 'MENU_UPDATED') {
-                            this.checkMenuCloudUpdate();
+                            if (!payload.senderId || payload.senderId !== this.clientId) {
+                                this.checkMenuCloudUpdate();
+                            }
                             return;
                         }
                         if (payload.action === 'CREATE_ORDER' && payload.order) {
@@ -1977,8 +1943,9 @@ class PacaService {
         console.log("PACA: Forcing full cloud sync...");
         if (this.menu && this.menu.items && this.menu.items.length > 0) {
             await this.pushMenuToCloud(this.menu);
+        } else {
+            await this.checkMenuCloudUpdate(true);
         }
-        await this.checkMenuCloudUpdate(true);
         await this.syncCloudOrders();
         await this.pushOrdersSnapshotToCloud();
         return { orderCount: this.orders.length, menu: this.menu };

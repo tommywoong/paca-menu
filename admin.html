@@ -2186,7 +2186,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="js/paca_core.js?v=20261005_2030"></script>
+    <script src="js/paca_core.js?v=20261006_1450"></script>
     <script>
         // State
         let currentOrderFilter = 'all';
@@ -2446,8 +2446,10 @@
                         renderOrders();
                         renderTablesAdmin();
                         renderRevenueStats();
-                    } else if (event.data?.type === 'INVENTORY_UPDATED' || event.data?.type === 'MENU_ITEM_SAVED' || event.data?.type === 'ITEM_AVAILABILITY_CHANGED') {
+                    } else if (event.data?.type === 'INVENTORY_UPDATED' || event.data?.type === 'MENU_ITEM_SAVED' || event.data?.type === 'MENU_ITEM_DELETED' || event.data?.type === 'MENU_SAVED' || event.data?.type === 'CATEGORIES_CHANGED' || event.data?.type === 'ITEM_AVAILABILITY_CHANGED') {
                         renderAdminMenu();
+                        populateMenuCategories();
+                        renderAdminCategories();
                         renderInventoryTable();
                     } else if (event.data?.type === 'USERS_UPDATED' || event.data?.type === 'CURRENT_USER_CHANGED') {
                         applyUserPermissions();
@@ -4000,14 +4002,12 @@
             if (!item) return;
             if (confirm(`Bạn có chắc muốn xóa món "${item.name}" khỏi thực đơn không?`)) {
                 showAdminToast(`⏳ Đang xóa món "${item.name}"...`, true);
-                window.paca.deleteMenuItem(itemId);
+                await window.paca.deleteMenuItem(itemId);
                 renderAdminMenu();
                 populateMenuCategories();
                 renderAdminCategories();
-                try {
-                    await window.paca.pushMenuToCloud();
-                } catch (e) {}
-                showAdminToast(`✓ Đã xóa vĩnh viễn món "${item.name}" khỏi thực đơn!`, true);
+                renderInventoryTable();
+                showAdminToast(`✓ Đã xóa món "${item.name}" khỏi thực đơn!`, true);
             }
         }
 
@@ -4299,15 +4299,12 @@
             }
 
             showAdminToast("⏳ Đang xóa danh mục...", true);
-            const res = window.paca.deleteCategory(catId, transferTarget);
+            const res = await window.paca.deleteCategory(catId, transferTarget);
             if (res.success) {
                 closeCategoryDeleteModal();
                 populateMenuCategories();
                 renderAdminCategories();
                 renderAdminMenu();
-                try {
-                    await window.paca.pushMenuToCloud();
-                } catch (e) {}
                 showAdminToast(`✓ Đã xóa danh mục thành công!${res.transferredCount ? ` (${res.transferredCount} món đã được chuyển sang danh mục mới)` : ''}`, true);
             } else {
                 alert(res.message);
