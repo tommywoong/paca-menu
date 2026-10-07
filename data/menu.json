@@ -402,54 +402,6 @@
       "sku": "PACA-BR02"
     },
     {
-      "id": "br03",
-      "name": "KISO - TEPACHE DỨA LÊN MEN THỦ CÔNG",
-      "name_vi": "Kiso - Tepache Dứa Lên Men",
-      "category": "beer",
-      "station": "bar",
-      "price": 65000,
-      "image": "assets/canva/30423de40428a91247022ecb792313f8.png",
-      "description_vi": "Đồ uống truyền thống từ Mexico ủ từ vỏ dứa chín, đường thốt nốt và quế. Vị chua thanh, sủi tăm tự nhiên, cực kỳ giải nhiệt. (330ml/ly).",
-      "description_en": "Traditional Mexican fermented pineapple beverage crafted with ripe pineapple peel, piloncillo palm sugar, and cinnamon. Naturally effervescent.",
-      "ingredients": [
-        "Dứa tươi lên men thủ công",
-        "Đường thốt nốt",
-        "Quế thơm"
-      ],
-      "badge": "Special Ferment",
-      "is_available": true,
-      "cost_price": 26000,
-      "unit": "Ly",
-      "stock_quantity": 30,
-      "low_stock_threshold": 5,
-      "track_stock": true,
-      "item_type": "standard",
-      "sku": "PACA-BR03"
-    },
-    {
-      "id": "br04",
-      "name": "HOEGAARDEN WITBIER",
-      "name_vi": "Bia Bỉ Hoegaarden Trắng",
-      "category": "beer",
-      "station": "bar",
-      "price": 65000,
-      "image": "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
-      "description_vi": "Bia lúa mì trứ danh của Bỉ với hương vỏ cam cay nhẹ và hạt ngò rí thơm dịu. (250ml - AVB 4.9%).",
-      "description_en": "Famous Belgian wheat beer with subtle notes of orange peel and coriander seed.",
-      "ingredients": [
-        "Chai 250ml"
-      ],
-      "badge": "Imported",
-      "is_available": true,
-      "cost_price": 26000,
-      "unit": "Chai",
-      "stock_quantity": 30,
-      "low_stock_threshold": 5,
-      "track_stock": true,
-      "item_type": "standard",
-      "sku": "PACA-BR04"
-    },
-    {
       "id": "br05",
       "name": "CORONA EXTRA",
       "name_vi": "Bia Chai Corona Extra",
@@ -473,29 +425,6 @@
       "sku": "PACA-BR05"
     },
     {
-      "id": "br06",
-      "name": "MICHELOB ULTRA LIGHT",
-      "name_vi": "Bia Michelob Ultra Light",
-      "category": "beer",
-      "station": "bar",
-      "price": 45000,
-      "image": "assets/canva/05940b5838075c36f20a1c039855c485.png",
-      "description_vi": "Bia nhẹ ít calo, êm dịu sảng khoái không lo nặng bụng. (250ml - AVB 4.2%).",
-      "description_en": "Low-carb, light and refreshing American beer.",
-      "ingredients": [
-        "Lon 250ml"
-      ],
-      "badge": "Low Carb",
-      "is_available": true,
-      "cost_price": 18000,
-      "unit": "Chai",
-      "stock_quantity": 30,
-      "low_stock_threshold": 5,
-      "track_stock": true,
-      "item_type": "standard",
-      "sku": "PACA-BR06"
-    },
-    {
       "id": "br07",
       "name": "CRAFT CIDER (APPLE / BLACKBERRY)",
       "name_vi": "Cider Táo / Mâm Xôi Đen",
@@ -517,49 +446,6 @@
       "track_stock": true,
       "item_type": "standard",
       "sku": "PACA-BR07"
-    },
-    {
-      "id": "br08",
-      "name": "PASSION FRUIT CRAFT CIDER",
-      "name_vi": "Cider Chanh Dây Lên Men",
-      "category": "beer",
-      "station": "bar",
-      "price": 75000,
-      "image": "assets/canva/2ed6eb2575b9648ab8d169de1039e74f.png",
-      "description_vi": "Cider chanh dây tươi lên men tự nhiên, chua ngọt thanh mát sảng khoái.",
-      "description_en": "Naturally fermented sparkling passion fruit craft cider.",
-      "badge": "Fruity Cider",
-      "is_available": true,
-      "cost_price": 28000,
-      "unit": "Ly",
-      "stock_quantity": 30,
-      "low_stock_threshold": 5,
-      "track_stock": true,
-      "item_type": "standard",
-      "sku": "PACA-BR08"
-    },
-    {
-      "id": "wn01",
-      "name": "CHATEAU DALAT TRADITION MERLOT",
-      "name_vi": "Vang Đỏ Chateau Dalat Merlot",
-      "category": "wine_shot",
-      "station": "bar",
-      "price": 85000,
-      "image": "assets/canva/89828c89d73528a34181b9d45f25f8a2.png",
-      "description_vi": "Vang đỏ đượm đà vị nho Merlot lên men gỗ sồi, nồng nàn quyến rũ giữa cái se lạnh Đà Lạt. (150ml/Ly).",
-      "description_en": "Oak-aged Dalat red wine made from Merlot grapes, smooth and rich (150ml glass).",
-      "ingredients": [
-        "Ly 150ml"
-      ],
-      "badge": "By The Glass",
-      "is_available": true,
-      "cost_price": 26000,
-      "unit": "Ly",
-      "stock_quantity": 50,
-      "low_stock_threshold": 5,
-      "track_stock": true,
-      "item_type": "standard",
-      "sku": "PACA-WN01"
     }
   ],
   "deleted_category_ids": [
@@ -567,5 +453,11 @@
     "cocktail",
     "mocktail"
   ],
-  "deleted_item_ids": []
+  "deleted_item_ids": [
+    "br08",
+    "wn01",
+    "br04",
+    "br06",
+    "br03"
+  ]
 }

@@ -259,7 +259,7 @@ class PacaService {
 
     // --- INITIALIZATION ---
     async init() {
-        const CURRENT_VERSION = '20261007_0930';
+        const CURRENT_VERSION = '20261007_0950';
         const savedVer = this.safeGetItem('paca_app_version');
         if (savedVer !== CURRENT_VERSION) {
             console.log(`PACA: Updating from version ${savedVer} to ${CURRENT_VERSION}.`);
