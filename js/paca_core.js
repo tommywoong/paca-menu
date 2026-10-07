@@ -259,21 +259,20 @@ class PacaService {
 
     // --- INITIALIZATION ---
     async init() {
-        const CURRENT_VERSION = '20261006_1450';
+        const CURRENT_VERSION = '20261007_0930';
         const savedVer = this.safeGetItem('paca_app_version');
         if (savedVer !== CURRENT_VERSION) {
             console.log(`PACA: Updating from version ${savedVer} to ${CURRENT_VERSION}.`);
             this.safeSetItem('paca_app_version', CURRENT_VERSION);
-            // Only clean legacy stale tombstones if upgrading from pre-20261005_2030
-            if (!savedVer || savedVer < '20261005_2030') {
-                try {
-                    localStorage.removeItem('paca_deleted_dishes_v1');
-                    localStorage.removeItem('paca_menu_data_v1');
-                    localStorage.removeItem('paca_menu_saved_timestamp');
-                    localStorage.removeItem('paca_published_canvas_v2');
-                    localStorage.removeItem('paca_canvas_published_timestamp');
-                } catch (e) {}
-            }
+            // On version upgrade, clear stale cache and legacy poisoned tombstones so all devices synchronize cleanly to 19 items
+            try {
+                localStorage.removeItem('paca_deleted_dishes_v1');
+                localStorage.removeItem('paca_deleted_categories_v1');
+                localStorage.removeItem('paca_menu_data_v1');
+                localStorage.removeItem('paca_menu_saved_timestamp');
+                localStorage.removeItem('paca_published_canvas_v2');
+                localStorage.removeItem('paca_canvas_published_timestamp');
+            } catch (e) {}
         }
 
         // Each component is isolated so failure in one never blocks others
@@ -781,41 +780,55 @@ class PacaService {
     async checkMenuCloudUpdate(force = false) {
         try {
             const cloudMenuPayload = await this.pullMenuFromCloud();
-            if (cloudMenuPayload && cloudMenuPayload.menu) {
-                // Apply all recorded tombstones to cloud menu object
-                this.filterDeletedTombstones(cloudMenuPayload.menu);
-                const localTs = parseInt(localStorage.getItem('paca_menu_saved_timestamp') || '0');
-                const cloudTs = cloudMenuPayload.timestamp || 0;
-                const isNewer = cloudTs > localTs;
-
-                const localCount = (this.menu?.items || []).length;
-                const cloudCount = (cloudMenuPayload.menu.items || []).length;
-
-                // If local menu was saved more recently than cloud, NEVER let stale cloud overwrite local!
-                // Instead, push local to cloud so cloud catches up.
-                if (!force && !isNewer && localTs > cloudTs) {
-                    console.log(`PACA: Local menu is newer than Cloud (localTs=${localTs} > cloudTs=${cloudTs}). Pushing local to cloud...`);
-                    this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Push local to cloud error", e));
-                    return;
+            if (!cloudMenuPayload || !cloudMenuPayload.menu) {
+                // If Cloud menu topic is empty or expired, re-populate Cloud from local menu immediately
+                if (this.menu && Array.isArray(this.menu.items) && this.menu.items.length > 0) {
+                    console.log("PACA: Cloud menu topic empty/expired. Pushing local menu to Cloud...");
+                    this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Push local menu to empty cloud error", e));
                 }
+                return;
+            }
 
-                // If cloud is genuinely newer or forced
-                if ((isNewer || force) && Array.isArray(cloudMenuPayload.menu.categories)) {
-                    console.log(`PACA: Cloud menu update received (newer)! Syncing to ${cloudCount} items...`);
+            // Apply all recorded tombstones to cloud menu object
+            this.filterDeletedTombstones(cloudMenuPayload.menu);
+            const localTs = parseInt(localStorage.getItem('paca_menu_saved_timestamp') || '0');
+            const cloudTs = cloudMenuPayload.timestamp || 0;
+            const isNewer = cloudTs > localTs;
 
-                    const mergedMenu = this.filterDeletedTombstones(cloudMenuPayload.menu);
-                    this.menu = mergedMenu;
-                    this.normalizeCategories();
-                    localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
-                    const newTs = Math.max(cloudTs, localTs, Date.now());
-                    localStorage.setItem('paca_menu_saved_timestamp', newTs.toString());
+            const localCount = (this.menu?.items || []).length;
+            const cloudCount = (cloudMenuPayload.menu.items || []).length;
 
-                    if (this.onMenuCloudUpdateCallback) {
-                        this.onMenuCloudUpdateCallback(this.menu);
-                    }
-                    if (this.broadcastChannel) {
-                        this.broadcastChannel.postMessage({ type: 'MENU_SAVED', timestamp: newTs });
-                    }
+            // If local on PC has MORE dishes than cloud (e.g. 19 dishes on PC vs 14 on Cloud)
+            if (!force && localCount > cloudCount && localCount > 0) {
+                console.log(`PACA: Local has ${localCount} items vs Cloud ${cloudCount} items. Pushing local menu to Cloud...`);
+                this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Push local to cloud error", e));
+                return;
+            }
+
+            // If local menu was saved more recently than cloud, NEVER let stale cloud overwrite local!
+            // Instead, push local to cloud so cloud catches up.
+            if (!force && !isNewer && localTs > cloudTs) {
+                console.log(`PACA: Local menu is newer than Cloud (localTs=${localTs} > cloudTs=${cloudTs}). Pushing local to cloud...`);
+                this.pushMenuToCloud(this.menu).catch(e => console.warn("PACA: Push local to cloud error", e));
+                return;
+            }
+
+            // If cloud is genuinely newer or forced
+            if ((isNewer || force) && Array.isArray(cloudMenuPayload.menu.categories)) {
+                console.log(`PACA: Cloud menu update received (newer)! Syncing to ${cloudCount} items...`);
+
+                const mergedMenu = this.filterDeletedTombstones(cloudMenuPayload.menu);
+                this.menu = mergedMenu;
+                this.normalizeCategories();
+                localStorage.setItem(PACA_STORAGE_KEYS.MENU, JSON.stringify(this.menu));
+                const newTs = Math.max(cloudTs, localTs, Date.now());
+                localStorage.setItem('paca_menu_saved_timestamp', newTs.toString());
+
+                if (this.onMenuCloudUpdateCallback) {
+                    this.onMenuCloudUpdateCallback(this.menu);
+                }
+                if (this.broadcastChannel) {
+                    this.broadcastChannel.postMessage({ type: 'MENU_SAVED', timestamp: newTs });
                 }
             }
         } catch (e) {
